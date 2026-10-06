@@ -50,13 +50,13 @@ class MessageController extends Controller
     {
         if ($type === 'room') {
             $message = RoomMessage::with('room')->findOrFail($id);
-            abort_unless($message->room->canBeWrittenBy($user), 403, 'Ce groupe est réservé à ses membres.');
+            abort_unless($message->room->canBeWrittenBy($user), 403, __('Ce groupe est réservé à ses membres.'));
 
             return $message;
         }
         $message = DirectMessage::with('conversation')->findOrFail($id);
         $c = $message->conversation;
-        abort_unless(in_array($user->id, [$c->user_one_id, $c->user_two_id], true), 403, 'Cette conversation ne vous concerne pas.');
+        abort_unless(in_array($user->id, [$c->user_one_id, $c->user_two_id], true), 403, __('Cette conversation ne vous concerne pas.'));
 
         return $message;
     }

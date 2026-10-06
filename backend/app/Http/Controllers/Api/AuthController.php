@@ -33,7 +33,7 @@ class AuthController extends Controller
 
         if (! Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
             // Message identique que l'e-mail existe ou non : on ne révèle pas qui est inscrit
-            throw ValidationException::withMessages(['email' => 'Adresse e-mail ou mot de passe incorrect.']);
+            throw ValidationException::withMessages(['email' => __('Adresse e-mail ou mot de passe incorrect.')]);
         }
         $request->session()->regenerate();
 
@@ -46,7 +46,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Vous êtes déconnecté.']);
+        return response()->json(['message' => __('Vous êtes déconnecté.')]);
     }
 
     /** Compte de la personne connectée : profil public + e-mail (visible par elle seule) */

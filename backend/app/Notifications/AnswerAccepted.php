@@ -18,15 +18,10 @@ class AnswerAccepted extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $title = 'Votre réponse a été validée';
-        if ($this->bountyAmount) {
-            $title .= ' · '.number_format($this->bountyAmount, 0, ',', ' ').' FCFA versés dans votre portefeuille';
-        }
-
         return [
             'kind' => $this->bountyAmount ? 'bounty' : 'accepted',
-            'title' => $title,
-            'body' => Str::limit($this->question->title, 90),
+            'amount' => $this->bountyAmount,
+            'question' => Str::limit($this->question->title, 90),
             'url' => "/app/questions/{$this->question->id}",
         ];
     }

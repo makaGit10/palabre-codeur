@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios'
+import { translate } from '../i18n'
 
 // Client HTTP unique vers l'API Laravel. La session repose sur un cookie sécurisé (Sanctum SPA) :
 // axios renvoie automatiquement le jeton anti-CSRF lu dans le cookie XSRF-TOKEN.
@@ -12,16 +13,16 @@ export const api = axios.create({
 // À appeler avant une connexion ou une inscription : dépose le cookie anti-CSRF
 export const fetchCsrfCookie = () => axios.get('/sanctum/csrf-cookie', { withCredentials: true })
 
-// Message d'erreur lisible, quel que soit le type d'erreur renvoyé par l'API
+// Message d'erreur lisible, dans la langue de l'interface, quel que soit le type d'erreur renvoyé par l'API
 export function errorMessage(error: unknown): string {
   if (isAxiosError(error)) {
-    if (!error.response) return 'Connexion au serveur impossible. Vérifiez votre réseau et réessayez.'
-    if (error.response.status === 429) return 'Trop de tentatives. Patientez une minute avant de réessayer.'
+    if (!error.response) return translate('api.network')
+    if (error.response.status === 429) return translate('api.too_many')
     const data = error.response.data as { message?: string; errors?: Record<string, string[]> } | undefined
     const firstFieldError = data?.errors && Object.values(data.errors)[0]?.[0]
-    return firstFieldError ?? data?.message ?? 'Une erreur est survenue. Réessayez.'
+    return firstFieldError ?? data?.message ?? translate('api.generic')
   }
-  return error instanceof Error ? error.message : 'Une erreur est survenue. Réessayez.'
+  return error instanceof Error ? error.message : translate('api.generic')
 }
 
 // Erreurs de validation champ par champ (ex. { title: "Le champ titre doit…" })

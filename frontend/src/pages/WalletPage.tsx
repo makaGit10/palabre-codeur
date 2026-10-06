@@ -3,39 +3,59 @@ import { useState } from 'react'
 import { Flag } from '../components/Brand'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
-import { COUNTRY_NAMES, formatFcfa, PAYMENT_LABELS, timeAgo } from '../lib/format'
-import { COUNTRY_CURRENCY, localHint, METHODS_BY_COUNTRY, MIN_WITHDRAWAL, MOBILE_MONEY, PHONE_PREFIX } from '../lib/money'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n, type Key } from '../i18n'
 import { errorMessage } from '../lib/api'
+import { formatFcfa, timeAgo } from '../lib/format'
+import { COUNTRIES, COUNTRY_CURRENCY, localHint, METHODS_BY_COUNTRY, MIN_WITHDRAWAL, MOBILE_MONEY, PHONE_PREFIX } from '../lib/money'
 import { getWallet, withdraw } from '../services/wallet'
 import type { CountryCode, PaymentMethod, WalletTransaction } from '../types'
 
-const TX_STYLE: Record<WalletTransaction['type'], { sign: string; className: string; tag: string }> = {
-  bounty_received: { sign: '+', className: 'text-green', tag: 'Reçue' },
-  withdrawal: { sign: '−', className: 'text-ink', tag: 'Retrait' },
-  bounty_held: { sign: '', className: 'text-gold', tag: 'Offerte' },
-  bounty_paid: { sign: '', className: 'text-muted', tag: 'Versée' },
+const TX_STYLE: Record<WalletTransaction['type'], { sign: string; className: string; tag: Key }> = {
+  bounty_received: { sign: '+', className: 'text-green', tag: 'w.tx_received' },
+  withdrawal: { sign: '−', className: 'text-ink', tag: 'w.tx_withdrawal' },
+  bounty_held: { sign: '', className: 'text-gold', tag: 'w.tx_held' },
+  bounty_paid: { sign: '', className: 'text-muted', tag: 'w.tx_paid' },
 }
 
 export default function WalletPage() {
+  const { t, country: countryName, payment } = useI18n()
   const { data: w, isLoading } = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
   const country = user?.country ?? 'SN'
 
-  if (isLoading || !w) return <p className="py-16 text-center text-muted">Chargement du portefeuille…</p>
+  if (isLoading || !w) return <p className="py-16 text-center text-muted">{t('w.loading')}</p>
   const hint = localHint(w.balance, country)
+
+  // L'API ne renvoie que le sujet d'une opération (titre de la question, numéro masqué…) : le libellé se compose ici
+  const txLabel = (tx: WalletTransaction) => {
+    switch (tx.type) {
+      case 'bounty_received':
+        return t('w.label_received', { subject: tx.label })
+      case 'bounty_held':
+        return t('w.label_held', { subject: tx.label })
+      case 'bounty_paid':
+        return t('w.label_paid', { subject: tx.label })
+      case 'withdrawal':
+        return tx.label ? t('w.label_withdrawal', { subject: tx.label }) : t('w.label_withdrawal_card')
+    }
+  }
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 max-w-[860px]">
-        <h1 className="text-[26px]">Portefeuille</h1>
-        <p className="mt-1 mb-5 text-sm text-muted">Vos gains de primes, en crédits Palabre (1 crédit = 1 FCFA), à retirer dans votre pays.</p>
+        <h1 className="text-[26px]">{t('w.title')}</h1>
+        <p className="mt-1 mb-5 text-sm text-muted">{t('w.subtitle')}</p>
 
         <section className="rounded-2xl bg-green p-6 text-green-ink">
-          <p className="text-sm opacity-85">Solde disponible</p>
+          <p className="text-sm opacity-85">{t('w.balance')}</p>
           <p className="mt-1 font-display text-[clamp(34px,5vw,48px)] font-extrabold tabular-nums">{formatFcfa(w.balance)}</p>
-          {hint && <p className="text-sm opacity-85">{hint} · taux indicatif</p>}
+          {hint && (
+            <p className="text-sm opacity-85">
+              {hint} {t('w.rate')}
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
               onClick={() => setOpen(!open)}
@@ -43,36 +63,32 @@ export default function WalletPage() {
               className="inline-flex items-center gap-2 rounded-[10px] bg-green-ink px-4 py-2.5 text-sm font-bold text-green disabled:opacity-50"
             >
               <Icon name="wallet" />
-              {open ? 'Fermer' : 'Retirer mes gains'}
+              {open ? t('common.close') : t('w.withdraw')}
             </button>
-            {w.held > 0 && (
-              <span className="text-[13px] opacity-85">
-                {formatFcfa(w.held)} de primes offertes, bloquées jusqu'à validation
-              </span>
-            )}
+            {w.held > 0 && <span className="text-[13px] opacity-85">{t('w.held', { amount: formatFcfa(w.held) })}</span>}
           </div>
-          {w.balance < MIN_WITHDRAWAL && <p className="mt-3 text-[13px] opacity-85">Retrait possible à partir de {formatFcfa(MIN_WITHDRAWAL)}.</p>}
+          {w.balance < MIN_WITHDRAWAL && <p className="mt-3 text-[13px] opacity-85">{t('w.min', { amount: formatFcfa(MIN_WITHDRAWAL) })}</p>}
         </section>
 
         {open && <WithdrawForm balance={w.balance} country={country} onDone={() => setOpen(false)} />}
 
-        <h2 className="mt-8 mb-3 text-lg">Historique</h2>
+        <h2 className="mt-8 mb-3 text-lg">{t('w.history')}</h2>
         <ul className="overflow-hidden rounded-[14px] border border-line bg-surface">
-          {w.transactions.map((t) => {
-            const s = TX_STYLE[t.type]
+          {w.transactions.map((tx) => {
+            const s = TX_STYLE[tx.type]
             return (
-              <li key={t.id} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-0">
-                <span className={`rounded-md bg-sunk px-2 py-0.5 text-[11px] font-bold uppercase ${s.className}`}>{s.tag}</span>
+              <li key={tx.id} className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-0">
+                <span className={`rounded-md bg-sunk px-2 py-0.5 text-[11px] font-bold uppercase ${s.className}`}>{t(s.tag)}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{t.label}</span>
+                  <span className="block truncate text-sm font-semibold">{txLabel(tx)}</span>
                   <span className="text-xs text-muted">
-                    {timeAgo(t.date)}
-                    {t.method && ` · ${PAYMENT_LABELS[t.method]}`}
+                    {timeAgo(tx.date)}
+                    {tx.method && ` · ${payment(tx.method)}`}
                   </span>
                 </span>
                 <span className={`font-bold whitespace-nowrap tabular-nums ${s.className}`}>
                   {s.sign}
-                  {formatFcfa(t.amount)}
+                  {formatFcfa(tx.amount)}
                 </span>
               </li>
             )
@@ -82,27 +98,27 @@ export default function WalletPage() {
 
       <aside className="flex flex-col gap-4 xl:sticky xl:top-7">
         <section className="rounded-[14px] border border-line bg-surface p-5">
-          <h2 className="mb-3 text-base">Comment ça marche</h2>
+          <h2 className="mb-3 text-base">{t('w.how')}</h2>
           <ol className="flex list-decimal flex-col gap-2 pl-5 text-[13.5px] text-muted">
-            <li>Quand votre réponse est validée, la prime arrive ici en crédits.</li>
-            <li>Les montants s'affichent dans votre monnaie.</li>
-            <li>Vous retirez quand vous voulez, avec un moyen disponible dans votre pays.</li>
+            <li>{t('w.how1')}</li>
+            <li>{t('w.how2')}</li>
+            <li>{t('w.how3')}</li>
           </ol>
         </section>
         <section className="rounded-[14px] border border-line bg-surface p-5">
-          <h2 className="mb-1 text-base">Partout en Afrique</h2>
-          <p className="mb-3 text-[12.5px] text-muted">Une prime de 2 000 FCFA, reçue dans chaque pays :</p>
+          <h2 className="mb-1 text-base">{t('w.everywhere')}</h2>
+          <p className="mb-3 text-[12.5px] text-muted">{t('w.everywhere_text')}</p>
           <ul className="flex flex-col gap-2.5 text-[13px]">
-            {(Object.keys(METHODS_BY_COUNTRY) as CountryCode[]).map((c) => (
+            {COUNTRIES.map((c) => (
               <li key={c} className="border-b border-line pb-2.5 last:border-0 last:pb-0">
                 <span className="flex items-center justify-between gap-2 font-semibold">
                   <span className="flex items-center gap-2">
                     <Flag code={c} />
-                    {COUNTRY_NAMES[c]}
+                    {countryName(c)}
                   </span>
                   <span className="tabular-nums">{localHint(2000, c) ?? `2 000 ${COUNTRY_CURRENCY[c] === 'XAF' ? 'FCFA (XAF)' : 'FCFA'}`}</span>
                 </span>
-                <span className="text-xs text-muted">{METHODS_BY_COUNTRY[c].map((m) => PAYMENT_LABELS[m]).join(' · ')}</span>
+                <span className="text-xs text-muted">{METHODS_BY_COUNTRY[c].map((m) => payment(m)).join(' · ')}</span>
               </li>
             ))}
           </ul>
@@ -113,6 +129,7 @@ export default function WalletPage() {
 }
 
 function WithdrawForm({ balance, country, onDone }: { balance: number; country: CountryCode; onDone: () => void }) {
+  const { t, country: countryName, payment } = useI18n()
   const methods = METHODS_BY_COUNTRY[country]
   const [amount, setAmount] = useState(String(balance))
   const [method, setMethod] = useState<PaymentMethod>(methods[0])
@@ -126,7 +143,7 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
     mutationFn: () => withdraw({ amount: Number(amount), method, account: isMobile ? `${PHONE_PREFIX[country]}${account}` : account }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
-      toast(`Retrait de ${formatFcfa(Number(amount))} vers ${PAYMENT_LABELS[method]} envoyé (paiement test)`, 'wallet')
+      toast(t('w.toast', { amount: formatFcfa(Number(amount)), method: payment(method) }), 'wallet')
       onDone()
     },
     onError: (e) => setError(errorMessage(e)),
@@ -135,10 +152,10 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
   const submit = () => {
     const n = Number(amount)
     const digits = account.replace(/\s/g, '')
-    if (!Number.isInteger(n) || n < MIN_WITHDRAWAL) return setError(`Le retrait minimum est de ${formatFcfa(MIN_WITHDRAWAL)}.`)
-    if (n > balance) return setError(`Vous ne pouvez pas retirer plus que votre solde (${formatFcfa(balance)}).`)
-    if (isMobile && !/^\d{8,10}$/.test(digits)) return setError('Entrez votre numéro de téléphone, sans indicatif (8 à 10 chiffres).')
-    if (method === 'bank_transfer' && digits.length < 16) return setError('Entrez votre RIB complet (au moins 16 caractères).')
+    if (!Number.isInteger(n) || n < MIN_WITHDRAWAL) return setError(t('w.err_min', { amount: formatFcfa(MIN_WITHDRAWAL) }))
+    if (n > balance) return setError(t('w.err_balance', { amount: formatFcfa(balance) }))
+    if (isMobile && !/^\d{8,10}$/.test(digits)) return setError(t('w.err_phone'))
+    if (method === 'bank_transfer' && digits.length < 16) return setError(t('w.err_rib'))
     setError('')
     mutation.mutate()
   }
@@ -156,7 +173,7 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
     >
       <div>
         <label htmlFor="wd-amount" className="mb-1.5 block text-sm font-bold">
-          Montant à retirer
+          {t('w.amount')}
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center rounded-[10px] border border-line bg-surface focus-within:border-green">
@@ -175,19 +192,19 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
             </button>
           ))}
           <button type="button" onClick={() => setAmount(String(balance))} className={chip(Number(amount) === balance)}>
-            Tout
+            {t('w.all')}
           </button>
         </div>
         {localHint(Number(amount) || 0, country) && <p className="mt-1.5 text-[13px] text-muted">{localHint(Number(amount) || 0, country)}</p>}
       </div>
 
       <fieldset>
-        <legend className="mb-1.5 text-sm font-bold">Recevoir sur</legend>
-        <p className="mb-2 text-[12.5px] text-muted">Seuls les moyens disponibles au {COUNTRY_NAMES[country]} sont proposés.</p>
+        <legend className="mb-1.5 text-sm font-bold">{t('w.receive_on')}</legend>
+        <p className="mb-2 text-[12.5px] text-muted">{t('w.methods_hint', { country: countryName(country) })}</p>
         <div className="flex flex-wrap gap-2">
           {methods.map((m) => (
             <button key={m} type="button" aria-pressed={method === m} onClick={() => setMethod(m)} className={chip(method === m)}>
-              {PAYMENT_LABELS[m]}
+              {payment(m)}
             </button>
           ))}
         </div>
@@ -196,7 +213,7 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
       {isMobile && (
         <div>
           <label htmlFor="wd-phone" className="mb-1.5 block text-sm font-bold">
-            Numéro {PAYMENT_LABELS[method]}
+            {t('w.number', { method: payment(method) })}
           </label>
           <div className="flex max-w-xs items-center rounded-[10px] border border-line bg-surface focus-within:border-green">
             <span className="border-r border-line px-3 py-2.5 text-sm text-muted">{PHONE_PREFIX[country]}</span>
@@ -215,25 +232,25 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
       {method === 'bank_transfer' && (
         <div>
           <label htmlFor="wd-rib" className="mb-1.5 block text-sm font-bold">
-            RIB
+            {t('w.rib')}
           </label>
           <input
             id="wd-rib"
             value={account}
             onChange={(e) => setAccount(e.target.value)}
-            placeholder="Votre relevé d'identité bancaire"
+            placeholder={t('w.rib_placeholder')}
             className="w-full max-w-md rounded-[10px] border border-line bg-surface px-3.5 py-2.5 outline-none focus:border-green"
           />
         </div>
       )}
-      {method === 'card' && <p className="text-[13px] text-muted">Le montant sera versé sur la carte bancaire enregistrée sur votre compte.</p>}
+      {method === 'card' && <p className="text-[13px] text-muted">{t('w.card_note')}</p>}
 
       {error && <p className="text-[13px] text-red">{error}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-        <span className="text-xs text-muted">Paiement en mode test pendant le concours.</span>
+        <span className="text-xs text-muted">{t('w.test_mode')}</span>
         <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
-          {mutation.isPending ? 'Envoi…' : `Retirer ${formatFcfa(Number(amount) || 0)}`}
+          {mutation.isPending ? t('common.sending') : t('w.withdraw_amount', { amount: formatFcfa(Number(amount) || 0) })}
         </button>
       </div>
     </form>

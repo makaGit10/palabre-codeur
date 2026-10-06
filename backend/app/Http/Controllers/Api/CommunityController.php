@@ -22,7 +22,7 @@ class CommunityController extends Controller
             ->get()
             ->map(fn ($row) => [
                 'code' => $row->country,
-                'name' => config("palabre.countries.{$row->country}.name", $row->country),
+                'name' => __(config("palabre.countries.{$row->country}.name", $row->country)),
                 'points' => (int) $row->points,
             ]);
 
@@ -55,7 +55,7 @@ class CommunityController extends Controller
 
         return response()->json([
             'user' => new UserResource($user),
-            'badges' => $user->badges()->get()->map(fn ($b) => ['icon' => $b->icon, 'label' => $b->label]),
+            'badges' => $user->badges()->get()->map(fn ($b) => ['slug' => $b->slug, 'icon' => $b->icon, 'label' => $b->label]),
             'questionsCount' => $user->questions()->count(),
             'answersCount' => $user->answers()->count(),
             'activity' => QuestionResource::collection($activity),

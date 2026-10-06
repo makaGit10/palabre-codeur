@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { useI18n } from '../i18n'
 import { globalSearch } from '../services/search'
 import type { SearchItem, SearchSectionId } from '../types'
 import { Icon, type IconName } from './Icon'
@@ -28,6 +29,7 @@ function Highlight({ text, q }: { text: string; q: string }) {
 }
 
 export function SearchInput({ id, placeholder, defaultValue = '', className }: { id: string; placeholder: string; defaultValue?: string; className: string }) {
+  const { t } = useI18n()
   const [value, setValue] = useState(defaultValue)
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
@@ -109,7 +111,7 @@ export function SearchInput({ id, placeholder, defaultValue = '', className }: {
 
       {visible && (
         <div className="absolute inset-x-0 top-[calc(100%+8px)] z-30 max-h-[60vh] overflow-y-auto rounded-2xl border border-line bg-surface p-2 text-ink shadow-[0_24px_60px_-24px_rgb(0_0_0/.45)]">
-          <div id={listId} role="listbox" aria-label="Suggestions">
+          <div id={listId} role="listbox" aria-label={t('sp.suggestions')}>
             {groups.map((s) => (
               <div key={s.id} role="group" aria-label={s.label}>
                 <h3 className="px-3 pt-2 pb-1 font-sans text-[11px] font-bold tracking-wide text-muted uppercase">{s.label}</h3>
@@ -145,12 +147,12 @@ export function SearchInput({ id, placeholder, defaultValue = '', className }: {
             ))}
           </div>
 
-          {settled && rows.length === 0 && <p className="px-3 pt-3 pb-2 text-center text-sm text-muted">Aucun résultat pour « {term} ». Personne n'en a encore parlé.</p>}
-          {!settled && rows.length === 0 && <p className="px-3 py-3 text-center text-sm text-muted">Recherche…</p>}
+          {settled && rows.length === 0 && <p className="px-3 pt-3 pb-2 text-center text-sm text-muted">{t('sp.no_result', { q: term })}</p>}
+          {!settled && rows.length === 0 && <p className="px-3 py-3 text-center text-sm text-muted">{t('sp.searching_short')}</p>}
 
           <button type="submit" className="mt-1 flex w-full items-center gap-3 rounded-[10px] border-t border-line px-3 py-2.5 text-left text-[13.5px] font-semibold text-green hover:bg-sunk">
             <Icon name="search" className="size-4" />
-            Toutes les questions pour « {term} »
+            {t('sp.all_questions', { q: term })}
           </button>
         </div>
       )}

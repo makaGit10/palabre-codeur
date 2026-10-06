@@ -6,6 +6,9 @@ import { formatNumber } from './format'
 
 export type CurrencyCode = 'XOF' | 'XAF' | 'MAD'
 
+// Pays pris en charge, dans l'ordre d'affichage
+export const COUNTRIES: CountryCode[] = ['SN', 'CI', 'CM', 'MA', 'BF', 'ML']
+
 export const COUNTRY_CURRENCY: Record<CountryCode, CurrencyCode> = {
   SN: 'XOF',
   CI: 'XOF',

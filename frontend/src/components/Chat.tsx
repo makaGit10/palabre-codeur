@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { useI18n } from '../i18n'
 import { timeAgo } from '../lib/format'
 import { searchUsers } from '../services/messaging'
 import type { MessageAttachment, Reaction, User } from '../types'
@@ -36,6 +37,7 @@ const iconBtn = 'grid size-7 place-items-center rounded-md text-muted hover:bg-s
 
 // Carte d'une question ou d'un extrait de code partagé dans un message
 function AttachmentCard({ a, mine }: { a: MessageAttachment; mine?: boolean }) {
+  const { t } = useI18n()
   const frame = mine ? 'border-green-ink/30 bg-green-ink/10 text-green-ink' : 'border-line bg-surface'
   return (
     <div className={`mt-1.5 max-w-[520px] overflow-hidden rounded-lg border text-[13px] ${frame}`}>
@@ -43,7 +45,7 @@ function AttachmentCard({ a, mine }: { a: MessageAttachment; mine?: boolean }) {
         <Icon name={a.type === 'snippet' ? 'code' : 'chat'} className="mt-0.5 size-4 flex-none" />
         <span className="min-w-0">
           <span className={`block text-[11px] font-bold tracking-wider uppercase ${mine ? 'opacity-80' : 'text-muted'}`}>
-            {a.type === 'snippet' ? 'Extrait de code' : 'Question'}
+            {a.type === 'snippet' ? t('chat.attachment_snippet') : t('chat.attachment_question')}
           </span>
           <span className="block font-semibold">{a.title}</span>
           <span className={`block text-xs ${mine ? 'opacity-80' : 'text-muted'}`}>{a.meta}</span>
@@ -60,6 +62,7 @@ function AttachmentCard({ a, mine }: { a: MessageAttachment; mine?: boolean }) {
 
 // Réactions sous un message : un clic ajoute la sienne ou la retire
 function Reactions({ reactions, mine, onReact }: { reactions: Reaction[]; mine?: boolean; onReact?: (emoji: string) => void }) {
+  const { t } = useI18n()
   if (!reactions.length) return null
   return (
     <div className="mt-1.5 flex flex-wrap gap-1">
@@ -68,7 +71,7 @@ function Reactions({ reactions, mine, onReact }: { reactions: Reaction[]; mine?:
           key={r.emoji}
           onClick={() => onReact?.(r.emoji)}
           aria-pressed={r.mine}
-          title={r.mine ? 'Retirer ma réaction' : 'Réagir'}
+          title={r.mine ? t('chat.remove_reaction') : t('chat.react')}
           className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs tabular-nums ${
             r.mine
               ? mine ? 'border-green-ink/60 bg-green-ink/20 text-green-ink' : 'border-green bg-green-soft text-green'
@@ -118,6 +121,7 @@ function Body({ text }: { text: string }) {
 
 // Un message avec ses actions au survol : réagir, modifier (1 h), supprimer pour tout le monde (24 h)
 function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
+  const { t } = useI18n()
   const [menu, setMenu] = useState<'none' | 'react' | 'edit' | 'delete'>('none')
   const [draft, setDraft] = useState(m.body)
   const mine = m.mine
@@ -126,18 +130,18 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
   const toolbar = actions && !m.deleted && (
     <div className={`absolute -top-3 flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 ${bubble && mine ? 'left-2' : 'right-2'}`}>
       <div className="relative">
-        <button onClick={() => setMenu(menu === 'react' ? 'none' : 'react')} title="Réagir" aria-label="Réagir" className={iconBtn}>
+        <button onClick={() => setMenu(menu === 'react' ? 'none' : 'react')} title={t('chat.react')} aria-label={t('chat.react')} className={iconBtn}>
           <Icon name="smile" className="size-4" />
         </button>
         {menu === 'react' && <EmojiPicker items={REACTIONS} align={bubble && mine ? 'left' : 'right'} onClose={() => setMenu('none')} onPick={(e) => { actions.onReact(m.id, e); setMenu('none') }} />}
       </div>
       {m.canEdit && (
-        <button onClick={() => { setDraft(m.body); setMenu('edit') }} title="Modifier (pendant 1 h)" aria-label="Modifier" className={iconBtn}>
+        <button onClick={() => { setDraft(m.body); setMenu('edit') }} title={t('chat.edit_title')} aria-label={t('chat.edit')} className={iconBtn}>
           <Icon name="edit" className="size-4" />
         </button>
       )}
       {m.canDelete && (
-        <button onClick={() => setMenu('delete')} title="Supprimer pour tout le monde (pendant 24 h)" aria-label="Supprimer" className={`${iconBtn} hover:text-red`}>
+        <button onClick={() => setMenu('delete')} title={t('chat.delete_title')} aria-label={t('common.delete')} className={`${iconBtn} hover:text-red`}>
           <Icon name="trash" className="size-4" />
         </button>
       )}
@@ -145,7 +149,7 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
   )
 
   const content = m.deleted ? (
-    <p className={`text-[13.5px] italic ${bubble && mine ? 'text-green-ink/70' : 'text-muted'}`}>Message supprimé</p>
+    <p className={`text-[13.5px] italic ${bubble && mine ? 'text-green-ink/70' : 'text-muted'}`}>{t('chat.deleted')}</p>
   ) : menu === 'edit' && actions ? (
     <form
       className="mt-1 flex items-end gap-2"
@@ -165,11 +169,11 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
         }}
         rows={2}
         maxLength={2000}
-        aria-label="Modifier le message"
+        aria-label={t('chat.edit_label')}
         className="min-w-[240px] flex-1 resize-y rounded-lg border border-green bg-surface px-2.5 py-1.5 text-[14px] text-ink outline-none"
       />
-      <button type="submit" title="Enregistrer" aria-label="Enregistrer" className="grid size-8 place-items-center rounded-lg bg-green text-green-ink"><Icon name="check" className="size-4" /></button>
-      <button type="button" onClick={() => setMenu('none')} title="Annuler" aria-label="Annuler" className="grid size-8 place-items-center rounded-lg border border-line bg-surface text-muted"><Icon name="close" className="size-4" /></button>
+      <button type="submit" title={t('common.save')} aria-label={t('common.save')} className="grid size-8 place-items-center rounded-lg bg-green text-green-ink"><Icon name="check" className="size-4" /></button>
+      <button type="button" onClick={() => setMenu('none')} title={t('common.cancel')} aria-label={t('common.cancel')} className="grid size-8 place-items-center rounded-lg border border-line bg-surface text-muted"><Icon name="close" className="size-4" /></button>
     </form>
   ) : (
     <>
@@ -180,16 +184,16 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
 
   const confirmDelete = menu === 'delete' && actions && (
     <div className="mt-1.5 flex items-center gap-2 text-[12.5px]">
-      <span className={bubble && mine ? 'text-green-ink' : 'text-ink'}>Supprimer pour tout le monde ?</span>
-      <button onClick={() => { actions.onDelete(m.id); setMenu('none') }} className="rounded-md bg-red px-2 py-0.5 font-semibold text-white">Supprimer</button>
-      <button onClick={() => setMenu('none')} className={`rounded-md border px-2 py-0.5 font-semibold ${bubble && mine ? 'border-green-ink/50 text-green-ink' : 'border-line'}`}>Annuler</button>
+      <span className={bubble && mine ? 'text-green-ink' : 'text-ink'}>{t('chat.confirm_delete')}</span>
+      <button onClick={() => { actions.onDelete(m.id); setMenu('none') }} className="rounded-md bg-red px-2 py-0.5 font-semibold text-white">{t('common.delete')}</button>
+      <button onClick={() => setMenu('none')} className={`rounded-md border px-2 py-0.5 font-semibold ${bubble && mine ? 'border-green-ink/50 text-green-ink' : 'border-line'}`}>{t('common.cancel')}</button>
     </div>
   )
 
   const meta = (cls: string) => (
     <span className={cls}>
       {timeAgo(m.createdAt)}
-      {m.editedAt && !m.deleted && ' · modifié'}
+      {m.editedAt && !m.deleted && ` ${t('chat.edited')}`}
     </span>
   )
 
@@ -230,13 +234,14 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
 
 // Fil de messages qui descend tout seul quand un message arrive
 export function ChatThread({ items, emptyText, loading, actions }: { items: ChatItem[]; emptyText: string; loading?: boolean; actions?: ChatActions }) {
+  const { t } = useI18n()
   const bottom = useRef<HTMLDivElement>(null)
   const count = items.length
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: 'end' })
   }, [count])
 
-  if (loading) return <p className="py-10 text-center text-sm text-muted">Chargement…</p>
+  if (loading) return <p className="py-10 text-center text-sm text-muted">{t('common.loading')}</p>
   if (!count) return <p className="py-10 text-center text-sm text-muted">{emptyText}</p>
 
   return (
@@ -269,6 +274,7 @@ export function ChatComposer({
   loginFrom?: string
   mentions?: boolean
 }) {
+  const { t } = useI18n()
   const [body, setBody] = useState('')
   const [emojis, setEmojis] = useState(false)
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
@@ -279,8 +285,8 @@ export function ChatComposer({
   // Autocomplétion des mentions : la recherche part 200 ms après la dernière frappe
   const [debounced, setDebounced] = useState<string | null>(null)
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(mentionQuery), 200)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setDebounced(mentionQuery), 200)
+    return () => clearTimeout(timer)
   }, [mentionQuery])
   const { data: candidates = [] } = useQuery({
     queryKey: ['users-search', debounced],
@@ -292,9 +298,9 @@ export function ChatComposer({
   if (loginFrom) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-        <span className="text-muted">Connectez-vous pour participer à la discussion.</span>
+        <span className="text-muted">{t('chat.login_prompt')}</span>
         <Link to="/connexion" state={{ from: loginFrom }} className="rounded-[10px] bg-green px-4 py-2 font-semibold text-green-ink hover:brightness-110">
-          Se connecter
+          {t('common.login')}
         </Link>
       </div>
     )
@@ -373,7 +379,7 @@ export function ChatComposer({
       }}
     >
       {mentionQuery !== null && candidates.length > 0 && (
-        <ul role="listbox" aria-label="Mentionner" className="absolute bottom-full left-2 z-20 mb-1 w-64 overflow-hidden rounded-xl border border-line bg-surface shadow-xl">
+        <ul role="listbox" aria-label={t('chat.mention')} className="absolute bottom-full left-2 z-20 mb-1 w-64 overflow-hidden rounded-xl border border-line bg-surface shadow-xl">
           {candidates.map((u, i) => (
             <li key={u.id}>
               <button
@@ -392,7 +398,7 @@ export function ChatComposer({
         </ul>
       )}
       <div className="relative">
-        <button type="button" onClick={() => setEmojis(!emojis)} title="Emoji" aria-label="Insérer un emoji" className="grid size-10 place-items-center rounded-[10px] text-muted hover:bg-sunk hover:text-ink">
+        <button type="button" onClick={() => setEmojis(!emojis)} title="Emoji" aria-label={t('chat.emoji')} className="grid size-10 place-items-center rounded-[10px] text-muted hover:bg-sunk hover:text-ink">
           <Icon name="smile" />
         </button>
         {emojis && <EmojiPicker items={EMOJIS} onClose={() => setEmojis(false)} onPick={(e) => { insertAtCaret(e); setEmojis(false) }} />}
@@ -409,10 +415,11 @@ export function ChatComposer({
         className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[14.5px] outline-none"
       />
       <span className="hidden pb-2.5 text-[11px] text-muted sm:block">
-        {mentions ? '@ · ' : ''}```code``` · Maj+Entrée
+        {mentions ? '@ · ' : ''}
+        {t('chat.hint')}
       </span>
       <button
-        aria-label="Envoyer"
+        aria-label={t('chat.send')}
         disabled={pending || !body.trim()}
         className="grid size-10 flex-none place-items-center rounded-[10px] bg-green text-green-ink hover:brightness-110 disabled:opacity-40"
       >

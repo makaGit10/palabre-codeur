@@ -7,7 +7,6 @@ use App\Models\RoomMessage;
 use App\Models\User;
 use App\Services\MessagingService;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
 /** Quelqu'un m'a mentionné avec @ dans un salon ou un groupe */
 class NewMention extends Notification
@@ -23,9 +22,9 @@ class NewMention extends Notification
     {
         return [
             'kind' => 'mention',
-            'title' => "{$this->author->name} vous a mentionné dans {$this->room->name}",
-            'body' => Str::limit(MessagingService::preview($this->message), 90),
+            'author' => $this->author->name,
+            'room' => $this->room->name,
             'url' => "/app/salons/{$this->room->slug}",
-        ];
+        ] + MessagingService::previewParts($this->message);
     }
 }

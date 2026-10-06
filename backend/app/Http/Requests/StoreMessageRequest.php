@@ -27,7 +27,7 @@ class StoreMessageRequest extends FormRequest
 
     public function messages(): array
     {
-        return ['attachment.id.exists' => "Ce que vous voulez partager n'existe plus."];
+        return ['attachment.id.exists' => __("Ce que vous voulez partager n'existe plus.")];
     }
 
     protected function prepareForValidation(): void
@@ -39,7 +39,7 @@ class StoreMessageRequest extends FormRequest
     {
         return [function (Validator $validator) {
             if ($this->input('body') === '' && ! $this->input('attachment')) {
-                $validator->errors()->add('body', 'Écrivez un message ou partagez quelque chose.');
+                $validator->errors()->add('body', __('Écrivez un message ou partagez quelque chose.'));
             }
         }];
     }

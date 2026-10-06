@@ -7,11 +7,12 @@ import { Markdown } from '../components/Markdown'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { listSnippets, toggleTested, type Snippet } from '../services/community'
 
-const FILTERS = [
-  { id: 'all', label: 'Tous' },
+// Filtres par API (noms de marques, identiques dans toutes les langues)
+const API_FILTERS = [
   { id: 'wave', label: 'Wave' },
   { id: 'orange-money', label: 'Orange Money' },
   { id: 'mtn-momo', label: 'MTN MoMo' },
@@ -19,9 +20,11 @@ const FILTERS = [
 ]
 
 export default function Snippets() {
+  const { t } = useI18n()
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const { data: snippets = [], isLoading } = useQuery({ queryKey: ['snippets'], queryFn: listSnippets })
+  const filters = [{ id: 'all', label: t('common.all') }, ...API_FILTERS]
 
   const list = useMemo(() => {
     const s = search.trim().toLowerCase()
@@ -36,21 +39,21 @@ export default function Snippets() {
     <div className="max-w-[1100px]">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[26px]">Snippets</h1>
-          <p className="mt-1 text-sm text-muted">Du code prêt à l'emploi pour les API africaines, testé par la communauté.</p>
+          <h1 className="text-[26px]">{t('sn.title')}</h1>
+          <p className="mt-1 text-sm text-muted">{t('sn.subtitle')}</p>
         </div>
         <Link
           to="/app/snippets/nouveau"
           className="inline-flex items-center gap-2 rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110"
         >
           <Icon name="plus" />
-          Nouveau snippet
+          {t('sn.new')}
         </Link>
       </div>
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.id}
               aria-pressed={filter === f.id}
@@ -69,14 +72,14 @@ export default function Snippets() {
             id="snippet-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Chercher un snippet…"
+            placeholder={t('sn.search')}
             className="min-w-0 flex-1 bg-transparent text-ink outline-none"
           />
         </label>
       </div>
 
       {isLoading ? (
-        <p className="py-10 text-center text-muted">Chargement des snippets…</p>
+        <p className="py-10 text-center text-muted">{t('sn.loading')}</p>
       ) : list.length ? (
         <div className="grid gap-4 2xl:grid-cols-2">
           {list.map((s) => (
@@ -84,15 +87,14 @@ export default function Snippets() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">
-          Aucun snippet ne correspond à votre recherche.
-        </div>
+        <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">{t('sn.empty')}</div>
       )}
     </div>
   )
 }
 
 function SnippetCard({ snippet: s }: { snippet: Snippet }) {
+  const { t } = useI18n()
   const toast = useToast()
   const { user, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
@@ -106,9 +108,9 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(s.code)
-      toast('Snippet copié')
+      toast(t('sn.copied'))
     } catch {
-      toast('Copie impossible : sélectionnez le code à la main', 'bell')
+      toast(t('sn.copy_failed'), 'bell')
     }
   }
 
@@ -137,7 +139,7 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
           }`}
         >
           <Icon name="check" className="size-3.5" />
-          Testé par {s.testedBy} devs
+          {t('sn.tested_by', { n: s.testedBy })}
         </button>
         <span>▲ {s.votes}</span>
         <span className="flex-1" />
@@ -148,7 +150,7 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
         <ShareButton item={{ type: 'snippet', id: s.id, title: s.title }} compact />
         <button onClick={copy} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 font-semibold text-ink hover:border-green">
           <Icon name="copy" className="size-4" />
-          Copier
+          {t('common.copy')}
         </button>
       </footer>
     </article>

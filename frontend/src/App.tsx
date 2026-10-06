@@ -46,7 +46,7 @@ export default function App() {
         <Route path="portefeuille" element={<RequireAuth><WalletPage /></RequireAuth>} />
       </Route>
 
-      <Route path="*" element={<ComingSoon title="Page introuvable" />} />
+      <Route path="*" element={<ComingSoon title="common.not_found" />} />
     </Routes>
   )
 }

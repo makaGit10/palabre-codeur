@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 import { formatFcfa, timeAgo } from '../lib/format'
 import { localHint } from '../lib/money'
-import { useAuth } from '../hooks/useAuth'
 import type { Question } from '../types'
 import { Avatar, Flag } from './Brand'
 import { Icon } from './Icon'
 
 export function QuestionCard({ question: q }: { question: Question }) {
+  const { t, tn } = useI18n()
   const openBounty = q.bounty && !q.solved
   const { user } = useAuth()
   const hint = q.bounty ? localHint(q.bounty.amount, user?.country ?? 'SN') : null
@@ -18,11 +20,12 @@ export function QuestionCard({ question: q }: { question: Question }) {
     >
       <div className="flex flex-col gap-1.5 text-center text-xs text-muted">
         <div>
-          <b className="block font-display text-[17px] text-ink">{q.votes}</b>votes
+          <b className="block font-display text-[17px] text-ink">{q.votes}</b>
+          {t('q.votes')}
         </div>
         <div className={`text-[11px] sm:text-xs ${q.solved ? 'rounded-lg bg-green py-0.5 text-green-ink' : ''}`}>
           <b className={`block font-display text-[17px] ${q.solved ? '' : 'text-ink'}`}>{q.answersCount}</b>
-          {q.answersCount > 1 ? 'réponses' : 'réponse'}
+          {tn('q.answers', q.answersCount)}
         </div>
       </div>
       <div className="min-w-0">
@@ -33,13 +36,13 @@ export function QuestionCard({ question: q }: { question: Question }) {
           </Link>
         </h3>
         <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-muted">
-          {q.tags.map((t) => (
+          {q.tags.map((tag) => (
             <Link
-              key={t}
-              to={`/app?tag=${t}`}
+              key={tag}
+              to={`/app?tag=${tag}`}
               className="relative z-10 rounded-md bg-green-soft px-2 py-[3px] font-mono text-[11.5px] text-green"
             >
-              {t}
+              {tag}
             </Link>
           ))}
           <span className="flex-1" />

@@ -28,7 +28,7 @@ class QuestionService
     {
         $bounty = $data['bounty'] ?? null;
         if ($bounty && ! in_array($bounty['method'], config("palabre.countries.{$author->country}.methods", []), true)) {
-            throw new BusinessRuleException("Ce moyen de paiement n'est pas disponible dans votre pays.");
+            throw new BusinessRuleException(__("Ce moyen de paiement n'est pas disponible dans votre pays."));
         }
 
         return DB::transaction(function () use ($author, $data, $bounty) {
@@ -49,7 +49,7 @@ class QuestionService
                 $author->walletTransactions()->create([
                     'type' => 'bounty_held',
                     'amount' => $bounty['amount'],
-                    'label' => 'Prime offerte · '.$question->title,
+                    'label' => $question->title, // le front-end compose « Prime offerte · … » dans la langue choisie
                     'payment_method' => $bounty['method'],
                     'provider_reference' => $reference,
                 ]);
@@ -94,13 +94,13 @@ class QuestionService
             $excerpt = Str::limit(trim(preg_replace('/```.*?```|[*`#>]/s', '', $body)), 220);
 
             return [
-                'text' => "Une question proche a déjà été résolue : « {$solved->title} ». La réponse validée conseille : {$excerpt}",
+                'text' => __('Une question proche a déjà été résolue : « :title ». La réponse validée conseille : :excerpt', ['title' => $solved->title, 'excerpt' => $excerpt]),
                 'model' => 'similarite-postgresql',
             ];
         }
 
         return [
-            'text' => "Je n'ai pas trouvé de question identique déjà résolue. Ajoutez le message d'erreur exact et la version de vos outils : cela aide la communauté à répondre plus vite.",
+            'text' => __("Je n'ai pas trouvé de question identique déjà résolue. Ajoutez le message d'erreur exact et la version de vos outils : cela aide la communauté à répondre plus vite."),
             'model' => 'regles',
         ];
     }
@@ -125,23 +125,23 @@ class QuestionService
     public function accept(Question $question, Answer $answer, User $user): array
     {
         if ($question->user_id !== $user->id) {
-            throw new BusinessRuleException("Seul l'auteur de la question peut valider une réponse.", 403);
+            throw new BusinessRuleException(__("Seul l'auteur de la question peut valider une réponse."), 403);
         }
         if ($answer->question_id !== $question->id) {
-            throw new BusinessRuleException("Cette réponse n'appartient pas à cette question.");
+            throw new BusinessRuleException(__("Cette réponse n'appartient pas à cette question."));
         }
 
         return DB::transaction(function () use ($question, $answer, $user) {
             // Verrou : deux clics simultanés ne peuvent pas verser la prime deux fois
             $question = Question::lockForUpdate()->findOrFail($question->id);
             if ($question->isSolved()) {
-                throw new BusinessRuleException('Une réponse a déjà été validée pour cette question.');
+                throw new BusinessRuleException(__('Une réponse a déjà été validée pour cette question.'));
             }
 
             $bounty = $question->bounty()->lockForUpdate()->first();
             $recipient = User::lockForUpdate()->findOrFail($answer->user_id);
             if ($bounty?->status === Bounty::HELD && $recipient->id === $user->id) {
-                throw new BusinessRuleException('Vous ne pouvez pas valider votre propre réponse sur une question avec prime.');
+                throw new BusinessRuleException(__('Vous ne pouvez pas valider votre propre réponse sur une question avec prime.'));
             }
 
             $question->forceFill(['accepted_answer_id' => $answer->id])->save();
@@ -168,12 +168,12 @@ class QuestionService
             $recipient->walletTransactions()->create([
                 'type' => 'bounty_received',
                 'amount' => $bounty->amount,
-                'label' => 'Prime reçue · '.$question->title,
+                'label' => $question->title,
             ]);
             $user->walletTransactions()->create([
                 'type' => 'bounty_paid',
                 'amount' => $bounty->amount,
-                'label' => "Prime versée à {$recipient->name} · {$question->title}",
+                'label' => "{$recipient->name} · {$question->title}",
             ]);
 
             $recipient->notify(new AnswerAccepted($question, $bounty->amount));

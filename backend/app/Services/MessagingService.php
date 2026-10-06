@@ -46,7 +46,7 @@ class MessagingService
     public function postToRoom(Room $room, User $author, string $body, ?array $attachment = null, array $mentions = []): RoomMessage
     {
         if (! $room->canBeWrittenBy($author)) {
-            throw new BusinessRuleException('Ce groupe est réservé à ses membres.', 403);
+            throw new BusinessRuleException(__('Ce groupe est réservé à ses membres.'), 403);
         }
         $message = $room->messages()->make(self::attributes($body, $attachment));
         $message->author()->associate($author)->save();
@@ -69,10 +69,10 @@ class MessagingService
     {
         $ids = collect($memberIds)->map(fn ($id) => (int) $id)->unique()->reject(fn ($id) => $id === $creator->id)->values();
         if ($ids->isEmpty()) {
-            throw new BusinessRuleException('Un groupe a besoin d’au moins une autre personne.');
+            throw new BusinessRuleException(__('Un groupe a besoin d’au moins une autre personne.'));
         }
         if ($ids->count() + 1 > config('palabre.messages.max_group_members')) {
-            throw new BusinessRuleException('Un groupe ne peut pas dépasser '.config('palabre.messages.max_group_members').' membres.');
+            throw new BusinessRuleException(__('Un groupe ne peut pas dépasser :max membres.', ['max' => config('palabre.messages.max_group_members')]));
         }
 
         return DB::transaction(function () use ($creator, $name, $ids) {
@@ -90,7 +90,7 @@ class MessagingService
     {
         $this->assertGroup($room);
         if (! $room->isAdmin($admin)) {
-            throw new BusinessRuleException('Seul un administrateur du groupe peut ajouter des membres.', 403);
+            throw new BusinessRuleException(__('Seul un administrateur du groupe peut ajouter des membres.'), 403);
         }
         $existing = $room->members()->pluck('users.id');
         $ids = collect($memberIds)->map(fn ($id) => (int) $id)->unique()->reject(fn ($id) => $existing->contains($id))->values();
@@ -104,7 +104,7 @@ class MessagingService
     {
         $this->assertGroup($room);
         if (! $room->isAdmin($admin) || $admin->id === $target->id) {
-            throw new BusinessRuleException('Seul un administrateur peut retirer un membre.', 403);
+            throw new BusinessRuleException(__('Seul un administrateur peut retirer un membre.'), 403);
         }
         $room->members()->detach($target->id);
     }
@@ -114,7 +114,7 @@ class MessagingService
     {
         $this->assertGroup($room);
         if (! $room->isMember($user)) {
-            throw new BusinessRuleException('Vous ne faites pas partie de ce groupe.', 403);
+            throw new BusinessRuleException(__('Vous ne faites pas partie de ce groupe.'), 403);
         }
 
         DB::transaction(function () use ($room, $user) {
@@ -135,7 +135,7 @@ class MessagingService
     private function assertGroup(Room $room): void
     {
         if (! $room->isGroup()) {
-            throw new BusinessRuleException('Ce salon est public : il n’a pas de membres à gérer.');
+            throw new BusinessRuleException(__('Ce salon est public : il n’a pas de membres à gérer.'));
         }
     }
 
@@ -149,7 +149,7 @@ class MessagingService
     public function send(User $sender, User $recipient, string $body, ?array $attachment = null): DirectMessage
     {
         if ($sender->id === $recipient->id) {
-            throw new BusinessRuleException('Vous ne pouvez pas vous écrire à vous-même.');
+            throw new BusinessRuleException(__('Vous ne pouvez pas vous écrire à vous-même.'));
         }
 
         return DB::transaction(function () use ($sender, $recipient, $body, $attachment) {
@@ -206,7 +206,7 @@ class MessagingService
     {
         if (! $message->canBeEditedBy($user)) {
             $minutes = config('palabre.messages.edit_window_minutes');
-            throw new BusinessRuleException("Un message ne peut être modifié que par son auteur, pendant {$minutes} minutes.", 403);
+            throw new BusinessRuleException(__('Un message ne peut être modifié que par son auteur, pendant :minutes minutes.', ['minutes' => $minutes]), 403);
         }
         $message->forceFill(['body' => $body, 'edited_at' => now()])->save();
     }
@@ -216,7 +216,7 @@ class MessagingService
     {
         if (! $message->canBeDeletedBy($user)) {
             $hours = config('palabre.messages.delete_window_hours');
-            throw new BusinessRuleException("Un message ne peut être supprimé que par son auteur, pendant {$hours} heures.", 403);
+            throw new BusinessRuleException(__('Un message ne peut être supprimé que par son auteur, pendant :hours heures.', ['hours' => $hours]), 403);
         }
         DB::transaction(function () use ($message) {
             $message->reactions()->delete();
@@ -228,10 +228,10 @@ class MessagingService
     public function toggleReaction(RoomMessage|DirectMessage $message, User $user, string $emoji): bool
     {
         if (! in_array($emoji, config('palabre.messages.reactions'), true)) {
-            throw new BusinessRuleException('Cette réaction n’est pas proposée.');
+            throw new BusinessRuleException(__('Cette réaction n’est pas proposée.'));
         }
         if ($message->isDeleted()) {
-            throw new BusinessRuleException('Ce message a été supprimé.');
+            throw new BusinessRuleException(__('Ce message a été supprimé.'));
         }
         $existing = $message->reactions()->where('user_id', $user->id)->where('emoji', $emoji)->first();
         if ($existing) {
@@ -264,18 +264,41 @@ class MessagingService
         ];
     }
 
-    /** Texte d'aperçu d'un message (liste des conversations, notifications) */
+    /** Texte d'aperçu d'un message (liste des conversations, notifications), dans la langue de la personne */
     public static function preview(RoomMessage|DirectMessage $message): string
     {
         if ($message->isDeleted()) {
-            return 'Message supprimé';
+            return __('Message supprimé');
         }
+
+        return self::previewText(self::previewParts($message));
+    }
+
+    /**
+     * Éléments d'aperçu d'un message, enregistrés tels quels (notifications) et traduits à la lecture.
+     *
+     * @return array{attachment: string|null, text: string}
+     */
+    public static function previewParts(RoomMessage|DirectMessage $message): array
+    {
         if ($message->body !== '') {
             // Les mentions sont stockées en liens Markdown : on n'affiche que « @Nom » dans un aperçu
-            return preg_replace('/\[(@[^\]]+)\]\(\/app\/profil\/\d+\)/', '$1', $message->body);
+            return ['attachment' => null, 'text' => preg_replace('/\[(@[^\]]+)\]\(\/app\/profil\/\d+\)/', '$1', $message->body)];
         }
         $attachment = $message->attachmentPayload();
 
-        return $attachment ? ($attachment['type'] === 'snippet' ? 'Extrait partagé : ' : 'Question partagée : ').$attachment['title'] : '';
+        return ['attachment' => $attachment['type'] ?? null, 'text' => $attachment['title'] ?? ''];
+    }
+
+    /** @param array{attachment?: string|null, text?: string} $parts */
+    public static function previewText(array $parts): string
+    {
+        $text = $parts['text'] ?? '';
+
+        return match ($parts['attachment'] ?? null) {
+            'snippet' => __('Extrait partagé : :title', ['title' => $text]),
+            'question' => __('Question partagée : :title', ['title' => $text]),
+            default => $text,
+        };
     }
 }

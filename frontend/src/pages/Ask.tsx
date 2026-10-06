@@ -1,13 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { MarkdownEditor } from '../components/Post'
 import { useToast } from '../components/toastContext'
-import { formatFcfa, PAYMENT_LABELS } from '../lib/format'
-import { localHint, METHODS_BY_COUNTRY } from '../lib/money'
 import { useAuth } from '../hooks/useAuth'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { useI18n } from '../i18n'
 import { errorMessage, fieldErrors } from '../lib/api'
+import { formatFcfa } from '../lib/format'
+import { localHint, METHODS_BY_COUNTRY } from '../lib/money'
 import { createQuestion, findSimilar } from '../services/questions'
 import type { PaymentMethod } from '../types'
 
@@ -17,16 +19,8 @@ const MAX_TAGS = 4
 
 type Errors = Partial<Record<'title' | 'body' | 'tags', string>>
 
-function useDebounced<T>(value: T, ms: number) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return debounced
-}
-
 export default function Ask() {
+  const { t, payment } = useI18n()
   const { user } = useAuth()
   const country = user?.country ?? 'SN'
   // Seuls les moyens de paiement disponibles dans le pays de la personne connectée
@@ -43,7 +37,7 @@ export default function Ask() {
   const toast = useToast()
 
   // Détection de doublons pendant la frappe du titre
-  const debouncedTitle = useDebounced(title.trim(), 350)
+  const debouncedTitle = useDebouncedValue(title.trim(), 350)
   const { data: similar = [] } = useQuery({
     queryKey: ['similar', debouncedTitle],
     queryFn: () => findSimilar(debouncedTitle),
@@ -51,9 +45,9 @@ export default function Ask() {
   })
 
   const addTag = (raw: string) => {
-    const t = raw.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    if (!t || tags.includes(t) || tags.length >= MAX_TAGS) return
-    setTags([...tags, t])
+    const tag = raw.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    if (!tag || tags.includes(tag) || tags.length >= MAX_TAGS) return
+    setTags([...tags, tag])
     setTagInput('')
   }
   const onTagKey = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -70,7 +64,7 @@ export default function Ask() {
       createQuestion({ title: title.trim(), body: body.trim(), tags, bounty: bounty ? { amount: bounty, method } : null }),
     onSuccess: ({ id }) => {
       queryClient.invalidateQueries({ queryKey: ['questions'] })
-      toast(bounty ? `Question publiée · ${formatFcfa(bounty)} bloqués via ${PAYMENT_LABELS[method]} (paiement test)` : 'Question publiée')
+      toast(bounty ? t('ask.toast_bounty', { amount: formatFcfa(bounty), method: payment(method) }) : t('ask.toast'))
       navigate(`/app/questions/${id}`)
     },
     onError: (e) => {
@@ -83,9 +77,9 @@ export default function Ask() {
 
   const submit = () => {
     const next: Errors = {}
-    if (title.trim().length < 15) next.title = 'Le titre doit faire au moins 15 caractères pour être compris.'
-    if (body.trim().length < 20) next.body = "Ajoutez quelques détails (au moins 20 caractères) : ce que vous avez essayé, l'erreur obtenue."
-    if (!tags.length) next.tags = 'Ajoutez au moins une étiquette pour que les bonnes personnes trouvent votre question.'
+    if (title.trim().length < 15) next.title = t('ask.err_title')
+    if (body.trim().length < 20) next.body = t('ask.err_body')
+    if (!tags.length) next.tags = t('ask.err_tags')
     setErrors(next)
     if (Object.keys(next).length === 0) mutation.mutate()
   }
@@ -97,10 +91,10 @@ export default function Ask() {
       <div className="min-w-0 max-w-[860px]">
         <Link to="/app" className="mb-3.5 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted hover:text-ink">
           <Icon name="left" className="size-4" />
-          Retour au fil
+          {t('common.back_feed')}
         </Link>
-        <h1 className="text-[26px]">Poser une question</h1>
-        <p className="mt-1 mb-5 text-sm text-muted">Plus votre question est précise, plus vite vous aurez une réponse.</p>
+        <h1 className="text-[26px]">{t('ask.title')}</h1>
+        <p className="mt-1 mb-5 text-sm text-muted">{t('ask.subtitle')}</p>
 
         <form
           noValidate
@@ -112,14 +106,14 @@ export default function Ask() {
         >
           <div>
             <label htmlFor="ask-title" className="mb-1 block text-sm font-bold">
-              Titre
+              {t('ask.title_label')}
             </label>
-            <p className="mb-2 text-[12.5px] text-muted">Résumez le problème en une phrase. Essayez « Wave », « Orange Money » ou « paie ».</p>
+            <p className="mb-2 text-[12.5px] text-muted">{t('ask.title_hint')}</p>
             <input
               id="ask-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex. : Paiement Orange Money refusé en production"
+              placeholder={t('ask.title_placeholder')}
               autoComplete="off"
               aria-invalid={!!errors.title}
               className={`w-full rounded-[10px] border bg-surface px-3.5 py-2.5 outline-none focus:border-green focus:ring-3 focus:ring-green-soft ${
@@ -131,7 +125,7 @@ export default function Ask() {
               <div className="mt-2.5 rounded-xl border border-green/35 bg-green-soft p-3">
                 <p className="flex items-center gap-2 text-[13px] font-bold text-green">
                   <Icon name="spark" />
-                  L'IA a trouvé des questions qui ressemblent à la vôtre
+                  {t('ask.similar')}
                 </p>
                 {similar.map((s) => (
                   <Link
@@ -140,7 +134,7 @@ export default function Ask() {
                     className="mt-2 flex justify-between gap-3 rounded-[9px] border border-line bg-surface px-3 py-2 text-[13.5px] font-semibold hover:border-green"
                   >
                     {s.title}
-                    <small className="font-medium whitespace-nowrap text-muted">{s.solved ? '✓ résolue' : `${s.answersCount} rép.`}</small>
+                    <small className="font-medium whitespace-nowrap text-muted">{s.solved ? t('ask.solved_mark') : t('ask.answers_short', { n: s.answersCount })}</small>
                   </Link>
                 ))}
               </div>
@@ -149,27 +143,27 @@ export default function Ask() {
 
           <div>
             <label htmlFor="ask-body" className="mb-1 block text-sm font-bold">
-              Détails
+              {t('ask.details')}
             </label>
-            <p className="mb-2 text-[12.5px] text-muted">Ce que vous avez essayé, le message d'erreur exact, un extrait de code.</p>
-            <MarkdownEditor id="ask-body" value={body} onChange={setBody} invalid={!!errors.body} placeholder="Décrivez votre problème…" />
+            <p className="mb-2 text-[12.5px] text-muted">{t('ask.details_hint')}</p>
+            <MarkdownEditor id="ask-body" value={body} onChange={setBody} invalid={!!errors.body} placeholder={t('ask.details_placeholder')} />
             {errors.body && <p className="mt-1.5 text-[13px] text-red">{errors.body}</p>}
           </div>
 
           <div>
             <label htmlFor="ask-tags" className="mb-1 block text-sm font-bold">
-              Étiquettes
+              {t('ask.tags')}
             </label>
-            <p className="mb-2 text-[12.5px] text-muted">Jusqu'à {MAX_TAGS}. Tapez puis appuyez sur Entrée.</p>
+            <p className="mb-2 text-[12.5px] text-muted">{t('ask.tags_hint', { max: MAX_TAGS })}</p>
             <div
               className={`flex flex-wrap items-center gap-1.5 rounded-[10px] border bg-surface px-2.5 py-2 focus-within:border-green ${
                 errors.tags ? 'border-red' : 'border-line'
               }`}
             >
-              {tags.map((t) => (
-                <span key={t} className="inline-flex items-center gap-1 rounded-md bg-green-soft py-0.5 pr-1 pl-2 font-mono text-xs text-green">
-                  {t}
-                  <button type="button" aria-label={`Retirer ${t}`} onClick={() => setTags(tags.filter((x) => x !== t))} className="px-1 font-bold">
+              {tags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-green-soft py-0.5 pr-1 pl-2 font-mono text-xs text-green">
+                  {tag}
+                  <button type="button" aria-label={t('ask.remove_tag', { tag })} onClick={() => setTags(tags.filter((x) => x !== tag))} className="px-1 font-bold">
                     ×
                   </button>
                 </span>
@@ -187,18 +181,17 @@ export default function Ask() {
               )}
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {POPULAR_TAGS
-                .filter((t) => !tags.includes(t))
+              {POPULAR_TAGS.filter((tag) => !tags.includes(tag))
                 .slice(0, 8)
-                .map((t) => (
+                .map((tag) => (
                   <button
-                    key={t}
+                    key={tag}
                     type="button"
-                    onClick={() => addTag(t)}
+                    onClick={() => addTag(tag)}
                     disabled={tags.length >= MAX_TAGS}
                     className="rounded-md border border-dashed border-line px-2 py-0.5 font-mono text-[11.5px] text-muted hover:border-green hover:text-green disabled:opacity-40"
                   >
-                    + {t}
+                    + {tag}
                   </button>
                 ))}
             </div>
@@ -207,9 +200,9 @@ export default function Ask() {
 
           <fieldset>
             <legend className="mb-1 text-sm font-bold">
-              Ajouter une prime <span className="font-medium text-muted">(facultatif)</span>
+              {t('ask.bounty')} <span className="font-medium text-muted">{t('common.optional')}</span>
             </legend>
-            <p className="mb-2.5 text-[12.5px] text-muted">Une question avec prime reçoit une réponse beaucoup plus vite.</p>
+            <p className="mb-2.5 text-[12.5px] text-muted">{t('ask.bounty_hint')}</p>
             <div className="flex flex-wrap gap-2">
               {BOUNTIES.map((a) => (
                 <button
@@ -221,14 +214,14 @@ export default function Ask() {
                     bounty === a ? 'border-gold-bg bg-gold-soft text-gold' : 'border-line bg-surface'
                   }`}
                 >
-                  {a ? formatFcfa(a) : 'Pas de prime'}
+                  {a ? formatFcfa(a) : t('ask.no_bounty')}
                   {a > 0 && localHint(a, country) && <span className="ml-1 font-normal opacity-75">{localHint(a, country)}</span>}
                 </button>
               ))}
             </div>
             {bounty > 0 && (
               <>
-                <p className="mt-4 mb-2 text-[12.5px] text-muted">Payer avec</p>
+                <p className="mt-4 mb-2 text-[12.5px] text-muted">{t('ask.pay_with')}</p>
                 <div className="flex flex-wrap gap-2">
                   {METHODS.map((m) => (
                     <button
@@ -240,14 +233,13 @@ export default function Ask() {
                         method === m ? 'border-green bg-green-soft text-green' : 'border-line bg-surface'
                       }`}
                     >
-                      {PAYMENT_LABELS[m]}
+                      {payment(m)}
                     </button>
                   ))}
                 </div>
                 <p className="mt-3 flex items-start gap-2 text-[12.5px] text-muted">
                   <Icon name="check" className="mt-0.5 size-4 text-green" />
-                  Le montant reste bloqué jusqu'à ce que vous validiez une réponse. Sans réponse en 7 jours, vous êtes remboursé.
-                  Paiement en mode test pendant le concours.
+                  {t('ask.bounty_note')}
                 </p>
               </>
             )}
@@ -255,29 +247,33 @@ export default function Ask() {
 
           <div className="flex flex-wrap justify-end gap-2.5 border-t border-line pt-5">
             <Link to="/app" className="rounded-[10px] px-4 py-2.5 text-sm font-semibold hover:bg-sunk">
-              Annuler
+              {t('common.cancel')}
             </Link>
             <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
-              {mutation.isPending ? 'Publication…' : bounty ? `Payer ${formatFcfa(bounty)} et publier` : 'Publier ma question'}
+              {mutation.isPending ? t('common.publishing') : bounty ? t('ask.pay_and_publish', { amount: formatFcfa(bounty) }) : t('ask.publish')}
             </button>
           </div>
         </form>
       </div>
 
       <aside className="sticky top-7 hidden rounded-[14px] border border-line bg-surface p-5 xl:block">
-        <h2 className="mb-3 text-base">Une bonne question, c'est…</h2>
+        <h2 className="mb-3 text-base">{t('ask.tips_title')}</h2>
         <ol className="flex list-decimal flex-col gap-2.5 pl-5 text-sm text-muted">
           <li>
-            <b className="text-ink">Un titre précis</b> : l'outil, le problème, le contexte.
+            <b className="text-ink">{t('ask.tip1_b')}</b>
+            {t('ask.tip1')}
           </li>
           <li>
-            <b className="text-ink">Le message d'erreur exact</b>, copié tel quel.
+            <b className="text-ink">{t('ask.tip2_b')}</b>
+            {t('ask.tip2')}
           </li>
           <li>
-            <b className="text-ink">Un extrait de code</b> minimal qui reproduit le problème.
+            <b className="text-ink">{t('ask.tip3_b')}</b>
+            {t('ask.tip3')}
           </li>
           <li>
-            <b className="text-ink">Ce que vous avez déjà essayé</b>, pour éviter les réponses inutiles.
+            <b className="text-ink">{t('ask.tip4_b')}</b>
+            {t('ask.tip4')}
           </li>
         </ol>
       </aside>

@@ -35,7 +35,7 @@ class WalletTest extends TestCase
 
         $this->postJson('/api/wallet/withdrawals', ['amount' => 2000, 'method' => 'wave', 'account' => '77 123 45 67'])
             ->assertCreated()
-            ->assertJsonPath('label', 'Retrait vers •••• 4567');
+            ->assertJsonPath('label', '•••• 4567'); // le front-end compose « Retrait vers … » dans la langue choisie
 
         $this->assertSame(500, $user->fresh()->wallet_balance);
         $this->assertDatabaseMissing('wallet_transactions', ['account_masked' => '771234567']);

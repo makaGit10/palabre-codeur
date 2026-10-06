@@ -7,21 +7,22 @@ import { SearchProvider } from '../components/SearchPalette'
 import { useAuth } from '../hooks/useAuth'
 import { usePersistentState, useTheme } from '../hooks/usePersistentState'
 import { useSearchPalette } from '../hooks/useSearchPalette'
+import { useI18n, type Key } from '../i18n'
 import { formatNumber } from '../lib/format'
 import { logout } from '../services/auth'
 import { listConversations, listNotifications } from '../services/messaging'
 import { listQuestions } from '../services/questions'
 
-type NavItem = { to: string; icon: IconName; label: string; end?: boolean; count?: 'bounties' | 'messages' }
+type NavItem = { to: string; icon: IconName; label: Key; end?: boolean; count?: 'bounties' | 'messages' }
 
 const NAV: NavItem[] = [
-  { to: '/app', icon: 'home', label: 'Fil', end: true },
-  { to: '/app/salons', icon: 'chat', label: "Sous l'arbre" },
-  { to: '/app/messages', icon: 'mail', label: 'Messages', count: 'messages' },
-  { to: '/app/snippets', icon: 'code', label: 'Snippets' },
-  { to: '/app/primes', icon: 'coin', label: 'Primes', count: 'bounties' },
-  { to: '/app/classement', icon: 'trophy', label: 'Classement' },
-  { to: '/app/portefeuille', icon: 'wallet', label: 'Portefeuille' },
+  { to: '/app', icon: 'home', label: 'nav.feed', end: true },
+  { to: '/app/salons', icon: 'chat', label: 'nav.tree' },
+  { to: '/app/messages', icon: 'mail', label: 'nav.messages', count: 'messages' },
+  { to: '/app/snippets', icon: 'code', label: 'nav.snippets' },
+  { to: '/app/primes', icon: 'coin', label: 'nav.bounties', count: 'bounties' },
+  { to: '/app/classement', icon: 'trophy', label: 'nav.leaderboard' },
+  { to: '/app/portefeuille', icon: 'wallet', label: 'nav.wallet' },
 ]
 
 // Compteurs de la navigation : primes ouvertes, messages et notifications non lus (rafraîchis régulièrement)
@@ -71,14 +72,26 @@ const itemClass = (collapsed: boolean, active = false) =>
     collapsed ? 'justify-center px-0' : 'px-3'
   } ${active ? 'bg-green-soft font-bold text-green' : 'text-muted hover:bg-sunk hover:text-ink'}`
 
+// Bouton de langue : icône globe et code de l'autre langue, nom complet au survol
+function LangButton({ className }: { className: string }) {
+  const { t, lang, setLang } = useI18n()
+  return (
+    <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} title={t('nav.language')} aria-label={t('nav.language')} className={className}>
+      <Icon name="globe" />
+      <span className="absolute right-1 bottom-0.5 text-[9px] font-bold">{lang === 'fr' ? 'EN' : 'FR'}</span>
+    </button>
+  )
+}
+
 // Barre latérale pleine hauteur : en-tête en haut, navigation au milieu, compte fixé en bas
 function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t, tn } = useI18n()
   const { toggle: toggleTheme, isDark } = useTheme()
   const { user } = useAuth()
   const counts = useCounts(!!user)
   const logoutMutation = useLogout()
   const openSearch = useSearchPalette()
-  const label = collapsed ? 'Déplier le menu' : 'Replier le menu'
+  const label = collapsed ? t('nav.expand') : t('nav.collapse')
 
   return (
     <aside aria-label="Navigation" className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface md:flex">
@@ -98,8 +111,8 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         {/* Recherche globale : partout dans l'application, aussi par Ctrl K */}
         <button
           onClick={openSearch}
-          title="Rechercher (Ctrl K)"
-          aria-label="Rechercher"
+          title={t('nav.search_title')}
+          aria-label={t('nav.search')}
           aria-keyshortcuts="Control+K"
           className={`mb-2 flex w-full items-center gap-2.5 rounded-[10px] border border-line bg-bg py-2 text-muted transition hover:border-green hover:text-ink ${
             collapsed ? 'justify-center px-0' : 'px-3'
@@ -108,33 +121,33 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           <Icon name="search" />
           {!collapsed && (
             <>
-              <span className="flex-1 text-left text-sm">Rechercher…</span>
+              <span className="flex-1 text-left text-sm">{t('nav.search_placeholder')}</span>
               <kbd className="rounded-md border border-line px-1.5 font-sans text-[11px]">Ctrl K</kbd>
             </>
           )}
         </button>
         <Link
           to="/app/poser"
-          title="Poser une question"
+          title={t('nav.ask')}
           className="mb-3 flex items-center justify-center gap-2 rounded-[10px] bg-green py-2.5 font-bold text-green-ink hover:brightness-110"
         >
           <Icon name="plus" />
-          {!collapsed && 'Poser une question'}
+          {!collapsed && t('nav.ask')}
         </Link>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3">
         {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} title={n.label} className={({ isActive }) => itemClass(collapsed, isActive)}>
+          <NavLink key={n.to} to={n.to} end={n.end} title={t(n.label)} className={({ isActive }) => itemClass(collapsed, isActive)}>
             <Icon name={n.icon} />
-            {!collapsed && n.label}
+            {!collapsed && t(n.label)}
             {n.count && <CountBadge n={counts[n.count]} gold={n.count === 'bounties'} floating={collapsed} />}
           </NavLink>
         ))}
         {!collapsed && (
           <div className="mt-4 rounded-xl border border-line bg-bg p-3.5 text-[13px] text-muted">
-            <b className="mb-1 block font-display text-ink">Le principe</b>
-            Aidez un dev, gagnez de la réputation, et parfois des FCFA.
+            <b className="mb-1 block font-display text-ink">{t('nav.principle_title')}</b>
+            {t('nav.principle')}
           </div>
         )}
       </nav>
@@ -143,20 +156,21 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         {/* Outils : icônes seules, nom au survol ; en ligne quand la barre est dépliée, en colonne quand elle est repliée */}
         <div className={`flex gap-1 ${collapsed ? 'flex-col items-center' : 'justify-around'}`}>
           {user && (
-            <NavLink to="/app/notifications" title="Notifications" aria-label="Notifications" className={({ isActive }) => toolClass(isActive)}>
+            <NavLink to="/app/notifications" title={t('nav.notifications')} aria-label={t('nav.notifications')} className={({ isActive }) => toolClass(isActive)}>
               <Icon name="bell" />
               <CountBadge n={counts.notifications} floating />
             </NavLink>
           )}
-          <button onClick={toggleTheme} title={isDark ? 'Mode clair' : 'Mode sombre'} aria-label={isDark ? 'Mode clair' : 'Mode sombre'} className={toolClass()}>
+          <button onClick={toggleTheme} title={isDark ? t('nav.light') : t('nav.dark')} aria-label={isDark ? t('nav.light') : t('nav.dark')} className={toolClass()}>
             <Icon name="moon" />
           </button>
+          <LangButton className={toolClass()} />
           {user && (
             <button
               onClick={() => logoutMutation.mutate()}
               disabled={logoutMutation.isPending}
-              title="Se déconnecter"
-              aria-label="Se déconnecter"
+              title={t('nav.logout')}
+              aria-label={t('nav.logout')}
               className={toolClass()}
             >
               <Icon name="logout" />
@@ -164,38 +178,38 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           )}
         </div>
         {user ? (
-            <NavLink
-              to={`/app/profil/${user.id}`}
-              title={user.name}
-              className={({ isActive }) =>
-                `mt-2 flex items-center gap-2.5 rounded-xl border p-2 transition ${collapsed ? 'justify-center border-transparent' : ''} ${
-                  isActive ? 'border-green bg-green-soft' : 'border-line hover:bg-sunk'
-                }`
-              }
-            >
-              <Avatar user={user} />
-              {!collapsed && (
-                <span className="flex min-w-0 flex-col leading-tight">
-                  <b className="truncate">{user.name}</b>
-                  <small className="text-xs text-muted">
-                    {formatNumber(user.reputation)} {user.reputation > 1 ? 'pts' : 'pt'}
-                  </small>
-                </span>
-              )}
-            </NavLink>
+          <NavLink
+            to={`/app/profil/${user.id}`}
+            title={user.name}
+            className={({ isActive }) =>
+              `mt-2 flex items-center gap-2.5 rounded-xl border p-2 transition ${collapsed ? 'justify-center border-transparent' : ''} ${
+                isActive ? 'border-green bg-green-soft' : 'border-line hover:bg-sunk'
+              }`
+            }
+          >
+            <Avatar user={user} />
+            {!collapsed && (
+              <span className="flex min-w-0 flex-col leading-tight">
+                <b className="truncate">{user.name}</b>
+                <small className="text-xs text-muted">
+                  {formatNumber(user.reputation)} {tn('common.pts', user.reputation)}
+                </small>
+              </span>
+            )}
+          </NavLink>
         ) : (
           <div className="mt-2 flex flex-col gap-2">
             <Link
               to="/connexion"
-              title="Se connecter"
+              title={t('common.login')}
               className="flex items-center justify-center gap-2 rounded-[10px] border border-line py-2.5 text-sm font-semibold whitespace-nowrap hover:border-green"
             >
               <Icon name="user" />
-              {!collapsed && 'Se connecter'}
+              {!collapsed && t('common.login')}
             </Link>
             {!collapsed && (
               <Link to="/inscription" className="flex items-center justify-center rounded-[10px] bg-green py-2.5 text-sm font-semibold text-green-ink hover:brightness-110">
-                Rejoindre
+                {t('common.join')}
               </Link>
             )}
           </div>
@@ -206,14 +220,15 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
 }
 
 const TABS: NavItem[] = [
-  { to: '/app', icon: 'home', label: 'Fil', end: true },
-  { to: '/app/salons', icon: 'chat', label: 'Salons' },
-  { to: '/app/poser', icon: 'plus', label: 'Poser' },
-  { to: '/app/messages', icon: 'mail', label: 'Messages', count: 'messages' },
+  { to: '/app', icon: 'home', label: 'nav.feed', end: true },
+  { to: '/app/salons', icon: 'chat', label: 'nav.rooms' },
+  { to: '/app/poser', icon: 'plus', label: 'nav.ask_short' },
+  { to: '/app/messages', icon: 'mail', label: 'nav.messages', count: 'messages' },
 ]
 
 // Sur téléphone : barre d'onglets en bas, et un menu « Plus » pour le reste
 function MobileTabbar() {
+  const { t, lang, setLang } = useI18n()
   const { user } = useAuth()
   const counts = useCounts(!!user)
   const { toggle: toggleTheme, isDark } = useTheme()
@@ -243,36 +258,39 @@ function MobileTabbar() {
                 }}
                 className={row}
               >
-                <Icon name="search" /> Rechercher
+                <Icon name="search" /> {t('nav.search')}
               </button>
               <Link to="/app/snippets" onClick={close} className={row}>
-                <Icon name="code" /> Snippets
+                <Icon name="code" /> {t('nav.snippets')}
               </Link>
               <Link to="/app/primes" onClick={close} className={row}>
-                <Icon name="coin" /> Primes <CountBadge n={counts.bounties} gold />
+                <Icon name="coin" /> {t('nav.bounties')} <CountBadge n={counts.bounties} gold />
               </Link>
               <Link to="/app/classement" onClick={close} className={row}>
-                <Icon name="trophy" /> Classement
+                <Icon name="trophy" /> {t('nav.leaderboard')}
               </Link>
               {user ? (
                 <>
                   <Link to="/app/portefeuille" onClick={close} className={row}>
-                    <Icon name="wallet" /> Portefeuille
+                    <Icon name="wallet" /> {t('nav.wallet')}
                   </Link>
                   <Link to="/app/notifications" onClick={close} className={row}>
-                    <Icon name="bell" /> Notifications <CountBadge n={counts.notifications} />
+                    <Icon name="bell" /> {t('nav.notifications')} <CountBadge n={counts.notifications} />
                   </Link>
                   <Link to={`/app/profil/${user.id}`} onClick={close} className={row}>
-                    <Avatar user={user} size="sm" /> Mon profil
+                    <Avatar user={user} size="sm" /> {t('nav.profile')}
                   </Link>
                 </>
               ) : (
                 <Link to="/connexion" onClick={close} className={row}>
-                  <Icon name="user" /> Se connecter
+                  <Icon name="user" /> {t('common.login')}
                 </Link>
               )}
               <button onClick={toggleTheme} className={row}>
-                <Icon name="moon" /> {isDark ? 'Mode clair' : 'Mode sombre'}
+                <Icon name="moon" /> {isDark ? t('nav.light') : t('nav.dark')}
+              </button>
+              <button onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} className={row}>
+                <Icon name="globe" /> {t('nav.language')}
               </button>
               {user && (
                 <button
@@ -282,7 +300,7 @@ function MobileTabbar() {
                   }}
                   className={`${row} text-red`}
                 >
-                  <Icon name="logout" /> Se déconnecter
+                  <Icon name="logout" /> {t('nav.logout')}
                 </button>
               )}
             </nav>
@@ -293,18 +311,18 @@ function MobileTabbar() {
         aria-label="Navigation"
         className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom,0px))] md:hidden"
       >
-        {TABS.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className={tab}>
-            <Icon name={t.icon} />
-            {t.label}
-            {t.count && counts[t.count] > 0 && (
-              <span className="absolute top-0 right-1/2 -mr-5 rounded-full bg-green px-1.5 text-[10px] font-bold text-green-ink">{counts[t.count]}</span>
+        {TABS.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className={tab}>
+            <Icon name={item.icon} />
+            {t(item.label)}
+            {item.count && counts[item.count] > 0 && (
+              <span className="absolute top-0 right-1/2 -mr-5 rounded-full bg-green px-1.5 text-[10px] font-bold text-green-ink">{counts[item.count]}</span>
             )}
           </NavLink>
         ))}
-        <button onClick={() => setOpen(true)} className={tab({ isActive: open })} aria-label="Plus d'options" aria-expanded={open}>
+        <button onClick={() => setOpen(true)} className={tab({ isActive: open })} aria-label={t('nav.more_options')} aria-expanded={open}>
           {user ? <Avatar user={user} size="sm" /> : <Icon name="more" />}
-          Plus
+          {t('nav.more')}
           {counts.notifications > 0 && <span className="absolute top-0 right-1/2 -mr-5 size-2 rounded-full bg-red" />}
         </button>
       </nav>

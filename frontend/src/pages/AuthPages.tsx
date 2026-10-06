@@ -3,8 +3,10 @@ import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
 import { Icon, type IconName } from '../components/Icon'
+import { useI18n, type Key } from '../i18n'
 import { errorMessage, fieldErrors } from '../lib/api'
-import { COUNTRY_NAMES, formatNumber } from '../lib/format'
+import { formatNumber } from '../lib/format'
+import { COUNTRIES } from '../lib/money'
 import { getDemoAccounts, login, register } from '../services/auth'
 import { getStats } from '../services/community'
 import type { CountryCode, Me } from '../types'
@@ -12,21 +14,20 @@ import type { CountryCode, Me } from '../types'
 const inputClass = (invalid?: string) =>
   `w-full rounded-[10px] border bg-surface px-3.5 py-2.5 outline-none focus:border-green focus:ring-3 focus:ring-green-soft ${invalid ? 'border-red' : 'border-line'}`
 
-const COUNTRIES = Object.keys(COUNTRY_NAMES) as CountryCode[]
-
-const PROMISES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'chat', title: 'Des réponses de chez nous', text: 'Wave, Orange Money, paie OHADA, connexion 3G : des devs qui connaissent vos problèmes.' },
-  { icon: 'code', title: 'Du code déjà testé', text: 'Des snippets pour les API africaines, confirmés par ceux qui les ont utilisés.' },
-  { icon: 'coin', title: 'Aider rapporte', text: 'Réputation, badges et primes en mobile money quand votre réponse est validée.' },
+const PROMISES: { icon: IconName; title: Key; text: Key }[] = [
+  { icon: 'chat', title: 'auth.promise1_title', text: 'auth.promise1_text' },
+  { icon: 'code', title: 'auth.promise2_title', text: 'auth.promise2_text' },
+  { icon: 'coin', title: 'auth.promise3_title', text: 'auth.promise3_text' },
 ]
 
 // Panneau vert : la promesse de Palabre et les vrais chiffres de la communauté
 function Showcase({ title }: { title: string }) {
+  const { t, country } = useI18n()
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: getStats })
   const figures: [number | undefined, string][] = [
-    [stats?.developers, 'développeurs'],
-    [stats?.solvedQuestions, 'questions résolues'],
-    [stats?.countries, 'pays'],
+    [stats?.developers, t('auth.fig_devs')],
+    [stats?.solvedQuestions, t('auth.fig_solved')],
+    [stats?.countries, t('auth.fig_countries')],
   ]
 
   return (
@@ -39,7 +40,7 @@ function Showcase({ title }: { title: string }) {
 
       <span className="inline-flex items-center gap-2 rounded-full bg-green-ink/15 px-3 py-1 text-[13px] font-semibold">
         <Icon name="spark" className="size-4" />
-        Pour les devs, par les devs
+        {t('landing.tagline')}
       </span>
       <h2 className="mt-4 max-w-[18ch] text-[clamp(26px,3.2vw,36px)] font-extrabold tracking-tight">{title}</h2>
 
@@ -50,8 +51,8 @@ function Showcase({ title }: { title: string }) {
               <Icon name={p.icon} className="size-[18px]" />
             </span>
             <span>
-              <b className="block text-[15px]">{p.title}</b>
-              <span className="text-[13.5px] opacity-85">{p.text}</span>
+              <b className="block text-[15px]">{t(p.title)}</b>
+              <span className="text-[13.5px] opacity-85">{t(p.text)}</span>
             </span>
           </li>
         ))}
@@ -70,7 +71,7 @@ function Showcase({ title }: { title: string }) {
         {COUNTRIES.map((c) => (
           <span key={c} className="inline-flex items-center gap-1.5">
             <Flag code={c} />
-            {COUNTRY_NAMES[c]}
+            {country(c)}
           </span>
         ))}
       </div>
@@ -113,6 +114,7 @@ function useAfterAuth() {
 
 // Comptes de démonstration (jury, visiteurs) : affichés seulement si l'API les publie
 function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password: string) => void; pendingEmail: string | null }) {
+  const { t, country } = useI18n()
   const { data } = useQuery({ queryKey: ['demo-accounts'], queryFn: getDemoAccounts, staleTime: Infinity })
   if (!data || data.accounts.length === 0) return null
 
@@ -120,11 +122,10 @@ function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password
     <section aria-labelledby="demo-accounts" className="mt-5 rounded-2xl border border-dashed border-gold/50 bg-gold-soft/40 p-5">
       <h2 id="demo-accounts" className="flex items-center gap-2 text-[15px]">
         <Icon name="spark" className="size-4 text-gold" />
-        Comptes de démonstration
+        {t('auth.demo_title')}
       </h2>
       <p className="mt-1 text-[13px] text-muted">
-        Pour le jury et les visiteurs : un clic sur un compte vous connecte. Mot de passe commun :{' '}
-        <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[12.5px] text-ink">{data.password}</code>
+        {t('auth.demo_text')} <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[12.5px] text-ink">{data.password}</code>
       </p>
       <ul className="mt-3 grid gap-2">
         {data.accounts.map((account) => {
@@ -144,12 +145,12 @@ function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password
                     <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                       <Flag code={account.country} />
                       {account.city ? `${account.city}, ` : ''}
-                      {COUNTRY_NAMES[account.country]}
+                      {country(account.country)}
                     </span>
                     <span className="truncate">{account.email}</span>
                   </span>
                 </span>
-                <span className="text-xs font-semibold whitespace-nowrap text-green">{pending ? 'Connexion…' : 'Utiliser ce compte'}</span>
+                <span className="text-xs font-semibold whitespace-nowrap text-green">{pending ? t('auth.logging_in') : t('auth.demo_use')}</span>
               </button>
             </li>
           )
@@ -160,6 +161,7 @@ function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password
 }
 
 export function LoginPage() {
+  const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -178,13 +180,13 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Se connecter"
-      showcase="Bon retour sous l'arbre."
+      title={t('common.login')}
+      showcase={t('auth.login_showcase')}
       subtitle={
         <>
-          Pas encore de compte ?{' '}
+          {t('auth.no_account')}{' '}
           <Link to="/inscription" state={location.state} className="font-semibold text-green">
-            Rejoindre Palabre
+            {t('common.join_palabre')}
           </Link>
         </>
       }
@@ -199,13 +201,13 @@ export function LoginPage() {
         >
           <div>
             <label htmlFor="login-email" className="mb-1.5 block text-sm font-bold">
-              Adresse e-mail
+              {t('auth.email')}
             </label>
             <input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass()} />
           </div>
           <div>
             <label htmlFor="login-password" className="mb-1.5 block text-sm font-bold">
-              Mot de passe
+              {t('auth.password')}
             </label>
             <input
               id="login-password"
@@ -219,11 +221,11 @@ export function LoginPage() {
           </div>
           <label className="flex items-center gap-2 text-sm text-muted">
             <input id="login-remember" type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4 accent-[var(--green)]" />
-            Rester connecté sur cet appareil
+            {t('auth.remember')}
           </label>
           {mutation.isError && <p className="rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(mutation.error)}</p>}
           <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
-            {mutation.isPending ? 'Connexion…' : 'Se connecter'}
+            {mutation.isPending ? t('auth.logging_in') : t('common.login')}
           </button>
         </form>
       </Card>
@@ -233,6 +235,7 @@ export function LoginPage() {
 }
 
 export function RegisterPage() {
+  const { t, country } = useI18n()
   const [form, setForm] = useState({ name: '', email: '', password: '', country: 'SN' as CountryCode, city: '' })
   const done = useAfterAuth()
   const location = useLocation()
@@ -242,13 +245,13 @@ export function RegisterPage() {
 
   return (
     <AuthShell
-      title="Rejoindre Palabre"
-      showcase="Prenez place sous l'arbre."
+      title={t('common.join_palabre')}
+      showcase={t('auth.register_showcase')}
       subtitle={
         <>
-          Déjà inscrit ?{' '}
+          {t('auth.have_account')}{' '}
           <Link to="/connexion" state={location.state} className="font-semibold text-green">
-            Se connecter
+            {t('common.login')}
           </Link>
         </>
       }
@@ -263,21 +266,21 @@ export function RegisterPage() {
         >
           <div>
             <label htmlFor="reg-name" className="mb-1.5 block text-sm font-bold">
-              Nom complet
+              {t('auth.name')}
             </label>
             <input id="reg-name" autoComplete="name" required value={form.name} onChange={set('name')} className={inputClass(errors.name)} />
             {errors.name && <p className="mt-1.5 text-[13px] text-red">{errors.name}</p>}
           </div>
           <div>
             <label htmlFor="reg-email" className="mb-1.5 block text-sm font-bold">
-              Adresse e-mail
+              {t('auth.email')}
             </label>
             <input id="reg-email" type="email" autoComplete="email" required value={form.email} onChange={set('email')} className={inputClass(errors.email)} />
             {errors.email && <p className="mt-1.5 text-[13px] text-red">{errors.email}</p>}
           </div>
           <div>
             <label htmlFor="reg-password" className="mb-1.5 block text-sm font-bold">
-              Mot de passe
+              {t('auth.password')}
             </label>
             <input
               id="reg-password"
@@ -288,12 +291,12 @@ export function RegisterPage() {
               onChange={set('password')}
               className={inputClass(errors.password)}
             />
-            <p className="mt-1.5 text-[12.5px] text-muted">Au moins 8 caractères, avec des lettres et des chiffres.</p>
+            <p className="mt-1.5 text-[12.5px] text-muted">{t('auth.password_hint')}</p>
             {errors.password && <p className="mt-1 text-[13px] text-red">{errors.password}</p>}
           </div>
           <fieldset>
-            <legend className="mb-1.5 text-sm font-bold">Pays</legend>
-            <p className="mb-2 text-[12.5px] text-muted">Il détermine votre monnaie et vos moyens de paiement.</p>
+            <legend className="mb-1.5 text-sm font-bold">{t('auth.country')}</legend>
+            <p className="mb-2 text-[12.5px] text-muted">{t('auth.country_hint')}</p>
             <div className="grid grid-cols-2 gap-2">
               {COUNTRIES.map((c) => (
                 <button
@@ -306,7 +309,7 @@ export function RegisterPage() {
                   }`}
                 >
                   <Flag code={c} />
-                  {COUNTRY_NAMES[c]}
+                  {country(c)}
                 </button>
               ))}
             </div>
@@ -314,7 +317,7 @@ export function RegisterPage() {
           </fieldset>
           <div>
             <label htmlFor="reg-city" className="mb-1.5 block text-sm font-bold">
-              Ville <span className="font-medium text-muted">(facultatif)</span>
+              {t('auth.city')} <span className="font-medium text-muted">{t('common.optional')}</span>
             </label>
             <input id="reg-city" autoComplete="address-level2" value={form.city} onChange={set('city')} className={inputClass(errors.city)} />
           </div>
@@ -322,7 +325,7 @@ export function RegisterPage() {
             <p className="rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(mutation.error)}</p>
           )}
           <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
-            {mutation.isPending ? 'Création du compte…' : 'Créer mon compte'}
+            {mutation.isPending ? t('auth.creating') : t('auth.create')}
           </button>
         </form>
       </Card>

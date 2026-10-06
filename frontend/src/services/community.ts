@@ -53,7 +53,7 @@ export async function getLeaderboard(): Promise<{ countries: CountryScore[]; dev
 
 export interface Profile {
   user: User
-  badges: { icon: string; label: string }[]
+  badges: { slug: string; icon: string; label: string }[]
   questionsCount: number
   answersCount: number
   activity: Question[]

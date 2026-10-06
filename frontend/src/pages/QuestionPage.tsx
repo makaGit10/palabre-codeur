@@ -6,13 +6,15 @@ import { Markdown } from '../components/Markdown'
 import { AuthorChip, MarkdownEditor, VoteBox } from '../components/Post'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
-import { formatFcfa, PAYMENT_LABELS, timeAgo } from '../lib/format'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
+import { formatFcfa, timeAgo } from '../lib/format'
 import { acceptAnswer, addAnswer, getQuestion, rateSuggestion, vote } from '../services/questions'
 import type { PaymentMethod, QuestionDetail, VoteValue } from '../types'
 
 export default function QuestionPage() {
+  const { t, tn, payment } = useI18n()
   const id = Number(useParams().id)
   const queryClient = useQueryClient()
   const toast = useToast()
@@ -51,12 +53,9 @@ export default function QuestionPage() {
     onSuccess: ({ recipient, bountyPaid }) => {
       refresh()
       if (bountyPaid) {
-        toast(
-          `${formatFcfa(bountyPaid.amount)} envoyés à ${recipient.name} via ${PAYMENT_LABELS[bountyPaid.method as PaymentMethod]} · +65 pts (paiement test)`,
-          'coin',
-        )
+        toast(t('q.toast_paid', { amount: formatFcfa(bountyPaid.amount), name: recipient.name, method: payment(bountyPaid.method as PaymentMethod) }), 'coin')
       } else {
-        toast(`Réponse validée · +15 pts pour ${recipient.name}`)
+        toast(t('q.toast_accepted', { name: recipient.name }))
       }
     },
     onError: (e) => toast(errorMessage(e), 'bell'),
@@ -71,13 +70,13 @@ export default function QuestionPage() {
     if (requireLogin()) aiMutation.mutate({ suggestionId, feedback })
   }
 
-  if (isLoading) return <p className="py-16 text-center text-muted">Chargement de la question…</p>
+  if (isLoading) return <p className="py-16 text-center text-muted">{t('q.loading')}</p>
   if (isError || !q)
     return (
       <div className="py-16 text-center">
-        <h1 className="text-2xl">Question introuvable</h1>
+        <h1 className="text-2xl">{t('q.not_found')}</h1>
         <Link to="/app" className="mt-4 inline-block font-semibold text-green">
-          Retour au fil
+          {t('common.back_feed')}
         </Link>
       </div>
     )
@@ -88,17 +87,17 @@ export default function QuestionPage() {
     <div className="max-w-[900px]">
       <Link to="/app" className="mb-3.5 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted hover:text-ink">
         <Icon name="left" className="size-4" />
-        Retour au fil
+        {t('common.back_feed')}
       </Link>
 
       <h1 className="text-[clamp(22px,2.6vw,30px)]">{q.title}</h1>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted">
-        <span>Posée {timeAgo(q.createdAt)}</span>
-        <span>· vue {q.views} fois</span>
+        <span>{t('q.asked', { ago: timeAgo(q.createdAt) })}</span>
+        <span>{t('q.views', { n: q.views })}</span>
         {q.solved && (
           <span className="inline-flex items-center gap-1 rounded-full bg-green-soft px-2.5 py-0.5 text-xs font-bold text-green">
             <Icon name="check" className="size-3.5" />
-            Résolue
+            {t('q.solved')}
           </span>
         )}
       </div>
@@ -111,14 +110,14 @@ export default function QuestionPage() {
           <Markdown>{q.body}</Markdown>
           <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap gap-2">
-              {q.tags.map((t) => (
-                <Link key={t} to={`/app?tag=${t}`} className="rounded-md bg-green-soft px-2 py-[3px] font-mono text-[11.5px] text-green">
-                  {t}
+              {q.tags.map((tag) => (
+                <Link key={tag} to={`/app?tag=${tag}`} className="rounded-md bg-green-soft px-2 py-[3px] font-mono text-[11.5px] text-green">
+                  {tag}
                 </Link>
               ))}
               <ShareButton item={{ type: 'question', id: q.id, title: q.title }} compact />
             </div>
-            <AuthorChip user={q.author} date={q.createdAt} label="Posée par" />
+            <AuthorChip user={q.author} date={q.createdAt} label={t('q.asked_by')} />
           </div>
         </div>
       </article>
@@ -128,23 +127,19 @@ export default function QuestionPage() {
           <h2 className="flex items-start gap-2 font-sans text-sm font-bold text-green">
             <Icon name="spark" />
             <span>
-              Suggestion de l'IA <span className="font-medium text-muted">· à vérifier par la communauté</span>
+              {t('q.ai_title')} <span className="font-medium text-muted">{t('q.ai_verify')}</span>
             </span>
           </h2>
           <p className="my-2.5 text-sm">{q.aiSuggestion.text}</p>
           {q.aiSuggestion.feedback ? (
-            <p className="text-[13px] font-semibold text-green">
-              {q.aiSuggestion.feedback === 'up'
-                ? 'Merci, votre avis aide à améliorer les suggestions.'
-                : 'Signalement envoyé. Un modérateur va vérifier.'}
-            </p>
+            <p className="text-[13px] font-semibold text-green">{q.aiSuggestion.feedback === 'up' ? t('q.ai_thanks') : t('q.ai_reported')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               <button onClick={() => rate(q.aiSuggestion!.id, 'up')} className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-semibold">
-                👍 Utile
+                {t('q.ai_useful')}
               </button>
               <button onClick={() => rate(q.aiSuggestion!.id, 'down')} className="rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] font-semibold">
-                Signaler une erreur
+                {t('q.ai_report')}
               </button>
             </div>
           )}
@@ -152,13 +147,13 @@ export default function QuestionPage() {
       )}
 
       <h2 className="mt-8 text-[19px]">
-        {q.answers.length} {q.answers.length > 1 ? 'réponses' : 'réponse'}
+        {q.answers.length} {tn('q.answers', q.answers.length)}
       </h2>
 
       {q.answers.length === 0 && (
         <div className="mt-3 rounded-[14px] border border-dashed border-line bg-surface px-5 py-8 text-center text-muted">
-          Pas encore de réponse. Soyez la première personne à aider
-          {q.bounty?.status === 'held' && <> et gagnez {formatFcfa(q.bounty.amount)}</>}.
+          {t('q.no_answers')}
+          {q.bounty?.status === 'held' && t('q.and_earn', { amount: formatFcfa(q.bounty.amount) })}.
         </div>
       )}
 
@@ -176,7 +171,7 @@ export default function QuestionPage() {
               onVote={(value) => castVote({ target: { type: 'answer', id: a.id }, value })}
             />
             {a.accepted && (
-              <span className="text-green" title="Réponse validée">
+              <span className="text-green" title={t('q.accepted')}>
                 <Icon name="check" className="size-6" />
               </span>
             )}
@@ -185,7 +180,7 @@ export default function QuestionPage() {
             {a.accepted && (
               <p className="mb-2 inline-flex items-center gap-1 text-xs font-bold text-green">
                 <Icon name="check" className="size-3.5" />
-                Réponse validée par {q.author.name}
+                {t('q.accepted_by', { name: q.author.name })}
               </p>
             )}
             <Markdown>{a.body}</Markdown>
@@ -197,13 +192,13 @@ export default function QuestionPage() {
                   className="inline-flex items-center gap-2 rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60"
                 >
                   <Icon name="check" />
-                  Valider cette réponse
-                  {q.bounty?.status === 'held' && <> et verser {formatFcfa(q.bounty.amount)}</>}
+                  {t('q.accept')}
+                  {q.bounty?.status === 'held' && t('q.and_pay', { amount: formatFcfa(q.bounty.amount) })}
                 </button>
               ) : (
                 <span />
               )}
-              <AuthorChip user={a.author} date={a.createdAt} label="Réponse de" />
+              <AuthorChip user={a.author} date={a.createdAt} label={t('q.answer_by')} />
             </div>
           </div>
         </article>
@@ -215,27 +210,25 @@ export default function QuestionPage() {
 }
 
 function BountyBanner({ q }: { q: QuestionDetail }) {
+  const { t, payment } = useI18n()
   const b = q.bounty!
   if (b.status === 'paid')
     return (
       <div className="mt-4 flex items-center gap-3 rounded-xl border border-green/30 bg-green-soft px-4 py-3 text-[13.5px]">
         <Icon name="coin" />
-        <span>
-          Prime de <b>{formatFcfa(b.amount)}</b> versée à la personne dont la réponse a été validée.
-        </span>
+        <span>{t('q.bounty_paid', { amount: formatFcfa(b.amount) })}</span>
       </div>
     )
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-gold-bg/40 bg-gold-soft px-4 py-3 text-[13.5px]">
       <span className="font-display text-[22px] font-extrabold whitespace-nowrap text-gold">{formatFcfa(b.amount)}</span>
-      <span>
-        Prime offerte par {q.author.name}, payée par <b>{PAYMENT_LABELS[b.method]}</b> à la personne dont la réponse sera validée.
-      </span>
+      <span>{t('q.bounty_open', { name: q.author.name, method: payment(b.method) })}</span>
     </div>
   )
 }
 
 function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDone: () => void; loggedIn: boolean }) {
+  const { t } = useI18n()
   const [body, setBody] = useState('')
   const [error, setError] = useState('')
   const toast = useToast()
@@ -244,7 +237,7 @@ function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDon
     onSuccess: () => {
       setBody('')
       onDone()
-      toast('Réponse publiée')
+      toast(t('q.answer_published'))
     },
     onError: (e) => setError(errorMessage(e)),
   })
@@ -254,15 +247,15 @@ function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDon
     return (
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-line bg-surface p-5">
         <p className="text-sm">
-          <b className="block font-display text-base">Vous connaissez la réponse ?</b>
-          <span className="text-muted">Connectez-vous pour aider et gagner de la réputation.</span>
+          <b className="block font-display text-base">{t('q.know_answer')}</b>
+          <span className="text-muted">{t('q.login_to_help')}</span>
         </p>
         <Link
           to="/connexion"
           state={{ from: location.pathname }}
           className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110"
         >
-          Se connecter pour répondre
+          {t('q.login_to_answer')}
         </Link>
       </div>
     )
@@ -273,7 +266,7 @@ function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDon
       onSubmit={(e) => {
         e.preventDefault()
         if (body.trim().length < 20) {
-          setError('Votre réponse est trop courte : écrivez au moins 20 caractères.')
+          setError(t('q.reply_too_short'))
           return
         }
         setError('')
@@ -281,19 +274,13 @@ function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDon
       }}
     >
       <label htmlFor="reply" className="mb-2.5 block font-display text-base font-bold">
-        Votre réponse
+        {t('q.your_answer')}
       </label>
-      <MarkdownEditor
-        id="reply"
-        value={body}
-        onChange={setBody}
-        invalid={!!error}
-        placeholder="Expliquez la solution. Mettez le code entre ``` pour le colorer."
-      />
+      <MarkdownEditor id="reply" value={body} onChange={setBody} invalid={!!error} placeholder={t('q.reply_placeholder')} />
       {error && <p className="mt-2 text-[13px] text-red">{error}</p>}
       <div className="mt-3 flex justify-end">
         <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
-          {mutation.isPending ? 'Publication…' : 'Publier ma réponse'}
+          {mutation.isPending ? t('common.publishing') : t('q.publish_answer')}
         </button>
       </div>
     </form>

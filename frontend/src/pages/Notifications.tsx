@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '../components/Icon'
+import { useI18n } from '../i18n'
 import { timeAgo } from '../lib/format'
 import { listNotifications, markNotificationsRead } from '../services/messaging'
 import type { AppNotification } from '../types'
@@ -9,6 +10,7 @@ import type { AppNotification } from '../types'
 const KIND_ICON: Record<AppNotification['kind'], IconName> = { answer: 'chat', accepted: 'check', bounty: 'coin', message: 'mail', mention: 'user', info: 'bell' }
 
 export default function Notifications() {
+  const { t } = useI18n()
   const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({ queryKey: ['notifications'], queryFn: listNotifications })
 
@@ -26,12 +28,12 @@ export default function Notifications() {
   return (
     <div className="max-w-[760px]">
       <div className="mb-5">
-        <h1 className="text-[26px]">Notifications</h1>
-        <p className="mt-1 text-sm text-muted">Réponses à vos questions, réponses validées, primes versées et messages reçus.</p>
+        <h1 className="text-[26px]">{t('nt.title')}</h1>
+        <p className="mt-1 text-sm text-muted">{t('nt.subtitle')}</p>
       </div>
 
       {isLoading ? (
-        <p className="py-10 text-center text-muted">Chargement…</p>
+        <p className="py-10 text-center text-muted">{t('common.loading')}</p>
       ) : data?.data.length ? (
         <ol className="overflow-hidden rounded-[14px] border border-line bg-surface">
           {data.data.map((n) => {
@@ -46,7 +48,7 @@ export default function Notifications() {
                   {n.body && <span className="block truncate text-[13px] text-muted">{n.body}</span>}
                   <span className="block text-xs text-muted">{timeAgo(n.createdAt)}</span>
                 </span>
-                {fresh && <span className="mt-2 size-2 flex-none rounded-full bg-green" aria-label="Nouveau" />}
+                {fresh && <span className="mt-2 size-2 flex-none rounded-full bg-green" aria-label={t('nt.new')} />}
               </>
             )
             const className = `flex items-start gap-3 border-b border-line px-4 py-3 last:border-0 ${fresh ? 'bg-green-soft/50' : ''} ${n.url ? 'hover:bg-sunk' : ''}`
@@ -66,7 +68,7 @@ export default function Notifications() {
       ) : (
         <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-12 text-center text-muted">
           <Icon name="bell" className="mx-auto size-8" />
-          <p className="mt-3">Rien pour l'instant. Posez une question ou aidez quelqu'un, et tout se passera ici.</p>
+          <p className="mt-3">{t('nt.empty')}</p>
         </div>
       )}
     </div>

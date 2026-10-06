@@ -19,12 +19,10 @@ class NewAnswer extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $author = $this->answer->author()->first();
-
         return [
             'kind' => 'answer',
-            'title' => "{$author->name} a répondu à votre question",
-            'body' => Str::limit($this->question->title, 90),
+            'author' => $this->answer->author()->value('name'),
+            'question' => Str::limit($this->question->title, 90),
             'url' => "/app/questions/{$this->question->id}",
         ];
     }

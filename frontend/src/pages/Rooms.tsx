@@ -7,6 +7,7 @@ import { CreateGroupDialog, GroupMembersDialog } from '../components/GroupDialog
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { deleteMessage, editMessage, listRooms, postRoomMessage, reactToMessage, roomMessages } from '../services/messaging'
@@ -58,6 +59,7 @@ function RoomSection({ title, items, active, action }: { title: string; items: R
 }
 
 export default function Rooms() {
+  const { t } = useI18n()
   const { slug } = useParams()
   const { user } = useAuth()
   const location = useLocation()
@@ -93,22 +95,22 @@ export default function Rooms() {
   const groups = rooms.filter((r) => r.isPrivate)
 
   const list = (
-    <nav aria-label="Salons" className="flex flex-col gap-3.5">
+    <nav aria-label={t('nav.rooms')} className="flex flex-col gap-3.5">
       {user && (
         <RoomSection
-          title="Mes groupes"
+          title={t('rm.my_groups')}
           items={groups}
           active={slug}
           action={
-            <button onClick={() => setCreating(true)} title="Nouveau groupe" aria-label="Nouveau groupe" className="grid size-6 place-items-center rounded-md text-green hover:bg-green-soft">
+            <button onClick={() => setCreating(true)} title={t('rm.new_group')} aria-label={t('rm.new_group')} className="grid size-6 place-items-center rounded-md text-green hover:bg-green-soft">
               <Icon name="plus" className="size-4" />
             </button>
           }
         />
       )}
-      {user && !groups.length && <p className="-mt-2 px-3 text-xs text-muted">Aucun groupe pour l'instant. Créez-en un avec +.</p>}
-      <RoomSection title="Par sujet" items={topics} active={slug} />
-      <RoomSection title="Par pays" items={countries} active={slug} />
+      {user && !groups.length && <p className="-mt-2 px-3 text-xs text-muted">{t('rm.no_groups')}</p>}
+      <RoomSection title={t('rm.by_topic')} items={topics} active={slug} />
+      <RoomSection title={t('rm.by_country')} items={countries} active={slug} />
     </nav>
   )
 
@@ -116,34 +118,32 @@ export default function Rooms() {
     <div className="max-w-[1180px]">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[26px]">Sous l'arbre</h1>
-          <p className="mt-1 text-sm text-muted">Salons par sujet et par pays, et vos groupes privés. Tout le monde lit les salons, les membres écrivent.</p>
+          <h1 className="text-[26px]">{t('rm.title')}</h1>
+          <p className="mt-1 text-sm text-muted">{t('rm.subtitle')}</p>
         </div>
       </div>
 
       <div className="grid items-start gap-5 md:grid-cols-[260px_minmax(0,1fr)]">
         <aside className={`rounded-[14px] border border-line bg-surface p-2.5 md:sticky md:top-7 ${slug ? 'hidden md:block' : ''}`}>
-          {roomsLoading ? <p className="py-6 text-center text-sm text-muted">Chargement des salons…</p> : list}
+          {roomsLoading ? <p className="py-6 text-center text-sm text-muted">{t('rm.loading')}</p> : list}
         </aside>
 
         {slug ? (
           <section className="flex min-w-0 flex-col rounded-[14px] border border-line bg-bg">
             <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
-              <Link to="/app/salons" className="text-muted hover:text-ink md:hidden" aria-label="Tous les salons">
+              <Link to="/app/salons" className="text-muted hover:text-ink md:hidden" aria-label={t('rm.all')}>
                 <Icon name="left" />
               </Link>
               {room && ROOM_COUNTRY[room.slug] && <Flag code={ROOM_COUNTRY[room.slug]} />}
               {room?.isPrivate && <Icon name="lock" className="size-4 text-muted" />}
               <div className="min-w-0">
                 <h2 className="truncate text-base">{room?.name ?? `#${slug}`}</h2>
-                <p className="truncate text-xs text-muted">
-                  {room?.isPrivate ? `Groupe privé · ${room.membersCount} membres` : room?.description}
-                </p>
+                <p className="truncate text-xs text-muted">{room?.isPrivate ? t('rm.private_members', { n: room.membersCount ?? 0 }) : room?.description}</p>
               </div>
               <span className="ml-auto flex items-center gap-1.5">
-                {room?.lastMessage && <span className="hidden text-xs whitespace-nowrap text-muted sm:inline">actif {timeAgo(room.lastMessage.createdAt)}</span>}
+                {room?.lastMessage && <span className="hidden text-xs whitespace-nowrap text-muted sm:inline">{t('rm.active', { ago: timeAgo(room.lastMessage.createdAt) })}</span>}
                 {room?.isPrivate && (
-                  <button onClick={() => setMembers(true)} title="Membres du groupe" aria-label="Membres du groupe" className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk hover:text-ink">
+                  <button onClick={() => setMembers(true)} title={t('rm.members')} aria-label={t('rm.members')} className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk hover:text-ink">
                     <Icon name="users" />
                   </button>
                 )}
@@ -151,16 +151,16 @@ export default function Rooms() {
             </header>
             <div className="h-[calc(100dvh-330px)] min-h-[260px] overflow-y-auto px-3 md:h-[calc(100dvh-290px)]">
               {isError ? (
-                <p className="py-10 text-center text-sm text-muted">Ce groupe est réservé à ses membres.</p>
+                <p className="py-10 text-center text-sm text-muted">{t('rm.members_only')}</p>
               ) : (
-                <ChatThread items={messages} loading={isLoading} actions={actions} emptyText="Personne n'a encore parlé ici. Lancez la palabre !" />
+                <ChatThread items={messages} loading={isLoading} actions={actions} emptyText={t('rm.empty')} />
               )}
             </div>
             <div className="border-t border-line bg-surface p-3">
               <ChatComposer
                 onSend={(p) => send.mutate(p)}
                 pending={send.isPending}
-                placeholder={`Écrire dans ${room?.name ?? 'ce salon'}…`}
+                placeholder={t('rm.write_in', { name: room?.name ?? t('rm.this_room') })}
                 loginFrom={user ? undefined : location.pathname}
                 mentions
               />
@@ -169,8 +169,8 @@ export default function Rooms() {
         ) : (
           <section className="hidden rounded-[14px] border border-dashed border-line bg-surface px-6 py-16 text-center md:block">
             <Icon name="chat" className="mx-auto size-8 text-muted" />
-            <p className="mt-3 font-display text-lg">Choisissez un salon</p>
-            <p className="mt-1 text-sm text-muted">Un sujet technique, les développeurs de votre pays, ou l'un de vos groupes.</p>
+            <p className="mt-3 font-display text-lg">{t('rm.choose')}</p>
+            <p className="mt-1 text-sm text-muted">{t('rm.choose_text')}</p>
           </section>
         )}
       </div>

@@ -26,7 +26,7 @@ trait HasAttachment
                 'type' => 'question',
                 'id' => $question->id,
                 'title' => $question->title,
-                'meta' => $question->answers_count.' '.($question->answers_count > 1 ? 'réponses' : 'réponse').($question->accepted_answer_id ? ' · résolue' : ''),
+                'meta' => $question->answers_count.' '.__($question->answers_count > 1 ? 'réponses' : 'réponse').($question->accepted_answer_id ? ' · '.__('résolue') : ''),
                 'url' => "/app/questions/{$question->id}",
             ] : null;
         }

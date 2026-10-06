@@ -24,11 +24,11 @@ class SearchService
     {
         $like = '%'.addcslashes($q, '%_\\').'%';
         $sections = [
-            ['id' => 'questions', 'label' => 'Questions', 'items' => $this->questions($q, $like)],
-            ['id' => 'snippets', 'label' => 'Extraits de code', 'items' => $this->snippets($q, $like)],
-            ['id' => 'rooms', 'label' => 'Salons et groupes', 'items' => $this->rooms($q, $like, $viewer)],
-            ['id' => 'users', 'label' => 'Membres', 'items' => $this->users($q, $like)],
-            ['id' => 'messages', 'label' => 'Messages', 'items' => $this->messages($q, $like, $viewer)],
+            ['id' => 'questions', 'label' => __('Questions'), 'items' => $this->questions($q, $like)],
+            ['id' => 'snippets', 'label' => __('Extraits de code'), 'items' => $this->snippets($q, $like)],
+            ['id' => 'rooms', 'label' => __('Salons et groupes'), 'items' => $this->rooms($q, $like, $viewer)],
+            ['id' => 'users', 'label' => __('Membres'), 'items' => $this->users($q, $like)],
+            ['id' => 'messages', 'label' => __('Messages'), 'items' => $this->messages($q, $like, $viewer)],
         ];
 
         return array_values(array_filter($sections, fn ($s) => $s['items']->isNotEmpty()));
@@ -47,7 +47,7 @@ class SearchService
             ->map(fn (Question $x) => [
                 'id' => $x->id,
                 'title' => $x->title,
-                'subtitle' => $x->answers_count.' '.($x->answers_count > 1 ? 'réponses' : 'réponse').($x->accepted_answer_id ? ' · résolue' : ''),
+                'subtitle' => $x->answers_count.' '.__($x->answers_count > 1 ? 'réponses' : 'réponse').($x->accepted_answer_id ? ' · '.__('résolue') : ''),
                 'url' => "/app/questions/{$x->id}",
             ]);
     }
@@ -81,7 +81,7 @@ class SearchService
             ->map(fn (Room $x) => [
                 'id' => $x->id,
                 'title' => $x->name,
-                'subtitle' => ($x->is_private ? 'Groupe privé' : ($x->description ?? 'Salon')).' · '.$x->messages_count.' messages',
+                'subtitle' => ($x->is_private ? __('Groupe privé') : ($x->description ?? __('Salon'))).' · '.$x->messages_count.' '.__('messages'),
                 'url' => "/app/salons/{$x->slug}",
             ]);
     }
@@ -96,7 +96,7 @@ class SearchService
             ->map(fn (User $x) => [
                 'id' => $x->id,
                 'title' => $x->name,
-                'subtitle' => $x->city.' · '.config("palabre.countries.{$x->country}.name", $x->country).' · '.number_format($x->reputation, 0, ',', ' ').($x->reputation > 1 ? ' pts' : ' pt'),
+                'subtitle' => $x->city.' · '.__(config("palabre.countries.{$x->country}.name", $x->country)).' · '.number_format($x->reputation, 0, ',', ' ').($x->reputation > 1 ? ' pts' : ' pt'),
                 'url' => "/app/profil/{$x->id}",
                 'country' => $x->country,
             ]);
@@ -116,7 +116,7 @@ class SearchService
             ->get()
             ->map(fn (RoomMessage $m) => [
                 'id' => 'room-'.$m->id,
-                'title' => "{$m->author->name} dans {$m->room->name}",
+                'title' => __(':author dans :room', ['author' => $m->author->name, 'room' => $m->room->name]),
                 'subtitle' => Str::limit(MessagingService::preview($m), 90),
                 'url' => "/app/salons/{$m->room->slug}",
                 'at' => $m->created_at,
@@ -136,7 +136,7 @@ class SearchService
 
                     return [
                         'id' => 'direct-'.$m->id,
-                        'title' => ($m->sender_id === $viewer->id ? 'Vous' : $m->sender->name).' · conversation avec '.$other->name,
+                        'title' => __(':sender · conversation avec :other', ['sender' => $m->sender_id === $viewer->id ? __('Vous') : $m->sender->name, 'other' => $other->name]),
                         'subtitle' => Str::limit(MessagingService::preview($m), 90),
                         'url' => "/app/messages/{$other->id}",
                         'at' => $m->created_at,

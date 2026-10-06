@@ -41,7 +41,7 @@ class ConversationController extends Controller
     {
         $me = $request->user();
         if ($user->id === $me->id) {
-            throw new BusinessRuleException('Vous ne pouvez pas vous écrire à vous-même.');
+            throw new BusinessRuleException(__('Vous ne pouvez pas vous écrire à vous-même.'));
         }
 
         return response()->json([

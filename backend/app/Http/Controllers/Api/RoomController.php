@@ -43,7 +43,7 @@ class RoomController extends Controller
     public function messages(Request $request, Room $room): AnonymousResourceCollection
     {
         $viewer = $request->user('sanctum');
-        abort_unless($room->canBeReadBy($viewer), 403, 'Ce groupe est réservé à ses membres.');
+        abort_unless($room->canBeReadBy($viewer), 403, __('Ce groupe est réservé à ses membres.'));
         if ($viewer) {
             $this->messaging->markRead($room, $viewer);
         }

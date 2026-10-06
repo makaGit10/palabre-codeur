@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { listConversations, listRooms, postRoomMessage, sendDirectMessage } from '../services/messaging'
 import type { MessagePayload } from '../types'
@@ -17,6 +18,7 @@ interface Shareable {
 
 // Bouton « Partager » : envoie une question ou un extrait, en carte cliquable, dans une conversation ou un salon
 export function ShareButton({ item, compact }: { item: Shareable; compact?: boolean }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -36,7 +38,7 @@ export function ShareButton({ item, compact }: { item: Shareable; compact?: bool
         }`}
       >
         <Icon name="send" className="size-4" />
-        Partager
+        {t('sh.share')}
       </button>
       {open && <ShareDialog item={item} onClose={() => setOpen(false)} />}
     </>
@@ -46,6 +48,7 @@ export function ShareButton({ item, compact }: { item: Shareable; compact?: bool
 type Target = { kind: 'user'; id: number; label: string } | { kind: 'room'; slug: string; label: string }
 
 function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }) {
+  const { t } = useI18n()
   const [note, setNote] = useState('')
   const toast = useToast()
   const { data: conversations } = useQuery({ queryKey: ['conversations'], queryFn: listConversations })
@@ -58,7 +61,7 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
       else await postRoomMessage(target.slug, payload)
     },
     onSuccess: (_, target) => {
-      toast(target.kind === 'user' ? `Envoyé à ${target.label}` : `Partagé dans ${target.label}`, 'send')
+      toast(target.kind === 'user' ? t('sh.sent', { name: target.label }) : t('sh.shared', { name: target.label }), 'send')
       onClose()
     },
     onError: (e) => toast(errorMessage(e), 'bell'),
@@ -68,9 +71,9 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
     const url = `${window.location.origin}${item.type === 'question' ? `/app/questions/${item.id}` : '/app/snippets'}`
     try {
       await navigator.clipboard.writeText(url)
-      toast('Lien copié')
+      toast(t('sh.link_copied'))
     } catch {
-      toast('Copie impossible sur cet appareil', 'bell')
+      toast(t('sh.copy_failed'), 'bell')
     }
   }
 
@@ -87,11 +90,11 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
         <header className="flex items-start gap-3 border-b border-line px-4 py-3">
           <div className="min-w-0 flex-1">
             <h2 id="share-title" className="text-base">
-              Partager {item.type === 'snippet' ? "l'extrait" : 'la question'}
+              {item.type === 'snippet' ? t('sh.title_snippet') : t('sh.title_question')}
             </h2>
             <p className="truncate text-[13px] text-muted">{item.title}</p>
           </div>
-          <button onClick={onClose} aria-label="Fermer" className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk">
+          <button onClick={onClose} aria-label={t('common.close')} className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk">
             <Icon name="close" />
           </button>
         </header>
@@ -101,7 +104,7 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
             id="share-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Un mot pour accompagner (facultatif)"
+            placeholder={t('sh.note')}
             maxLength={2000}
             className="w-full rounded-[10px] border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-green"
           />
@@ -110,7 +113,7 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
         <div className="flex-1 overflow-y-auto px-2 py-2">
           {!!conversations?.data.length && (
             <>
-              <p className="px-2.5 pt-1 pb-1 text-[11px] font-bold tracking-wider text-muted uppercase">Conversations</p>
+              <p className="px-2.5 pt-1 pb-1 text-[11px] font-bold tracking-wider text-muted uppercase">{t('sh.conversations')}</p>
               {conversations.data.map((c) => (
                 <button key={c.id} disabled={share.isPending} onClick={() => share.mutate({ kind: 'user', id: c.user.id, label: c.user.name })} className={row}>
                   <Avatar user={c.user} size="sm" />
@@ -121,7 +124,7 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
               ))}
             </>
           )}
-          <p className="px-2.5 pt-2 pb-1 text-[11px] font-bold tracking-wider text-muted uppercase">Salons</p>
+          <p className="px-2.5 pt-2 pb-1 text-[11px] font-bold tracking-wider text-muted uppercase">{t('sh.rooms')}</p>
           {rooms.map((r) => (
             <button key={r.id} disabled={share.isPending} onClick={() => share.mutate({ kind: 'room', slug: r.slug, label: r.name })} className={row}>
               <Icon name="chat" className="size-4 text-muted" />
@@ -132,10 +135,10 @@ function ShareDialog({ item, onClose }: { item: Shareable; onClose: () => void }
         </div>
 
         <footer className="flex items-center justify-between gap-3 border-t border-line px-4 py-3 text-[13px]">
-          <span className="text-muted">Pour écrire à quelqu'un d'autre, passez par son profil.</span>
+          <span className="text-muted">{t('sh.other')}</span>
           <button onClick={copyLink} className="inline-flex flex-none items-center gap-1.5 font-semibold text-green">
             <Icon name="copy" className="size-4" />
-            Copier le lien
+            {t('sh.copy_link')}
           </button>
         </footer>
       </div>

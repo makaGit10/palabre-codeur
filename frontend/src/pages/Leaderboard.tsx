@@ -2,28 +2,27 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
 import { Icon } from '../components/Icon'
-import { COUNTRY_NAMES, formatFcfa, formatNumber } from '../lib/format'
+import { useI18n } from '../i18n'
+import { currentMonth, formatFcfa, formatNumber } from '../lib/format'
 import { localHint } from '../lib/money'
 import { getLeaderboard } from '../services/community'
 
-// Mois en cours, calculé une fois au chargement de la page
-const MONTH = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(new Date())
-
 export default function Leaderboard() {
+  const { t, country } = useI18n()
   const { data, isLoading } = useQuery({ queryKey: ['leaderboard'], queryFn: getLeaderboard })
 
-  if (isLoading || !data) return <p className="py-16 text-center text-muted">Chargement du classement…</p>
+  if (isLoading || !data) return <p className="py-16 text-center text-muted">{t('lb.loading')}</p>
   const max = data.countries[0]?.points ?? 1
 
   return (
     <div className="max-w-[1100px]">
-      <h1 className="text-[26px]">Classement · {MONTH}</h1>
-      <p className="mt-1 mb-5 text-sm text-muted">Chaque réponse validée rapporte des points à votre pays.</p>
+      <h1 className="text-[26px]">{t('lb.title', { month: currentMonth() })}</h1>
+      <p className="mt-1 mb-5 text-sm text-muted">{t('lb.subtitle')}</p>
 
       <section className="mb-5 rounded-[14px] border border-line bg-surface p-5">
         <h2 className="mb-4 flex items-center gap-2 text-base">
           <Icon name="trophy" />
-          Coupe des pays
+          {t('lb.cup')}
         </h2>
         <ol className="flex flex-col gap-3">
           {data.countries.map((c, i) => (
@@ -31,7 +30,7 @@ export default function Leaderboard() {
               <span className="font-display font-extrabold text-muted">{i + 1}</span>
               <span className="flex items-center gap-2 truncate">
                 <Flag code={c.code} />
-                {c.name}
+                {country(c.code)}
               </span>
               <span className="h-2.5 overflow-hidden rounded-full bg-sunk">
                 <span
@@ -48,17 +47,17 @@ export default function Leaderboard() {
       <section className="rounded-[14px] border border-line bg-surface p-5">
         <h2 className="mb-3 flex items-center gap-2 text-base">
           <Icon name="user" />
-          Meilleurs développeurs
+          {t('lb.best')}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-muted">
                 <th className="px-2.5 py-2 font-semibold">#</th>
-                <th className="px-2.5 py-2 font-semibold">Développeur</th>
-                <th className="px-2.5 py-2 font-semibold">Pays</th>
-                <th className="px-2.5 py-2 text-right font-semibold">Réputation</th>
-                <th className="px-2.5 py-2 text-right font-semibold">Primes gagnées</th>
+                <th className="px-2.5 py-2 font-semibold">{t('lb.dev')}</th>
+                <th className="px-2.5 py-2 font-semibold">{t('lb.country')}</th>
+                <th className="px-2.5 py-2 text-right font-semibold">{t('lb.reputation')}</th>
+                <th className="px-2.5 py-2 text-right font-semibold">{t('lb.earned')}</th>
               </tr>
             </thead>
             <tbody>
@@ -74,7 +73,7 @@ export default function Leaderboard() {
                   <td className="px-2.5 py-3">
                     <span className="inline-flex items-center gap-2">
                       <Flag code={u.country} />
-                      {COUNTRY_NAMES[u.country]}
+                      {country(u.country)}
                     </span>
                   </td>
                   <td className="px-2.5 py-3 text-right font-semibold">{formatNumber(u.reputation)}</td>

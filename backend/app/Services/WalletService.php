@@ -19,17 +19,17 @@ class WalletService
     public function withdraw(User $user, int $amount, string $method, ?string $account): WalletTransaction
     {
         if (! in_array($method, config("palabre.countries.{$user->country}.methods", []), true)) {
-            throw new BusinessRuleException("Ce moyen de retrait n'est pas disponible dans votre pays.");
+            throw new BusinessRuleException(__("Ce moyen de retrait n'est pas disponible dans votre pays."));
         }
         $min = config('palabre.wallet.min_withdrawal');
         if ($amount < $min) {
-            throw new BusinessRuleException("Le retrait minimum est de {$min} FCFA.");
+            throw new BusinessRuleException(__('Le retrait minimum est de :min FCFA.', ['min' => $min]));
         }
 
         return DB::transaction(function () use ($user, $amount, $method, $account) {
             $locked = User::lockForUpdate()->findOrFail($user->id);
             if ($amount > $locked->wallet_balance) {
-                throw new BusinessRuleException('Le montant dépasse votre solde disponible.');
+                throw new BusinessRuleException(__('Le montant dépasse votre solde disponible.'));
             }
 
             $reference = $this->payments->payout($amount, $method, (string) $account);
@@ -38,7 +38,7 @@ class WalletService
             return $locked->walletTransactions()->create([
                 'type' => 'withdrawal',
                 'amount' => $amount,
-                'label' => $account ? 'Retrait vers '.self::mask($account) : 'Retrait vers la carte enregistrée',
+                'label' => $account ? self::mask($account) : '', // numéro masqué ; vide pour la carte enregistrée (libellé composé par le front-end)
                 'payment_method' => $method,
                 'account_masked' => $account ? self::mask($account) : null,
                 'provider_reference' => $reference,

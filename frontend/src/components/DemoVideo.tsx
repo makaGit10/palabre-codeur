@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../i18n'
 import { Icon } from './Icon'
 
 // Adresse de la vidéo de démonstration : lien YouTube (VITE_DEMO_VIDEO_URL) ou fichier servi par le front
@@ -13,6 +14,7 @@ function youtubeId(url: string): string | null {
 // Bouton « Voir la démo » : ouvre la vidéo de présentation dans une fenêtre, sans quitter la page
 export function DemoButton() {
   const [open, setOpen] = useState(false)
+  const { t } = useI18n()
   return (
     <>
       <button
@@ -23,8 +25,8 @@ export function DemoButton() {
         <span className="grid size-8 place-items-center rounded-full bg-green text-green-ink transition group-hover:scale-105">
           <Icon name="play" className="size-4" />
         </span>
-        Voir la démo
-        <span className="font-medium text-muted">3 min</span>
+        {t('demo.watch')}
+        <span className="font-medium text-muted">{t('demo.duration')}</span>
       </button>
       {open && <DemoVideoDialog onClose={() => setOpen(false)} />}
     </>
@@ -33,6 +35,7 @@ export function DemoButton() {
 
 function DemoVideoDialog({ onClose }: { onClose: () => void }) {
   const [failed, setFailed] = useState(false)
+  const { t } = useI18n()
   const youtube = youtubeId(VIDEO_URL)
 
   // Échap ferme la vidéo
@@ -46,13 +49,13 @@ function DemoVideoDialog({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/75 p-3 sm:p-6" onClick={onClose} role="presentation">
       <div
         role="dialog"
-        aria-label="Démonstration de Palabre"
+        aria-label={t('demo.dialog')}
         className="w-full max-w-4xl overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center gap-3 px-4 py-3">
-          <h2 className="flex-1 text-base">Palabre en 3 minutes</h2>
-          <button onClick={onClose} aria-label="Fermer" className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk">
+          <h2 className="flex-1 text-base">{t('demo.title')}</h2>
+          <button onClick={onClose} aria-label={t('common.close')} className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sunk">
             <Icon name="close" />
           </button>
         </header>
@@ -61,12 +64,12 @@ function DemoVideoDialog({ onClose }: { onClose: () => void }) {
             <iframe
               className="size-full"
               src={`https://www.youtube-nocookie.com/embed/${youtube}?autoplay=1&rel=0`}
-              title="Démonstration de Palabre"
+              title={t('demo.dialog')}
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
             />
           ) : failed ? (
-            <p className="grid size-full place-items-center px-6 text-center text-sm text-code-ink">La vidéo n'est pas disponible pour le moment.</p>
+            <p className="grid size-full place-items-center px-6 text-center text-sm text-code-ink">{t('demo.unavailable')}</p>
           ) : (
             <video className="size-full" src={VIDEO_URL} controls autoPlay playsInline onError={() => setFailed(true)}>
               <track kind="captions" />

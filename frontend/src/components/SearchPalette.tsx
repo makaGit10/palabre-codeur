@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { useNavigate } from 'react-router-dom'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { SearchPaletteContext } from '../hooks/useSearchPalette'
+import { useI18n, type Key } from '../i18n'
 import { globalSearch } from '../services/search'
 import type { SearchSectionId } from '../types'
 import { Icon, type IconName } from './Icon'
@@ -13,10 +14,10 @@ const RECENT_KEY = 'palabre-recent-searches'
 const RECENT_MAX = 4
 const MIN_CHARS = 2
 const SECTION_ICON: Record<SearchSectionId, IconName> = { questions: 'home', snippets: 'code', rooms: 'chat', users: 'user', messages: 'mail' }
-const SHORTCUTS: { title: string; url: string; icon: IconName }[] = [
-  { title: 'Poser une question', url: '/app/poser', icon: 'plus' },
-  { title: 'Partager un extrait de code', url: '/app/snippets/nouveau', icon: 'code' },
-  { title: 'Voir les primes ouvertes', url: '/app/primes', icon: 'coin' },
+const SHORTCUTS: { title: Key; url: string; icon: IconName }[] = [
+  { title: 'sp.sc_ask', url: '/app/poser', icon: 'plus' },
+  { title: 'sp.sc_snippet', url: '/app/snippets/nouveau', icon: 'code' },
+  { title: 'sp.sc_bounties', url: '/app/primes', icon: 'coin' },
 ]
 
 function readRecent(): string[] {
@@ -58,6 +59,7 @@ function Kbd({ children }: { children: ReactNode }) {
 }
 
 function SearchPalette({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n()
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const [recent] = useState(readRecent)
@@ -88,12 +90,12 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
           rows: s.items.map((it) => row({ key: `${s.id}-${it.id}`, title: it.title, subtitle: it.subtitle, icon: SECTION_ICON[s.id], action: { go: it.url }, country: it.country })),
         })),
         noResult
-          ? { id: 'ask', label: 'Et maintenant ?', rows: [row({ key: 'ask', title: 'Poser la question à la communauté', icon: 'plus', action: { go: '/app/poser' } })] }
-          : { id: 'all', label: 'Et aussi', rows: [row({ key: 'all', title: `Toutes les questions pour « ${term} »`, icon: 'search', action: { go: `/app?q=${encodeURIComponent(term)}` } })] },
+          ? { id: 'ask', label: t('sp.and_now'), rows: [row({ key: 'ask', title: t('sp.ask_community'), icon: 'plus', action: { go: '/app/poser' } })] }
+          : { id: 'all', label: t('sp.also'), rows: [row({ key: 'all', title: t('sp.all_questions', { q: term }), icon: 'search', action: { go: `/app?q=${encodeURIComponent(term)}` } })] },
       ]
     : [
-        ...(recent.length ? [{ id: 'recent', label: 'Recherches récentes', rows: recent.map((r) => row({ key: `recent-${r}`, title: r, icon: 'search', action: { query: r } })) }] : []),
-        { id: 'shortcuts', label: 'Raccourcis', rows: SHORTCUTS.map((s) => row({ key: s.url, title: s.title, icon: s.icon, action: { go: s.url } })) },
+        ...(recent.length ? [{ id: 'recent', label: t('sp.recent'), rows: recent.map((r) => row({ key: `recent-${r}`, title: r, icon: 'search', action: { query: r } })) }] : []),
+        { id: 'shortcuts', label: t('sp.shortcuts'), rows: SHORTCUTS.map((s) => row({ key: s.url, title: t(s.title), icon: s.icon, action: { go: s.url } })) },
       ]
   const rows = groups.flatMap((g) => g.rows)
   const current = Math.min(active, Math.max(rows.length - 1, 0))
@@ -138,7 +140,7 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Recherche"
+        aria-label={t('sp.dialog')}
         className="mx-auto flex max-h-[74dvh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -154,7 +156,7 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
             aria-autocomplete="list"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Rechercher une question, un extrait, un salon, une personne…"
+            placeholder={t('sp.placeholder')}
             className="h-12 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted"
             value={q}
             onChange={(e) => {
@@ -164,21 +166,17 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
             onKeyDown={onKeyDown}
           />
           {isFetching ? (
-            <span aria-label="Recherche en cours" className="size-4 flex-none animate-spin rounded-full border-2 border-line border-t-green" />
+            <span aria-label={t('sp.searching')} className="size-4 flex-none animate-spin rounded-full border-2 border-line border-t-green" />
           ) : (
-            <button onClick={onClose} aria-label="Fermer" className="flex-none rounded-md text-muted hover:text-ink">
-              <Kbd>Échap</Kbd>
+            <button onClick={onClose} aria-label={t('common.close')} className="flex-none rounded-md text-muted hover:text-ink">
+              <Kbd>{t('sp.esc')}</Kbd>
             </button>
           )}
         </div>
 
-        <div ref={listRef} id={listId} role="listbox" aria-label="Résultats" className="overflow-y-auto p-2">
-          {noResult && (
-            <p className="px-3 pt-4 pb-2 text-center text-sm text-muted">
-              Aucun résultat pour « {term} ». Personne n'en a encore parlé.
-            </p>
-          )}
-          {isError && <p className="px-3 py-4 text-center text-sm text-red">Recherche indisponible pour le moment.</p>}
+        <div ref={listRef} id={listId} role="listbox" aria-label={t('sp.results')} className="overflow-y-auto p-2">
+          {noResult && <p className="px-3 pt-4 pb-2 text-center text-sm text-muted">{t('sp.no_result', { q: term })}</p>}
+          {isError && <p className="px-3 py-4 text-center text-sm text-red">{t('sp.unavailable')}</p>}
           {groups.map((g) => (
             <div key={g.id} role="group" aria-label={g.label}>
               <h3 className="px-3 pt-2 pb-1 font-sans text-[11px] font-bold tracking-wide text-muted uppercase">{g.label}</h3>
@@ -213,13 +211,13 @@ function SearchPalette({ onClose }: { onClose: () => void }) {
 
         <footer className="hidden items-center gap-4 border-t border-line px-3.5 py-1.5 text-[11px] text-muted sm:flex">
           <span>
-            <Kbd>↑</Kbd> <Kbd>↓</Kbd> naviguer
+            <Kbd>↑</Kbd> <Kbd>↓</Kbd> {t('sp.navigate')}
           </span>
           <span>
-            <Kbd>↵</Kbd> ouvrir
+            <Kbd>↵</Kbd> {t('sp.open')}
           </span>
           <span>
-            <Kbd>Échap</Kbd> fermer
+            <Kbd>{t('sp.esc')}</Kbd> {t('sp.close')}
           </span>
         </footer>
       </div>

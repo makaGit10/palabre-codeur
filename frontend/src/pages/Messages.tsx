@@ -5,11 +5,13 @@ import { Avatar, Flag } from '../components/Brand'
 import { ChatComposer, ChatThread, type ChatActions, type ComposerPayload } from '../components/Chat'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
+import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
-import { COUNTRY_NAMES, timeAgo } from '../lib/format'
+import { timeAgo } from '../lib/format'
 import { deleteMessage, editMessage, listConversations, reactToMessage, sendDirectMessage, thread } from '../services/messaging'
 
 export default function Messages() {
+  const { t, country } = useI18n()
   const userId = Number(useParams().userId) || null
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -51,16 +53,16 @@ export default function Messages() {
   return (
     <div className="max-w-[1180px]">
       <div className="mb-4">
-        <h1 className="text-[26px]">Messages</h1>
-        <p className="mt-1 text-sm text-muted">Vos conversations privées avec les autres développeurs.</p>
+        <h1 className="text-[26px]">{t('msg.title')}</h1>
+        <p className="mt-1 text-sm text-muted">{t('msg.subtitle')}</p>
       </div>
 
       <div className="grid items-start gap-5 md:grid-cols-[300px_minmax(0,1fr)]">
         <aside className={`rounded-[14px] border border-line bg-surface p-2 md:sticky md:top-7 ${userId ? 'hidden md:block' : ''}`}>
           {listLoading ? (
-            <p className="py-6 text-center text-sm text-muted">Chargement…</p>
+            <p className="py-6 text-center text-sm text-muted">{t('common.loading')}</p>
           ) : list.length ? (
-            <nav aria-label="Conversations" className="flex flex-col gap-0.5">
+            <nav aria-label={t('msg.nav')} className="flex flex-col gap-0.5">
               {list.map((c) => (
                 <Link
                   key={c.id}
@@ -77,7 +79,7 @@ export default function Messages() {
                     </span>
                     {c.lastMessage && (
                       <span className={`block truncate text-xs ${c.unreadCount ? 'font-semibold text-ink' : 'text-muted'}`}>
-                        {c.lastMessage.mine ? 'Vous : ' : ''}
+                        {c.lastMessage.mine ? t('msg.you') : ''}
                         {c.lastMessage.body}
                       </span>
                     )}
@@ -89,14 +91,14 @@ export default function Messages() {
               ))}
             </nav>
           ) : (
-            <p className="px-3 py-6 text-center text-sm text-muted">Pas encore de conversation. Écrivez à quelqu'un depuis son profil.</p>
+            <p className="px-3 py-6 text-center text-sm text-muted">{t('msg.empty_list')}</p>
           )}
         </aside>
 
         {userId ? (
           <section className="flex min-w-0 flex-col rounded-[14px] border border-line bg-bg">
             <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
-              <Link to="/app/messages" className="text-muted hover:text-ink md:hidden" aria-label="Toutes les conversations">
+              <Link to="/app/messages" className="text-muted hover:text-ink md:hidden" aria-label={t('msg.all')}>
                 <Icon name="left" />
               </Link>
               {other ? (
@@ -107,12 +109,12 @@ export default function Messages() {
                       {other.name} <Flag code={other.country} />
                     </Link>
                     <p className="text-xs text-muted">
-                      {other.city}, {COUNTRY_NAMES[other.country]}
+                      {other.city}, {country(other.country)}
                     </p>
                   </div>
                 </>
               ) : (
-                <span className="text-sm text-muted">{isError ? 'Conversation introuvable' : 'Chargement…'}</span>
+                <span className="text-sm text-muted">{isError ? t('msg.not_found') : t('common.loading')}</span>
               )}
             </header>
             <div className="h-[calc(100dvh-330px)] min-h-[260px] overflow-y-auto px-3 md:h-[calc(100dvh-290px)]">
@@ -120,18 +122,18 @@ export default function Messages() {
                 items={current?.messages ?? []}
                 loading={isLoading}
                 actions={actions}
-                emptyText={other ? `Dites bonjour à ${other.name.split(' ')[0]} !` : ''}
+                emptyText={other ? t('msg.say_hi', { name: other.name.split(' ')[0] }) : ''}
               />
             </div>
             <div className="border-t border-line bg-surface p-3">
-              <ChatComposer onSend={(p) => send.mutate(p)} pending={send.isPending || !other} placeholder="Écrire un message…" />
+              <ChatComposer onSend={(p) => send.mutate(p)} pending={send.isPending || !other} placeholder={t('msg.placeholder')} />
             </div>
           </section>
         ) : (
           <section className="hidden rounded-[14px] border border-dashed border-line bg-surface px-6 py-16 text-center md:block">
             <Icon name="mail" className="mx-auto size-8 text-muted" />
-            <p className="mt-3 font-display text-lg">Choisissez une conversation</p>
-            <p className="mt-1 text-sm text-muted">Ou écrivez à un développeur depuis son profil.</p>
+            <p className="mt-3 font-display text-lg">{t('msg.choose')}</p>
+            <p className="mt-1 text-sm text-muted">{t('msg.choose_text')}</p>
           </section>
         )}
       </div>

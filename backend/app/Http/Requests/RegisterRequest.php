@@ -22,8 +22,8 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.unique' => 'Un compte existe déjà avec cette adresse e-mail.',
-            'password' => 'Le mot de passe doit contenir au moins 8 caractères, dont des lettres et des chiffres.',
+            'email.unique' => __('Un compte existe déjà avec cette adresse e-mail.'),
+            'password' => __('Le mot de passe doit contenir au moins 8 caractères, dont des lettres et des chiffres.'),
         ];
     }
 

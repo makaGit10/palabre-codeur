@@ -6,7 +6,6 @@ use App\Models\DirectMessage;
 use App\Models\User;
 use App\Services\MessagingService;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Str;
 
 /** Nouveau message privé */
 class NewDirectMessage extends Notification
@@ -22,9 +21,8 @@ class NewDirectMessage extends Notification
     {
         return [
             'kind' => 'message',
-            'title' => "Nouveau message de {$this->sender->name}",
-            'body' => Str::limit(MessagingService::preview($this->message), 90),
+            'sender' => $this->sender->name,
             'url' => "/app/messages/{$this->sender->id}",
-        ];
+        ] + MessagingService::previewParts($this->message);
     }
 }

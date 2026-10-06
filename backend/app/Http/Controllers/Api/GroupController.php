@@ -26,7 +26,7 @@ class GroupController extends Controller
 
     public function members(Request $request, Room $room): JsonResponse
     {
-        abort_unless($room->canBeReadBy($request->user()), 403, 'Ce groupe est réservé à ses membres.');
+        abort_unless($room->canBeReadBy($request->user()), 403, __('Ce groupe est réservé à ses membres.'));
         $members = $room->members()->orderBy('room_user.joined_at')->get()->map(fn (User $u) => (new UserResource($u))->resolve() + [
             'role' => $u->pivot->role,
             'joinedAt' => $u->pivot->joined_at,
@@ -53,6 +53,6 @@ class GroupController extends Controller
     {
         $this->messaging->leave($room, $request->user());
 
-        return response()->json(['message' => 'Vous avez quitté le groupe.']);
+        return response()->json(['message' => __('Vous avez quitté le groupe.')]);
     }
 }

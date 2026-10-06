@@ -24,6 +24,6 @@ class WithdrawRequest extends FormRequest
 
     public function messages(): array
     {
-        return ['account.regex' => 'Entrez un numéro de téléphone valide (8 à 15 chiffres).'];
+        return ['account.regex' => __('Entrez un numéro de téléphone valide (8 à 15 chiffres).')];
     }
 }

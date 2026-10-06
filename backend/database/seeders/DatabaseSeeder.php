@@ -285,10 +285,11 @@ class DatabaseSeeder extends Seeder
         $mareme = $this->users['mareme'];
         $mareme->forceFill(['wallet_balance' => 2500, 'wallet_held' => 1000])->save();
 
+        // Seul le sujet est enregistré : le front-end compose « Prime reçue · … » dans la langue choisie
         $history = [
-            [9 * 1440, 'bounty_received', 1500, 'Prime reçue · Pagination Laravel lente sur 50 000 lignes', null],
-            [4 * 1440, 'bounty_received', 1000, 'Prime reçue · Envoi de SMS OTP au Cameroun : quel fournisseur ?', null],
-            [12, 'bounty_held', 1000, 'Prime offerte · Webhook Wave : aucune notification reçue en production', 'wave'],
+            [9 * 1440, 'bounty_received', 1500, 'Pagination Laravel lente sur 50 000 lignes', null],
+            [4 * 1440, 'bounty_received', 1000, 'Envoi de SMS OTP au Cameroun : quel fournisseur ?', null],
+            [12, 'bounty_held', 1000, 'Webhook Wave : aucune notification reçue en production', 'wave'],
         ];
         foreach ($history as [$minutesAgo, $type, $amount, $label, $method]) {
             $date = Carbon::now()->subMinutes($minutesAgo);
