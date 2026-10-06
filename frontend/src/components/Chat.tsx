@@ -96,7 +96,7 @@ function EmojiPicker({ items, onPick, onClose, align = 'left' }: { items: string
     }
   }, [onClose])
   return (
-    <div ref={box} role="listbox" className={`absolute bottom-full z-20 mb-1 grid grid-cols-8 gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-xl ${align === 'right' ? 'right-0' : 'left-0'}`}>
+    <div ref={box} role="listbox" className={`absolute bottom-full z-20 mb-1 grid w-max grid-cols-[repeat(8,2rem)] gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-xl ${align === 'right' ? 'right-0' : 'left-0'}`}>
       {items.map((e) => (
         <button key={e} role="option" aria-selected={false} onClick={() => onPick(e)} className="grid size-8 place-items-center rounded-md text-lg hover:bg-sunk">
           {e}
