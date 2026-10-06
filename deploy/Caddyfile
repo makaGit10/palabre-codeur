@@ -1,0 +1,38 @@
+# Serveur web de production (Caddy, intégré à FrankenPHP) : HTTPS automatique, compression,
+# en-têtes de sécurité, l'API Laravel sous /api et le front-end React pour tout le reste.
+{
+	frankenphp
+}
+
+{$SERVER_NAME} {
+	encode zstd br gzip
+
+	header {
+		# Une fois visité en HTTPS, le navigateur refuse le HTTP pendant un an
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+	}
+
+	# L'API Laravel et sa page de santé
+	@api path /api/* /sanctum/* /up
+	handle @api {
+		root * /app/public
+		php_server
+	}
+
+	# Le front-end : fichiers construits (mis en cache un an, leur nom change à chaque version) ;
+	# toute autre adresse renvoie l'application, qui fait son propre routage.
+	handle {
+		root * /app/frontend
+		# Seuls nos propres scripts s'exécutent ; polices Google ; vidéo de démonstration YouTube
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}

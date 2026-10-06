@@ -1,0 +1,11 @@
+# Jamais dans l'image de production : secrets locaux, dépendances installées, fichiers de travail
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/vendor
+**/dist
+backend/storage/logs/*
+backend/tests
+.git
+demo

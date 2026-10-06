@@ -1,0 +1,59 @@
+# Palabre en production, sur un seul serveur Ubuntu avec Docker. Mode d'emploi : deploy/README.md
+# Lancer depuis ce dossier : docker compose up -d --build
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - caddy_data:/data # certificats HTTPS
+      - caddy_config:/config
+      - app_storage:/app/storage # journaux et fichiers de l'application
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "php -r \"exit(@file_get_contents('http://localhost/up') === false ? 1 : 0);\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Base de données : jamais exposée hors du réseau Docker
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-palabre}
+      POSTGRES_USER: ${DB_USERNAME:-palabre}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Définir DB_PASSWORD dans deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-palabre} -d ${DB_DATABASE:-palabre}"]
+      interval: 5s
+      retries: 10
+
+  # Valkey (licence BSD) : cache et sessions. Les sessions expirent d'elles-mêmes ; en cas de manque de
+  # mémoire, seules les clés qui ont une durée de vie sont évincées.
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: valkey-server --save 60 1 --maxmemory 128mb --maxmemory-policy volatile-lru
+    volumes:
+      - valkeydata:/data
+
+volumes:
+  pgdata:
+  valkeydata:
+  caddy_data:
+  caddy_config:
+  app_storage:
