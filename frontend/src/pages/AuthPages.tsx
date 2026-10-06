@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
+import { CodeTree } from '../components/CodeTree'
 import { Icon, type IconName } from '../components/Icon'
 import { useI18n, type Key } from '../i18n'
 import { errorMessage, fieldErrors } from '../lib/api'
@@ -20,7 +21,8 @@ const PROMISES: { icon: IconName; title: Key; text: Key }[] = [
   { icon: 'coin', title: 'auth.promise3_title', text: 'auth.promise3_text' },
 ]
 
-// Panneau vert : la promesse de Palabre et les vrais chiffres de la communauté
+// Panneau « nuit sous le baobab » : la promesse de Palabre, l'arbre animé et les vrais chiffres.
+// Sur ordinateur, il reste fixe à l'écran pendant que le formulaire défile ; sur téléphone, seul le titre est affiché.
 function Showcase({ title }: { title: string }) {
   const { t, country } = useI18n()
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: getStats })
@@ -31,65 +33,79 @@ function Showcase({ title }: { title: string }) {
   ]
 
   return (
-    <aside className="relative overflow-hidden rounded-[24px] bg-green p-7 text-green-ink sm:p-9">
-      {/* Marque en filigrane */}
-      <svg viewBox="0 0 40 40" className="pointer-events-none absolute -right-14 -bottom-16 size-72 opacity-[.13]" aria-hidden="true">
-        <path d="M18 34c.5-5 .3-9-1-13M22 34c-.4-5 0-9 1.5-13M17 21c-3-1-5-3-6-5M23.5 21c3-1 5-3 6-5M20 21v-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-        <ellipse cx="20" cy="13" rx="11" ry="5.5" fill="currentColor" />
-      </svg>
-
-      <span className="inline-flex items-center gap-2 rounded-full bg-green-ink/15 px-3 py-1 text-[13px] font-semibold">
+    <aside
+      className="relative flex h-full flex-col overflow-hidden bg-[#0B1511] px-6 py-6 text-[#E7EEEA] sm:px-10 lg:py-8"
+      style={{
+        backgroundImage:
+          'radial-gradient(60% 50% at 88% 8%, rgb(242 169 0 / .22), transparent 70%), radial-gradient(55% 45% at 8% 96%, rgb(63 191 143 / .28), transparent 70%)',
+      }}
+    >
+      <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[13px] font-semibold text-[#F2B731]">
         <Icon name="spark" className="size-4" />
         {t('landing.tagline')}
       </span>
-      <h2 className="mt-4 max-w-[18ch] text-[clamp(26px,3.2vw,36px)] font-extrabold tracking-tight">{title}</h2>
+      <h2 className="mt-4 max-w-[16ch] text-[clamp(28px,3vw,42px)] font-extrabold tracking-tight text-white">{title}</h2>
 
-      <ul className="mt-6 flex flex-col gap-4">
+      {/* Promesses : sur ordinateur seulement, et masquées sur les écrans peu hauts pour laisser l'arbre respirer */}
+      <ul className="mt-5 hidden flex-col gap-2.5 lg:flex [@media(max-height:780px)]:lg:hidden">
         {PROMISES.map((p) => (
-          <li key={p.title} className="flex gap-3">
-            <span className="grid size-9 flex-none place-items-center rounded-[10px] bg-green-ink/15">
-              <Icon name={p.icon} className="size-[18px]" />
+          <li key={p.title} className="flex items-center gap-3">
+            <span className="grid size-8 flex-none place-items-center rounded-[9px] bg-white/10 text-[#3FBF8F]">
+              <Icon name={p.icon} className="size-4" />
             </span>
-            <span>
-              <b className="block text-[15px]">{t(p.title)}</b>
-              <span className="text-[13.5px] opacity-85">{t(p.text)}</span>
+            <span className="text-[14px]">
+              <b className="text-white">{t(p.title)}</b>
+              <span className="text-[#E7EEEA]/70"> · {t(p.text)}</span>
             </span>
           </li>
         ))}
       </ul>
 
-      <dl className="mt-7 grid grid-cols-3 gap-3 border-t border-green-ink/20 pt-5">
-        {figures.map(([n, label]) => (
-          <div key={label}>
-            <dd className="font-display text-[26px] font-extrabold tabular-nums">{n === undefined ? '–' : formatNumber(n)}</dd>
-            <dt className="text-[12px] opacity-75">{label}</dt>
-          </div>
-        ))}
-      </dl>
+      {/* L'arbre à palabres, avec sa pluie de code */}
+      <div className="hidden min-h-0 flex-1 items-center justify-center lg:flex">
+        {/* text-ink : les bulles de l'arbre gardent leur texte sombre sur fond clair */}
+        <div className="w-full max-w-[460px] text-ink [@media(max-height:840px)]:max-w-[380px]">
+          <CodeTree />
+        </div>
+      </div>
 
-      <div className="mt-5 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] opacity-85">
-        {COUNTRIES.map((c) => (
-          <span key={c} className="inline-flex items-center gap-1.5">
-            <Flag code={c} />
-            {country(c)}
-          </span>
-        ))}
+      <div className="mt-auto hidden lg:block">
+        <dl className="grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
+          {figures.map(([n, label]) => (
+            <div key={label}>
+              <dd className="font-display text-[26px] font-extrabold text-white tabular-nums">{n === undefined ? '–' : formatNumber(n)}</dd>
+              <dt className="text-[12px] text-[#E7EEEA]/65">{label}</dt>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-3 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-[#E7EEEA]/75">
+          {COUNTRIES.map((c) => (
+            <span key={c} className="inline-flex items-center gap-1.5">
+              <Flag code={c} />
+              {country(c)}
+            </span>
+          ))}
+        </div>
       </div>
     </aside>
   )
 }
 
-// Formulaire à droite, panneau de présentation à gauche (en dessous sur téléphone)
+// Deux colonnes sur ordinateur : panneau fixe à gauche, formulaire centré à droite qui défile si besoin.
+// Sur téléphone : bandeau sombre avec le titre, puis le formulaire.
 function AuthShell({ title, subtitle, showcase, children }: { title: string; subtitle: ReactNode; showcase: string; children: ReactNode }) {
   return (
-    <div className="mx-auto grid w-full max-w-[1120px] gap-8 px-4 py-8 md:px-10 lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-12 lg:py-12">
-      <div className="order-1 lg:order-2 lg:pt-1">
-        <h1 className="text-[28px]">{title}</h1>
-        <p className="mt-1.5 mb-6 text-sm text-muted">{subtitle}</p>
-        {children}
-      </div>
-      <div className="order-2 lg:order-1">
+    <div className="lg:grid lg:grid-cols-[1.05fr_1fr]">
+      {/* 57px : hauteur de l'en-tête public collant, sous lequel le panneau se cale */}
+      <div className="lg:sticky lg:top-[57px] lg:h-[calc(100dvh-57px)]">
         <Showcase title={showcase} />
+      </div>
+      <div className="flex justify-center px-4 py-8 sm:px-8 lg:min-h-[calc(100dvh-57px)] lg:items-center lg:py-12">
+        <div className="w-full max-w-[460px]">
+          <h1 className="text-[28px]">{title}</h1>
+          <p className="mt-1.5 mb-6 text-sm text-muted">{subtitle}</p>
+          {children}
+        </div>
       </div>
     </div>
   )
