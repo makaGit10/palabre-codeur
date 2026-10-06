@@ -103,6 +103,11 @@
 .hljs-title, .hljs-title.function_ { color: #82AAFF; }
 .hljs-variable, .hljs-params { color: #FFCB6B; }
 
+/* Mentions @ dans les messages : lien vers le profil, affiché comme une pastille */
+.md a[href^="/app/profil/"] { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--green-soft); color: var(--green); font-weight: 600; text-decoration: none; }
+.bubble-mine .md a[href^="/app/profil/"] { background: rgb(255 255 255 / .2); color: var(--green-ink); }
+.bubble-mine .md :not(pre) > code { background: rgb(0 0 0 / .18); }
+
 /* Arbre à code : feuillage qui se balance et morceaux de code qui tombent */
 .canopy { transform-box: view-box; transform-origin: 300px 230px; animation: canopy-sway 7s ease-in-out infinite; }
 @keyframes canopy-sway { 0%, 100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.7deg); } }

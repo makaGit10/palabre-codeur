@@ -1,19 +1,38 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { timeAgo } from '../lib/format'
-import type { MessageAttachment, User } from '../types'
+import { searchUsers } from '../services/messaging'
+import type { MessageAttachment, Reaction, User } from '../types'
 import { Avatar, Flag } from './Brand'
 import { Icon } from './Icon'
 import { Markdown } from './Markdown'
+
+// Réactions proposées (même liste que config/palabre.php côté serveur) et emojis de la zone de saisie
+const REACTIONS = ['👍', '❤️', '😂', '🔥', '👏', '🤔', '🙏', '🎉']
+const EMOJIS = ['😀', '😂', '😍', '🤔', '😅', '🙏', '👍', '👏', '🔥', '🎉', '💡', '🚀', '✅', '❌', '⚡', '🐛', '💻', '📱', '🌍', '🇸🇳', '🇨🇮', '🇨🇲', '🇲🇦', '☕']
 
 export interface ChatItem {
   id: number
   body: string
   createdAt: string
   attachment?: MessageAttachment | null
+  editedAt?: string | null
+  deleted?: boolean
+  reactions?: Reaction[]
+  canEdit?: boolean
+  canDelete?: boolean
   author?: User // salons : auteur affiché
   mine?: boolean // messages privés : à droite si c'est moi
 }
+
+export interface ChatActions {
+  onEdit: (id: number, body: string) => void
+  onDelete: (id: number) => void
+  onReact: (id: number, emoji: string) => void
+}
+
+const iconBtn = 'grid size-7 place-items-center rounded-md text-muted hover:bg-sunk hover:text-ink'
 
 // Carte d'une question ou d'un extrait de code partagé dans un message
 function AttachmentCard({ a, mine }: { a: MessageAttachment; mine?: boolean }) {
@@ -39,18 +58,178 @@ function AttachmentCard({ a, mine }: { a: MessageAttachment; mine?: boolean }) {
   )
 }
 
-// Texte d'un message : Markdown (code coloré, liens), un retour à la ligne = un saut de ligne
-function Body({ text, mine }: { text: string; mine?: boolean }) {
+// Réactions sous un message : un clic ajoute la sienne ou la retire
+function Reactions({ reactions, mine, onReact }: { reactions: Reaction[]; mine?: boolean; onReact?: (emoji: string) => void }) {
+  if (!reactions.length) return null
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {reactions.map((r) => (
+        <button
+          key={r.emoji}
+          onClick={() => onReact?.(r.emoji)}
+          aria-pressed={r.mine}
+          title={r.mine ? 'Retirer ma réaction' : 'Réagir'}
+          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs tabular-nums ${
+            r.mine
+              ? mine ? 'border-green-ink/60 bg-green-ink/20 text-green-ink' : 'border-green bg-green-soft text-green'
+              : mine ? 'border-green-ink/30 text-green-ink' : 'border-line bg-surface text-muted'
+          }`}
+        >
+          {r.emoji} {r.count}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Choix d'un emoji dans une petite fenêtre, fermée au clic ailleurs ou avec Échap
+function EmojiPicker({ items, onPick, onClose, align = 'left' }: { items: string[]; onPick: (e: string) => void; onClose: () => void; align?: 'left' | 'right' }) {
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => !box.current?.contains(e.target as Node) && onClose()
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+  return (
+    <div ref={box} role="listbox" className={`absolute bottom-full z-20 mb-1 grid grid-cols-8 gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-xl ${align === 'right' ? 'right-0' : 'left-0'}`}>
+      {items.map((e) => (
+        <button key={e} role="option" aria-selected={false} onClick={() => onPick(e)} className="grid size-8 place-items-center rounded-md text-lg hover:bg-sunk">
+          {e}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// Texte d'un message : Markdown (code coloré, liens, mentions), un retour à la ligne = un saut de ligne
+function Body({ text }: { text: string }) {
   if (!text) return null
   return (
-    <div className={`text-[14.5px] ${mine ? '[&_a]:text-green-ink [&_a]:underline [&_code]:bg-black/15' : ''}`}>
+    <div className="text-[14.5px]">
       <Markdown breaks>{text}</Markdown>
     </div>
   )
 }
 
+// Un message avec ses actions au survol : réagir, modifier (1 h), supprimer pour tout le monde (24 h)
+function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
+  const [menu, setMenu] = useState<'none' | 'react' | 'edit' | 'delete'>('none')
+  const [draft, setDraft] = useState(m.body)
+  const mine = m.mine
+  const bubble = m.author === undefined
+
+  const toolbar = actions && !m.deleted && (
+    <div className={`absolute -top-3 flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 ${bubble && mine ? 'left-2' : 'right-2'}`}>
+      <div className="relative">
+        <button onClick={() => setMenu(menu === 'react' ? 'none' : 'react')} title="Réagir" aria-label="Réagir" className={iconBtn}>
+          <Icon name="smile" className="size-4" />
+        </button>
+        {menu === 'react' && <EmojiPicker items={REACTIONS} align={bubble && mine ? 'left' : 'right'} onClose={() => setMenu('none')} onPick={(e) => { actions.onReact(m.id, e); setMenu('none') }} />}
+      </div>
+      {m.canEdit && (
+        <button onClick={() => { setDraft(m.body); setMenu('edit') }} title="Modifier (pendant 1 h)" aria-label="Modifier" className={iconBtn}>
+          <Icon name="edit" className="size-4" />
+        </button>
+      )}
+      {m.canDelete && (
+        <button onClick={() => setMenu('delete')} title="Supprimer pour tout le monde (pendant 24 h)" aria-label="Supprimer" className={`${iconBtn} hover:text-red`}>
+          <Icon name="trash" className="size-4" />
+        </button>
+      )}
+    </div>
+  )
+
+  const content = m.deleted ? (
+    <p className={`text-[13.5px] italic ${bubble && mine ? 'text-green-ink/70' : 'text-muted'}`}>Message supprimé</p>
+  ) : menu === 'edit' && actions ? (
+    <form
+      className="mt-1 flex items-end gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (draft.trim()) actions.onEdit(m.id, draft.trim())
+        setMenu('none')
+      }}
+    >
+      <textarea
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setMenu('none')
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit() }
+        }}
+        rows={2}
+        maxLength={2000}
+        aria-label="Modifier le message"
+        className="min-w-[240px] flex-1 resize-y rounded-lg border border-green bg-surface px-2.5 py-1.5 text-[14px] text-ink outline-none"
+      />
+      <button type="submit" title="Enregistrer" aria-label="Enregistrer" className="grid size-8 place-items-center rounded-lg bg-green text-green-ink"><Icon name="check" className="size-4" /></button>
+      <button type="button" onClick={() => setMenu('none')} title="Annuler" aria-label="Annuler" className="grid size-8 place-items-center rounded-lg border border-line bg-surface text-muted"><Icon name="close" className="size-4" /></button>
+    </form>
+  ) : (
+    <>
+      <Body text={m.body} />
+      {m.attachment && <AttachmentCard a={m.attachment} mine={bubble && mine} />}
+    </>
+  )
+
+  const confirmDelete = menu === 'delete' && actions && (
+    <div className="mt-1.5 flex items-center gap-2 text-[12.5px]">
+      <span className={bubble && mine ? 'text-green-ink' : 'text-ink'}>Supprimer pour tout le monde ?</span>
+      <button onClick={() => { actions.onDelete(m.id); setMenu('none') }} className="rounded-md bg-red px-2 py-0.5 font-semibold text-white">Supprimer</button>
+      <button onClick={() => setMenu('none')} className={`rounded-md border px-2 py-0.5 font-semibold ${bubble && mine ? 'border-green-ink/50 text-green-ink' : 'border-line'}`}>Annuler</button>
+    </div>
+  )
+
+  const meta = (cls: string) => (
+    <span className={cls}>
+      {timeAgo(m.createdAt)}
+      {m.editedAt && !m.deleted && ' · modifié'}
+    </span>
+  )
+
+  if (!bubble) {
+    return (
+      <li className="group relative flex gap-2.5 rounded-lg px-1 py-0.5 hover:bg-sunk/60">
+        {toolbar}
+        <Link to={`/app/profil/${m.author!.id}`} className="mt-0.5">
+          <Avatar user={m.author!} size="sm" />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-[12.5px] text-muted">
+            <Link to={`/app/profil/${m.author!.id}`} className="inline-flex items-center gap-1.5 font-semibold text-ink">
+              {m.author!.name} <Flag code={m.author!.country} />
+            </Link>
+            {meta('')}
+          </p>
+          {content}
+          {confirmDelete}
+          <Reactions reactions={m.reactions ?? []} onReact={actions ? (e) => actions.onReact(m.id, e) : undefined} />
+        </div>
+      </li>
+    )
+  }
+
+  return (
+    <li className={`group relative flex ${mine ? 'justify-end' : 'justify-start'}`}>
+      {toolbar}
+      <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${mine ? 'bubble-mine rounded-br-md bg-green text-green-ink' : 'rounded-bl-md border border-line bg-surface'}`}>
+        {content}
+        {confirmDelete}
+        <Reactions reactions={m.reactions ?? []} mine={mine} onReact={actions ? (e) => actions.onReact(m.id, e) : undefined} />
+        {meta(`mt-1 block text-[11px] ${mine ? 'text-green-ink/70' : 'text-muted'}`)}
+      </div>
+    </li>
+  )
+}
+
 // Fil de messages qui descend tout seul quand un message arrive
-export function ChatThread({ items, emptyText, loading }: { items: ChatItem[]; emptyText: string; loading?: boolean }) {
+export function ChatThread({ items, emptyText, loading, actions }: { items: ChatItem[]; emptyText: string; loading?: boolean; actions?: ChatActions }) {
   const bottom = useRef<HTMLDivElement>(null)
   const count = items.length
   useEffect(() => {
@@ -61,57 +240,54 @@ export function ChatThread({ items, emptyText, loading }: { items: ChatItem[]; e
   if (!count) return <p className="py-10 text-center text-sm text-muted">{emptyText}</p>
 
   return (
-    <ol className="flex flex-col gap-3 px-1 py-3">
-      {items.map((m) =>
-        m.author ? (
-          <li key={m.id} className="flex gap-2.5">
-            <Link to={`/app/profil/${m.author.id}`} className="mt-0.5">
-              <Avatar user={m.author} size="sm" />
-            </Link>
-            <div className="min-w-0 flex-1">
-              <p className="flex flex-wrap items-baseline gap-x-2 text-[12.5px] text-muted">
-                <Link to={`/app/profil/${m.author.id}`} className="inline-flex items-center gap-1.5 font-semibold text-ink">
-                  {m.author.name} <Flag code={m.author.country} />
-                </Link>
-                <span>{timeAgo(m.createdAt)}</span>
-              </p>
-              <Body text={m.body} />
-              {m.attachment && <AttachmentCard a={m.attachment} />}
-            </div>
-          </li>
-        ) : (
-          <li key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${
-                m.mine ? 'rounded-br-md bg-green text-green-ink' : 'rounded-bl-md border border-line bg-surface'
-              }`}
-            >
-              <Body text={m.body} mine={m.mine} />
-              {m.attachment && <AttachmentCard a={m.attachment} mine={m.mine} />}
-              <span className={`mt-1 block text-[11px] ${m.mine ? 'text-green-ink/70' : 'text-muted'}`}>{timeAgo(m.createdAt)}</span>
-            </div>
-          </li>
-        ),
-      )}
+    <ol className="flex flex-col gap-2.5 px-1 py-3">
+      {items.map((m) => (
+        <MessageRow key={m.id} m={m} actions={actions} />
+      ))}
       <div ref={bottom} />
     </ol>
   )
 }
 
-// Zone de saisie : Entrée envoie, Maj+Entrée va à la ligne. Sans compte : invitation à se connecter.
+export interface ComposerPayload {
+  body: string
+  mentions: number[]
+}
+
+// Zone de saisie : Entrée envoie, Maj+Entrée va à la ligne, emojis, mentions @ avec autocomplétion.
+// Sans compte : invitation à se connecter.
 export function ChatComposer({
   onSend,
   pending,
   placeholder,
   loginFrom,
+  mentions = false,
 }: {
-  onSend: (body: string) => void
+  onSend: (payload: ComposerPayload) => void
   pending: boolean
   placeholder: string
   loginFrom?: string
+  mentions?: boolean
 }) {
   const [body, setBody] = useState('')
+  const [emojis, setEmojis] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionIndex, setMentionIndex] = useState(0)
+  const [picked, setPicked] = useState<{ id: number; name: string }[]>([])
   const field = useRef<HTMLTextAreaElement>(null)
+
+  // Autocomplétion des mentions : la recherche part 200 ms après la dernière frappe
+  const [debounced, setDebounced] = useState<string | null>(null)
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(mentionQuery), 200)
+    return () => clearTimeout(t)
+  }, [mentionQuery])
+  const { data: candidates = [] } = useQuery({
+    queryKey: ['users-search', debounced],
+    queryFn: () => searchUsers(debounced ?? ''),
+    enabled: mentions && debounced !== null,
+    staleTime: 30_000,
+  })
 
   if (loginFrom) {
     return (
@@ -124,14 +300,64 @@ export function ChatComposer({
     )
   }
 
+  const detectMention = (text: string, caret: number) => {
+    if (!mentions) return
+    const m = text.slice(0, caret).match(/(?:^|\s)@([^\s@]{0,30})$/)
+    setMentionQuery(m ? m[1] : null)
+    setMentionIndex(0)
+  }
+
+  const insertAtCaret = (snippet: string) => {
+    const el = field.current
+    const start = el?.selectionStart ?? body.length
+    const end = el?.selectionEnd ?? body.length
+    const next = body.slice(0, start) + snippet + body.slice(end)
+    setBody(next)
+    requestAnimationFrame(() => {
+      el?.focus()
+      el?.setSelectionRange(start + snippet.length, start + snippet.length)
+    })
+  }
+
+  const pickMention = (user: User) => {
+    const el = field.current
+    const caret = el?.selectionStart ?? body.length
+    const before = body.slice(0, caret).replace(/@[^\s@]{0,30}$/, `@${user.name} `)
+    const next = before + body.slice(caret)
+    setBody(next)
+    setPicked((p) => (p.some((x) => x.id === user.id) ? p : [...p, { id: user.id, name: user.name }]))
+    setMentionQuery(null)
+    requestAnimationFrame(() => {
+      el?.focus()
+      el?.setSelectionRange(before.length, before.length)
+    })
+  }
+
   // La valeur est lue dans le champ lui-même : l'envoi ne dépend pas d'un état React potentiellement en retard
   const submit = () => {
-    const text = (field.current?.value ?? body).trim()
+    let text = (field.current?.value ?? body).trim()
     if (!text || pending) return
-    onSend(text)
+    // Les mentions encore présentes deviennent des liens vers le profil, affichés comme des pastilles
+    const ids: number[] = []
+    for (const p of picked) {
+      if (text.includes(`@${p.name}`)) {
+        text = text.split(`@${p.name}`).join(`[@${p.name}](/app/profil/${p.id})`)
+        ids.push(p.id)
+      }
+    }
+    onSend({ body: text, mentions: ids })
     setBody('')
+    setPicked([])
+    setMentionQuery(null)
   }
+
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mentionQuery !== null && candidates.length) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIndex((i) => (i + 1) % candidates.length); return }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIndex((i) => (i - 1 + candidates.length) % candidates.length); return }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pickMention(candidates[mentionIndex]); return }
+      if (e.key === 'Escape') { setMentionQuery(null); return }
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       submit()
@@ -140,17 +366,42 @@ export function ChatComposer({
 
   return (
     <form
-      className="flex items-end gap-2 rounded-xl border border-line bg-surface p-2 focus-within:border-green"
+      className="relative flex items-end gap-1.5 rounded-xl border border-line bg-surface p-2 focus-within:border-green"
       onSubmit={(e) => {
         e.preventDefault()
         submit()
       }}
     >
+      {mentionQuery !== null && candidates.length > 0 && (
+        <ul role="listbox" aria-label="Mentionner" className="absolute bottom-full left-2 z-20 mb-1 w-64 overflow-hidden rounded-xl border border-line bg-surface shadow-xl">
+          {candidates.map((u, i) => (
+            <li key={u.id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={i === mentionIndex}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pickMention(u)}
+                className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm ${i === mentionIndex ? 'bg-green-soft' : 'hover:bg-sunk'}`}
+              >
+                <Avatar user={u} size="sm" />
+                <span className="inline-flex items-center gap-1.5 font-semibold">{u.name} <Flag code={u.country} /></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="relative">
+        <button type="button" onClick={() => setEmojis(!emojis)} title="Emoji" aria-label="Insérer un emoji" className="grid size-10 place-items-center rounded-[10px] text-muted hover:bg-sunk hover:text-ink">
+          <Icon name="smile" />
+        </button>
+        {emojis && <EmojiPicker items={EMOJIS} onClose={() => setEmojis(false)} onPick={(e) => { insertAtCaret(e); setEmojis(false) }} />}
+      </div>
       <textarea
         ref={field}
         id="chat-composer"
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(e) => { setBody(e.target.value); detectMention(e.target.value, e.target.selectionStart) }}
         onKeyDown={onKey}
         placeholder={placeholder}
         rows={1}
@@ -158,7 +409,7 @@ export function ChatComposer({
         className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[14.5px] outline-none"
       />
       <span className="hidden pb-2.5 text-[11px] text-muted sm:block">
-        ```code``` · Maj+Entrée : ligne
+        {mentions ? '@ · ' : ''}```code``` · Maj+Entrée
       </span>
       <button
         aria-label="Envoyer"

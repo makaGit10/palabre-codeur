@@ -87,9 +87,12 @@ export interface Room {
   id: number
   slug: string
   name: string
-  kind: 'topic' | 'country'
+  kind: 'topic' | 'country' | 'group'
+  isPrivate: boolean
   description: string | null
   messagesCount: number
+  membersCount: number | null
+  unreadCount: number
   lastMessage: { body: string; authorName: string; createdAt: string } | null
 }
 
@@ -107,14 +110,35 @@ export interface MessageAttachment {
 export interface MessagePayload {
   body?: string
   attachment?: { type: 'question' | 'snippet'; id: number }
+  mentions?: number[] // personnes mentionnées avec @
 }
 
-export interface RoomMessage {
+export interface Reaction {
+  emoji: string
+  count: number
+  mine: boolean
+}
+
+// Champs communs aux messages de salon et privés
+export interface MessageBase {
   id: number
   body: string
-  author: User
   attachment: MessageAttachment | null
+  editedAt: string | null
+  deleted: boolean
+  reactions: Reaction[]
+  canEdit: boolean
+  canDelete: boolean
   createdAt: string
+}
+
+export interface GroupMember extends User {
+  role: 'admin' | 'member'
+  joinedAt: string
+}
+
+export interface RoomMessage extends MessageBase {
+  author: User
 }
 
 export interface Conversation {
@@ -124,18 +148,14 @@ export interface Conversation {
   unreadCount: number
 }
 
-export interface DirectMessage {
-  id: number
-  body: string
+export interface DirectMessage extends MessageBase {
   mine: boolean
-  attachment: MessageAttachment | null
   readAt: string | null
-  createdAt: string
 }
 
 export interface AppNotification {
   id: string
-  kind: 'answer' | 'accepted' | 'bounty' | 'message' | 'info'
+  kind: 'answer' | 'accepted' | 'bounty' | 'message' | 'mention' | 'info'
   title: string
   body: string
   url: string | null

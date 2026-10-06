@@ -2,12 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
-import { ChatComposer, ChatThread } from '../components/Chat'
+import { ChatComposer, ChatThread, type ChatActions, type ComposerPayload } from '../components/Chat'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
 import { errorMessage } from '../lib/api'
 import { COUNTRY_NAMES, timeAgo } from '../lib/format'
-import { listConversations, sendDirectMessage, thread } from '../services/messaging'
+import { deleteMessage, editMessage, listConversations, reactToMessage, sendDirectMessage, thread } from '../services/messaging'
 
 export default function Messages() {
   const userId = Number(useParams().userId) || null
@@ -30,14 +30,20 @@ export default function Messages() {
     }
   }, [userId, isSuccess, queryClient])
 
-  const send = useMutation({
-    mutationFn: (body: string) => sendDirectMessage(userId!, { body }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['thread', userId] })
-      queryClient.invalidateQueries({ queryKey: ['conversations'] })
-    },
-    onError: (e) => toast(errorMessage(e), 'bell'),
-  })
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['thread', userId] })
+    queryClient.invalidateQueries({ queryKey: ['conversations'] })
+  }
+  const fail = (e: unknown) => toast(errorMessage(e), 'bell')
+  const send = useMutation({ mutationFn: (p: ComposerPayload) => sendDirectMessage(userId!, { body: p.body }), onSuccess: refresh, onError: fail })
+  const edit = useMutation({ mutationFn: (v: { id: number; body: string }) => editMessage('direct', v.id, v.body), onSuccess: refresh, onError: fail })
+  const remove = useMutation({ mutationFn: (id: number) => deleteMessage('direct', id), onSuccess: refresh, onError: fail })
+  const react = useMutation({ mutationFn: (v: { id: number; emoji: string }) => reactToMessage('direct', v.id, v.emoji), onSuccess: refresh, onError: fail })
+  const actions: ChatActions = {
+    onEdit: (id, body) => edit.mutate({ id, body }),
+    onDelete: (id) => remove.mutate(id),
+    onReact: (id, emoji) => react.mutate({ id, emoji }),
+  }
 
   const list = conversations?.data ?? []
   const other = current?.user
@@ -89,7 +95,7 @@ export default function Messages() {
 
         {userId ? (
           <section className="flex min-w-0 flex-col rounded-[14px] border border-line bg-bg">
-            <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-3">
+            <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
               <Link to="/app/messages" className="text-muted hover:text-ink md:hidden" aria-label="Toutes les conversations">
                 <Icon name="left" />
               </Link>
@@ -113,11 +119,12 @@ export default function Messages() {
               <ChatThread
                 items={current?.messages ?? []}
                 loading={isLoading}
+                actions={actions}
                 emptyText={other ? `Dites bonjour à ${other.name.split(' ')[0]} !` : ''}
               />
             </div>
             <div className="border-t border-line bg-surface p-3">
-              <ChatComposer onSend={(body) => send.mutate(body)} pending={send.isPending || !other} placeholder="Écrire un message…" />
+              <ChatComposer onSend={(p) => send.mutate(p)} pending={send.isPending || !other} placeholder="Écrire un message…" />
             </div>
           </section>
         ) : (
