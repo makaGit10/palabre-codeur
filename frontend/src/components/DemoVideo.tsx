@@ -22,8 +22,10 @@ export function DemoButton() {
         onClick={() => setOpen(true)}
         className="group inline-flex items-center gap-2.5 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-sm font-semibold shadow-[0_10px_30px_-18px_rgb(0_0_0/.35)] transition hover:border-green"
       >
-        <span className="grid size-8 place-items-center rounded-full bg-green text-green-ink transition group-hover:scale-105">
-          <Icon name="play" className="size-4" />
+        <span className="relative grid size-8 place-items-center rounded-full bg-green text-green-ink transition group-hover:scale-105">
+          {/* Halo qui pulse autour du bouton de lecture, pour attirer l'œil (désactivé si l'utilisateur limite les animations) */}
+          <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-green opacity-50 motion-reduce:hidden" />
+          <Icon name="play" className="relative size-4" />
         </span>
         {t('demo.watch')}
         <span className="font-medium text-muted">{t('demo.duration')}</span>
