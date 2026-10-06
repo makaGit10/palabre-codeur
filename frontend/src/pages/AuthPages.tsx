@@ -29,7 +29,7 @@ function Showcase({ title }: { title: string }) {
   const figures: [number | undefined, string][] = [
     [stats?.developers, t('auth.fig_devs')],
     [stats?.solvedQuestions, t('auth.fig_solved')],
-    [stats?.countries, t('auth.fig_countries')],
+    [COUNTRIES.length, t('auth.fig_countries')],
   ]
 
   return (

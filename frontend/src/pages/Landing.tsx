@@ -63,7 +63,7 @@ export default function Landing() {
         {[
           [stats?.developers, tn('landing.stat_devs', plural(stats?.developers))],
           [stats?.solvedQuestions, tn('landing.stat_solved', plural(stats?.solvedQuestions))],
-          [stats?.countries, t('landing.stat_countries')],
+          [COUNTRIES.length, t('landing.stat_countries')],
           [stats?.bountiesPaid, t('landing.stat_bounties')],
         ].map(([n, l]) => (
           <div key={l} className="bg-surface p-5">
