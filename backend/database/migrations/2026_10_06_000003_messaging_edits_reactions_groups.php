@@ -38,7 +38,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('role', 10)->default('member'); // admin | member
             $table->timestamp('joined_at')->useCurrent();
-            $table->timestamp('last_read_at')->nullable(); // non-lus par groupe
+            $table->unsignedBigInteger('last_read_message_id')->nullable(); // non-lus par groupe : dernier message lu (repère exact)
             $table->primary(['room_id', 'user_id']);
         });
     }

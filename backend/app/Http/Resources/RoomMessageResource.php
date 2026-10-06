@@ -2,19 +2,19 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Concerns\SerializesMessage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class RoomMessageResource extends JsonResource
 {
+    use SerializesMessage;
+
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'body' => $this->body,
             'author' => new UserResource($this->author),
-            'attachment' => $this->attachmentPayload(),
-            'createdAt' => $this->created_at->toIso8601String(),
-        ];
+        ] + $this->messageFields($request);
     }
 }

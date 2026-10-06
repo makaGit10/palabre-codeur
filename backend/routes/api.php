@@ -5,10 +5,13 @@ use App\Http\Controllers\Api\AnswerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommunityController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SnippetController;
+use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +44,8 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/conversations/{user}', [ConversationController::class, 'show'])->whereNumber('user');
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'readAll']);
+    Route::get('/groups/{room:slug}/members', [GroupController::class, 'members']);
+    Route::get('/users/search', UserSearchController::class);
 });
 
 // Participation : compte obligatoire, et nombre d'écritures limité par personne
@@ -59,4 +64,15 @@ Route::middleware(['auth:sanctum', 'throttle:writes'])->group(function () {
 
     Route::post('/rooms/{room:slug}/messages', [RoomController::class, 'store']);
     Route::post('/conversations/{user}/messages', [ConversationController::class, 'store'])->whereNumber('user');
+
+    // Modifier, supprimer, réagir (type : room | direct)
+    Route::patch('/messages/{type}/{id}', [MessageController::class, 'update'])->whereIn('type', ['room', 'direct'])->whereNumber('id');
+    Route::delete('/messages/{type}/{id}', [MessageController::class, 'destroy'])->whereIn('type', ['room', 'direct'])->whereNumber('id');
+    Route::post('/messages/{type}/{id}/reactions', [MessageController::class, 'react'])->whereIn('type', ['room', 'direct'])->whereNumber('id');
+
+    // Groupes privés
+    Route::post('/groups', [GroupController::class, 'store']);
+    Route::post('/groups/{room:slug}/members', [GroupController::class, 'addMembers']);
+    Route::delete('/groups/{room:slug}/members/me', [GroupController::class, 'leave']);
+    Route::delete('/groups/{room:slug}/members/{user}', [GroupController::class, 'removeMember'])->whereNumber('user');
 });

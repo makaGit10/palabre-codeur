@@ -47,7 +47,7 @@ class Room extends Model
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot(['role', 'joined_at', 'last_read_at']);
+        return $this->belongsToMany(User::class)->withPivot(['role', 'joined_at', 'last_read_message_id']);
     }
 
     public function isGroup(): bool

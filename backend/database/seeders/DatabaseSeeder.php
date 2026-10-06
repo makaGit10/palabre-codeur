@@ -358,5 +358,20 @@ class DatabaseSeeder extends Seeder
 
         $u['mareme']->notify(new NewAnswer($this->moussaAnswer, $this->q1));
         $u['mareme']->notify(new NewDirectMessage($message, $u['moussa']));
+
+        // Un groupe privé « Équipe Dakar » (Mareme administratrice) et quelques réactions
+        $group = Room::create(['slug' => 'g-equipe-dakar', 'name' => 'Équipe Dakar', 'kind' => Room::GROUP, 'description' => null]);
+        $group->forceFill(['is_private' => true, 'created_by' => $u['mareme']->id])->save();
+        $group->members()->attach($u['mareme']->id, ['role' => Room::ROLE_ADMIN]);
+        $group->members()->attach([$u['moussa']->id, $u['fatou']->id], ['role' => Room::ROLE_MEMBER]);
+        foreach ([['mareme', 55, 'On se cale sur le meetup du 18 ? Je propose un atelier « webhooks sans douleur ».'], ['fatou', 40, 'Partante ! Je peux faire la partie paie et conformité.']] as [$author, $minutesAgo, $body]) {
+            $date = Carbon::now()->subMinutes($minutesAgo);
+            $m = $group->messages()->make(['body' => $body]);
+            $m->forceFill(['user_id' => $u[$author]->id, 'created_at' => $date, 'updated_at' => $date])->save();
+        }
+        $rooms['wave']->messages()->where('user_id', $u['mareme']->id)->first()?->reactions()->createMany([
+            ['user_id' => $u['moussa']->id, 'emoji' => '👍'],
+            ['user_id' => $u['mariam']->id, 'emoji' => '🙏'],
+        ]);
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
-/** Un message contient du texte, une pièce jointe (question ou extrait partagé), ou les deux */
+/** Un message contient du texte, une pièce jointe (question ou extrait partagé), ou les deux ; et des mentions @ */
 class StoreMessageRequest extends FormRequest
 {
     public function rules(): array
@@ -20,6 +20,8 @@ class StoreMessageRequest extends FormRequest
                 'integer',
                 Rule::exists($this->input('attachment.type') === 'snippet' ? 'snippets' : 'questions', 'id'),
             ],
+            'mentions' => ['nullable', 'array', 'max:10'],
+            'mentions.*' => ['integer', Rule::exists('users', 'id')],
         ];
     }
 
@@ -42,7 +44,7 @@ class StoreMessageRequest extends FormRequest
         }];
     }
 
-    /** @return array{body: string, attachment: array{type: string, id: int}|null} */
+    /** @return array{body: string, attachment: array{type: string, id: int}|null, mentions: list<int>} */
     public function payload(): array
     {
         $attachment = $this->validated('attachment');
@@ -50,6 +52,7 @@ class StoreMessageRequest extends FormRequest
         return [
             'body' => (string) $this->validated('body'),
             'attachment' => $attachment ? ['type' => $attachment['type'], 'id' => (int) $attachment['id']] : null,
+            'mentions' => array_map('intval', $this->validated('mentions') ?? []),
         ];
     }
 }
