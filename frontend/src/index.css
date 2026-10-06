@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* Palette Palabre : vert baobab + or des primes. Thème clair par défaut. */
+:root {
+  --bg: #F4F6F1;
+  --surface: #FFFFFF;
+  --sunk: #EEF1EA;
+  --ink: #13201A;
+  --muted: #5D6A62;
+  --line: #DFE4DA;
+  --green: #0E6B4E;
+  --green-ink: #FFFFFF;
+  --green-soft: #E1EFE8;
+  --gold: #B87D06;
+  --gold-bg: #F2A900;
+  --gold-soft: #FBF0D3;
+  --red: #C2413A;
+  --code-bg: #0F1A16;
+  --code-ink: #DCE6E0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0E1412; --surface: #151D1A; --sunk: #111815; --ink: #E7EEEA; --muted: #93A39A; --line: #25312C;
+    --green: #3FBF8F; --green-ink: #06140E; --green-soft: #16302A;
+    --gold: #F2B731; --gold-bg: #F2B731; --gold-soft: #2F2710; --red: #E06A62; --code-bg: #0A100E;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0E1412; --surface: #151D1A; --sunk: #111815; --ink: #E7EEEA; --muted: #93A39A; --line: #25312C;
+  --green: #3FBF8F; --green-ink: #06140E; --green-soft: #16302A;
+  --gold: #F2B731; --gold-bg: #F2B731; --gold-soft: #2F2710; --red: #E06A62; --code-bg: #0A100E;
+}
+
+/* Les variables deviennent des classes Tailwind : bg-surface, text-muted, border-line… */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunk: var(--sunk);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-green: var(--green);
+  --color-green-ink: var(--green-ink);
+  --color-green-soft: var(--green-soft);
+  --color-gold: var(--gold);
+  --color-gold-bg: var(--gold-bg);
+  --color-gold-soft: var(--gold-soft);
+  --color-red: var(--red);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* Drapeaux simplifiés des pays (les emojis drapeaux ne s'affichent pas sous Windows) */
+.flag { display: inline-block; width: 18px; height: 12px; border-radius: 2px; vertical-align: -1px; box-shadow: 0 0 0 1px rgb(0 0 0 / .12); flex: none; }
+.flag-SN { background: linear-gradient(90deg, #00853F 33.3%, #FDEF42 33.3% 66.6%, #E31B23 66.6%); }
+.flag-CI { background: linear-gradient(90deg, #F77F00 33.3%, #FFFFFF 33.3% 66.6%, #009E60 66.6%); }
+.flag-ML { background: linear-gradient(90deg, #14B53A 33.3%, #FCD116 33.3% 66.6%, #CE1126 66.6%); }
+.flag-CM { background: linear-gradient(90deg, #007A5E 33.3%, #CE1126 33.3% 66.6%, #FCD116 66.6%); }
+.flag-BF { background: linear-gradient(180deg, #EF2B2D 50%, #009E49 50%); }
+.flag-MA { background: #C1272D; }
+
+/* Contenu Markdown des questions et réponses */
+.md { overflow-wrap: anywhere; }
+.md > * + * { margin-top: 12px; }
+.md strong { font-weight: 700; }
+.md a { color: var(--green); text-decoration: underline; }
+.md ul { list-style: disc; padding-left: 22px; }
+.md ol { list-style: decimal; padding-left: 22px; }
+.md blockquote { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
+.md :not(pre) > code { font-family: var(--font-mono); font-size: .88em; background: var(--sunk); padding: 1px 6px; border-radius: 5px; }
+.md pre { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font: 12.5px/1.65 var(--font-mono); }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: #C792EA; }
+.hljs-string, .hljs-attr { color: #B5E08C; }
+.hljs-comment { color: #6B8378; font-style: italic; }
+.hljs-number { color: #F78C6C; }
+.hljs-title, .hljs-title.function_ { color: #82AAFF; }
+.hljs-variable, .hljs-params { color: #FFCB6B; }
+
+/* Arbre à code : feuillage qui se balance et morceaux de code qui tombent */
+.canopy { transform-box: view-box; transform-origin: 300px 230px; animation: canopy-sway 7s ease-in-out infinite; }
+@keyframes canopy-sway { 0%, 100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.7deg); } }
+
+.code-drop {
+  position: absolute;
+  top: var(--start);
+  white-space: nowrap;
+  opacity: 0;
+  animation: code-fall var(--dur) linear var(--delay) infinite;
+}
+@keyframes code-fall {
+  0% { top: var(--start); opacity: 0; transform: translateX(0) rotate(0); }
+  10% { opacity: 1; }
+  50% { transform: translateX(var(--sway)) rotate(calc(var(--rot) * .5)); }
+  85% { opacity: 1; }
+  100% { top: 90%; opacity: 0; transform: translateX(calc(var(--sway) * -.4)) rotate(var(--rot)); }
+}
+
+.float-slow { animation: float 5s ease-in-out infinite; }
+.float-slow-2 { animation: float 6s ease-in-out 1s infinite; }
+@keyframes float { 50% { transform: translateY(-8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+  /* Sans animation, les morceaux de code reposent au pied de l'arbre */
+  .code-drop { top: 84%; opacity: .8; }
+}

@@ -1,0 +1,45 @@
+# Environnement de développement de Palabre : docker compose up -d
+# Les mots de passe ci-dessous servent uniquement en local.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: palabre
+      POSTGRES_USER: palabre
+      POSTGRES_PASSWORD: palabre
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U palabre -d palabre"]
+      interval: 5s
+      retries: 10
+
+  # Valkey : remplaçant de Redis sous licence BSD (Redis est passé sous AGPL, interdite par le règlement)
+  valkey:
+    image: valkey/valkey:8-alpine
+    # Pas de port exposé : seule l'API y accède, à l'intérieur du réseau Docker
+
+  api:
+    build: ./backend/docker/php
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    working_dir: /var/www/html
+    environment:
+      # Plusieurs requêtes traitées en parallèle (une page en envoie plusieurs à la fois)
+      PHP_CLI_SERVER_WORKERS: 4
+    volumes:
+      - ./backend:/var/www/html
+      # vendor dans un volume Docker (côté Linux) : lecture des milliers de fichiers bien plus rapide sous Windows
+      - vendor:/var/www/html/vendor
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+
+volumes:
+  pgdata:
+  vendor:
