@@ -3,8 +3,10 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Avatar, Logo } from '../components/Brand'
 import { Icon, type IconName } from '../components/Icon'
+import { SearchProvider } from '../components/SearchPalette'
 import { useAuth } from '../hooks/useAuth'
 import { usePersistentState, useTheme } from '../hooks/usePersistentState'
+import { useSearchPalette } from '../hooks/useSearchPalette'
 import { formatNumber } from '../lib/format'
 import { logout } from '../services/auth'
 import { listConversations, listNotifications } from '../services/messaging'
@@ -75,6 +77,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   const { user } = useAuth()
   const counts = useCounts(!!user)
   const logoutMutation = useLogout()
+  const openSearch = useSearchPalette()
   const label = collapsed ? 'Déplier le menu' : 'Replier le menu'
 
   return (
@@ -92,6 +95,24 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
             <Icon name="left" className={`size-[18px] transition-transform ${collapsed ? 'rotate-180' : ''}`} />
           </button>
         </div>
+        {/* Recherche globale : partout dans l'application, aussi par Ctrl K */}
+        <button
+          onClick={openSearch}
+          title="Rechercher (Ctrl K)"
+          aria-label="Rechercher"
+          aria-keyshortcuts="Control+K"
+          className={`mb-2 flex w-full items-center gap-2.5 rounded-[10px] border border-line bg-bg py-2 text-muted transition hover:border-green hover:text-ink ${
+            collapsed ? 'justify-center px-0' : 'px-3'
+          }`}
+        >
+          <Icon name="search" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-left text-sm">Rechercher…</span>
+              <kbd className="rounded-md border border-line px-1.5 font-sans text-[11px]">Ctrl K</kbd>
+            </>
+          )}
+        </button>
         <Link
           to="/app/poser"
           title="Poser une question"
@@ -197,6 +218,7 @@ function MobileTabbar() {
   const counts = useCounts(!!user)
   const { toggle: toggleTheme, isDark } = useTheme()
   const logoutMutation = useLogout()
+  const openSearch = useSearchPalette()
   const [open, setOpen] = useState(false)
   const tab = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10.5px] ${isActive ? 'font-bold text-green' : 'text-muted'}`
@@ -214,6 +236,15 @@ function MobileTabbar() {
           >
             <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-line" />
             <nav className="grid gap-0.5">
+              <button
+                onClick={() => {
+                  close()
+                  openSearch()
+                }}
+                className={row}
+              >
+                <Icon name="search" /> Rechercher
+              </button>
               <Link to="/app/snippets" onClick={close} className={row}>
                 <Icon name="code" /> Snippets
               </Link>
@@ -285,16 +316,18 @@ export default function AppLayout() {
   const [collapsed, setCollapsed] = usePersistentState('palabre-nav-collapsed', false)
 
   return (
-    <div
-      className={`min-h-dvh md:grid md:transition-[grid-template-columns] ${
-        collapsed ? 'md:grid-cols-[72px_minmax(0,1fr)]' : 'md:grid-cols-[256px_minmax(0,1fr)]'
-      }`}
-    >
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <main className="min-w-0 px-4 pt-5 pb-28 md:px-8 md:pt-7 md:pb-10 2xl:px-12">
-        <Outlet />
-      </main>
-      <MobileTabbar />
-    </div>
+    <SearchProvider>
+      <div
+        className={`min-h-dvh md:grid md:transition-[grid-template-columns] ${
+          collapsed ? 'md:grid-cols-[72px_minmax(0,1fr)]' : 'md:grid-cols-[256px_minmax(0,1fr)]'
+        }`}
+      >
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <main className="min-w-0 px-4 pt-5 pb-28 md:px-8 md:pt-7 md:pb-10 2xl:px-12">
+          <Outlet />
+        </main>
+        <MobileTabbar />
+      </div>
+    </SearchProvider>
   )
 }

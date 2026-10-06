@@ -25,6 +25,9 @@ class Room extends Model
 
     public const ROLE_MEMBER = 'member';
 
+    // Un salon est public tant qu'on ne l'a pas créé comme groupe
+    protected $attributes = ['is_private' => false];
+
     protected function casts(): array
     {
         return ['is_private' => 'boolean'];

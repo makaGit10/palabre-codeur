@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\RoomController;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SnippetController;
 use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\VoteController;
@@ -27,6 +28,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::get('/users/{user}', [CommunityController::class, 'profile'])->whereNumber('user');
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::get('/rooms/{room:slug}/messages', [RoomController::class, 'messages']);
+    Route::get('/search', SearchController::class);
 });
 
 // Inscription et connexion (cookie de session) : tentatives limitées contre le vol de mot de passe

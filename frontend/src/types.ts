@@ -162,3 +162,20 @@ export interface AppNotification {
   readAt: string | null
   createdAt: string
 }
+
+// ——— Recherche globale (Ctrl K) : résultats groupés par section ———
+export type SearchSectionId = 'questions' | 'snippets' | 'rooms' | 'users' | 'messages'
+
+export interface SearchItem {
+  id: number | string
+  title: string
+  subtitle: string
+  url: string
+  country?: CountryCode // pour les membres
+}
+
+export interface SearchSection {
+  id: SearchSectionId
+  label: string
+  items: SearchItem[]
+}

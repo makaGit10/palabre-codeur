@@ -271,7 +271,8 @@ class MessagingService
             return 'Message supprimé';
         }
         if ($message->body !== '') {
-            return $message->body;
+            // Les mentions sont stockées en liens Markdown : on n'affiche que « @Nom » dans un aperçu
+            return preg_replace('/\[(@[^\]]+)\]\(\/app\/profil\/\d+\)/', '$1', $message->body);
         }
         $attachment = $message->attachmentPayload();
 
