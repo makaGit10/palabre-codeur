@@ -141,9 +141,12 @@ function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13.5px] font-semibold">{account.name}</span>
                   <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
-                    <Flag code={account.country} />
-                    {account.city ? `${account.city}, ` : ''}
-                    {COUNTRY_NAMES[account.country]} · {account.email}
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                      <Flag code={account.country} />
+                      {account.city ? `${account.city}, ` : ''}
+                      {COUNTRY_NAMES[account.country]}
+                    </span>
+                    <span className="truncate">{account.email}</span>
                   </span>
                 </span>
                 <span className="text-xs font-semibold whitespace-nowrap text-green">{pending ? 'Connexion…' : 'Utiliser ce compte'}</span>
