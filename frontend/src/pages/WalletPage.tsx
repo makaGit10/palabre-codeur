@@ -108,7 +108,8 @@ export default function WalletPage() {
         <section className="rounded-[14px] border border-line bg-surface p-5">
           <h2 className="mb-1 text-base">{t('w.everywhere')}</h2>
           <p className="mb-3 text-[12.5px] text-muted">{t('w.everywhere_text')}</p>
-          <ul className="flex flex-col gap-2.5 text-[13px]">
+          {/* 26 pays : la liste défile dans son cadre */}
+          <ul className="flex max-h-[440px] flex-col gap-2.5 overflow-y-auto pr-1 text-[13px]">
             {COUNTRIES.map((c) => (
               <li key={c} className="border-b border-line pb-2.5 last:border-0 last:pb-0">
                 <span className="flex items-center justify-between gap-2 font-semibold">

@@ -85,6 +85,26 @@
 .flag-CM { background: linear-gradient(90deg, #007A5E 33.3%, #CE1126 33.3% 66.6%, #FCD116 66.6%); }
 .flag-BF { background: linear-gradient(180deg, #EF2B2D 50%, #009E49 50%); }
 .flag-MA { background: #C1272D; }
+.flag-NE { background: linear-gradient(180deg, #E05206 33.3%, #FFFFFF 33.3% 66.6%, #0DB02B 66.6%); }
+.flag-BJ { background: linear-gradient(90deg, #008751 40%, transparent 40%), linear-gradient(180deg, #FCD116 50%, #E8112D 50%); }
+.flag-TG { background: linear-gradient(#D21034, #D21034) 0 0 / 40% 60% no-repeat, repeating-linear-gradient(180deg, #006A4E 0 20%, #FFCE00 20% 40%); }
+.flag-GN { background: linear-gradient(90deg, #CE1126 33.3%, #FCD116 33.3% 66.6%, #009460 66.6%); }
+.flag-MR { background: linear-gradient(180deg, #D01C1F 20%, #00A95C 20% 80%, #D01C1F 80%); }
+.flag-GA { background: linear-gradient(180deg, #009E60 33.3%, #FCD116 33.3% 66.6%, #3A75C4 66.6%); }
+.flag-CG { background: linear-gradient(135deg, #009543 42%, #FBDE4A 42% 58%, #DC241F 58%); }
+.flag-CD { background: linear-gradient(135deg, #007FFF 40%, #F7D618 40% 44%, #CE1021 44% 56%, #F7D618 56% 60%, #007FFF 60%); }
+.flag-TD { background: linear-gradient(90deg, #002664 33.3%, #FECB00 33.3% 66.6%, #C60C30 66.6%); }
+.flag-CF { background: linear-gradient(90deg, transparent 40%, #D21034 40% 60%, transparent 60%), linear-gradient(180deg, #003082 25%, #FFFFFF 25% 50%, #289728 50% 75%, #FFCE00 75%); }
+.flag-GQ { background: linear-gradient(90deg, #0073CE 22%, transparent 22%), linear-gradient(180deg, #3E9A00 33.3%, #FFFFFF 33.3% 66.6%, #E32118 66.6%); }
+.flag-DZ { background: linear-gradient(90deg, #006233 50%, #FFFFFF 50%); }
+.flag-TN { background: radial-gradient(circle, #FFFFFF 3.5px, #E70013 4px); }
+.flag-MG { background: linear-gradient(90deg, #FFFFFF 33.3%, transparent 33.3%), linear-gradient(180deg, #FC3D32 50%, #007E3A 50%); }
+.flag-KM { background: linear-gradient(90deg, #3D8E33 28%, transparent 28%), linear-gradient(180deg, #FFC61E 25%, #FFFFFF 25% 50%, #CE1126 50% 75%, #3A75C4 75%); }
+.flag-DJ { background: linear-gradient(90deg, #FFFFFF 30%, transparent 30%), linear-gradient(180deg, #6AB2E7 50%, #12AD2B 50%); }
+.flag-RW { background: linear-gradient(180deg, #00A1DE 50%, #FAD201 50% 75%, #20603D 75%); }
+.flag-BI { background: conic-gradient(from 45deg, #1EB53A 0 90deg, #CE1126 90deg 180deg, #1EB53A 180deg 270deg, #CE1126 270deg); }
+.flag-MU { background: linear-gradient(180deg, #EA2839 25%, #1A206D 25% 50%, #FFD500 50% 75%, #00A551 75%); }
+.flag-SC { background: conic-gradient(at 0% 100%, #003F87 0 18deg, #FCD856 18deg 36deg, #D62828 36deg 54deg, #FFFFFF 54deg 72deg, #007A3D 72deg); }
 
 /* Contenu Markdown des questions et réponses */
 .md { overflow-wrap: anywhere; }

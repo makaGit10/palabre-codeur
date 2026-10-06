@@ -1,4 +1,31 @@
-export type CountryCode = 'SN' | 'CI' | 'CM' | 'MA' | 'BF' | 'ML'
+// Les 26 pays d'Afrique francophone
+export type CountryCode =
+  | 'SN'
+  | 'CI'
+  | 'CM'
+  | 'MA'
+  | 'BF'
+  | 'ML'
+  | 'NE'
+  | 'BJ'
+  | 'TG'
+  | 'GN'
+  | 'MR'
+  | 'GA'
+  | 'CG'
+  | 'CD'
+  | 'TD'
+  | 'CF'
+  | 'GQ'
+  | 'DZ'
+  | 'TN'
+  | 'MG'
+  | 'KM'
+  | 'DJ'
+  | 'RW'
+  | 'BI'
+  | 'MU'
+  | 'SC'
 
 export interface User {
   id: number
@@ -14,7 +41,19 @@ export interface Me extends User {
   email: string
 }
 
-export type PaymentMethod = 'wave' | 'orange_money' | 'free_money' | 'mtn_momo' | 'moov_money' | 'card' | 'bank_transfer'
+export type PaymentMethod =
+  | 'wave'
+  | 'orange_money'
+  | 'free_money'
+  | 'mtn_momo'
+  | 'moov_money'
+  | 'airtel_money'
+  | 'mpesa'
+  | 'flooz'
+  | 'tmoney'
+  | 'mvola'
+  | 'card'
+  | 'bank_transfer'
 
 export interface Bounty {
   amount: number

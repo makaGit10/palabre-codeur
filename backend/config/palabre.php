@@ -3,7 +3,7 @@
 // Règles métier de Palabre, réunies au même endroit.
 return [
 
-    // Pays pris en charge : nom, monnaie, moyens de paiement et de retrait disponibles.
+    // Les 26 pays d'Afrique francophone : nom, monnaie, moyens de paiement et de retrait disponibles.
     // Liste des moyens à confirmer avec l'agrégateur de paiement retenu.
     'countries' => [
         'SN' => ['name' => 'Sénégal', 'currency' => 'XOF', 'methods' => ['wave', 'orange_money', 'free_money', 'card']],
@@ -12,9 +12,29 @@ return [
         'BF' => ['name' => 'Burkina Faso', 'currency' => 'XOF', 'methods' => ['wave', 'orange_money', 'moov_money', 'card']],
         'CM' => ['name' => 'Cameroun', 'currency' => 'XAF', 'methods' => ['mtn_momo', 'orange_money', 'card']],
         'MA' => ['name' => 'Maroc', 'currency' => 'MAD', 'methods' => ['card', 'bank_transfer']],
+        'NE' => ['name' => 'Niger', 'currency' => 'XOF', 'methods' => ['airtel_money', 'moov_money', 'card']],
+        'BJ' => ['name' => 'Bénin', 'currency' => 'XOF', 'methods' => ['mtn_momo', 'moov_money', 'card']],
+        'TG' => ['name' => 'Togo', 'currency' => 'XOF', 'methods' => ['flooz', 'tmoney', 'card']],
+        'GN' => ['name' => 'Guinée', 'currency' => 'GNF', 'methods' => ['orange_money', 'mtn_momo', 'card']],
+        'MR' => ['name' => 'Mauritanie', 'currency' => 'MRU', 'methods' => ['card', 'bank_transfer']],
+        'GA' => ['name' => 'Gabon', 'currency' => 'XAF', 'methods' => ['airtel_money', 'moov_money', 'card']],
+        'CG' => ['name' => 'Congo', 'currency' => 'XAF', 'methods' => ['mtn_momo', 'airtel_money', 'card']],
+        'CD' => ['name' => 'RD Congo', 'currency' => 'CDF', 'methods' => ['mpesa', 'orange_money', 'airtel_money', 'card']],
+        'TD' => ['name' => 'Tchad', 'currency' => 'XAF', 'methods' => ['airtel_money', 'moov_money', 'card']],
+        'CF' => ['name' => 'Centrafrique', 'currency' => 'XAF', 'methods' => ['orange_money', 'card', 'bank_transfer']],
+        'GQ' => ['name' => 'Guinée équatoriale', 'currency' => 'XAF', 'methods' => ['card', 'bank_transfer']],
+        'DZ' => ['name' => 'Algérie', 'currency' => 'DZD', 'methods' => ['card', 'bank_transfer']],
+        'TN' => ['name' => 'Tunisie', 'currency' => 'TND', 'methods' => ['card', 'bank_transfer']],
+        'MG' => ['name' => 'Madagascar', 'currency' => 'MGA', 'methods' => ['mvola', 'orange_money', 'airtel_money', 'card']],
+        'KM' => ['name' => 'Comores', 'currency' => 'KMF', 'methods' => ['card', 'bank_transfer']],
+        'DJ' => ['name' => 'Djibouti', 'currency' => 'DJF', 'methods' => ['card', 'bank_transfer']],
+        'RW' => ['name' => 'Rwanda', 'currency' => 'RWF', 'methods' => ['mtn_momo', 'airtel_money', 'card']],
+        'BI' => ['name' => 'Burundi', 'currency' => 'BIF', 'methods' => ['card', 'bank_transfer']],
+        'MU' => ['name' => 'Maurice', 'currency' => 'MUR', 'methods' => ['card', 'bank_transfer']],
+        'SC' => ['name' => 'Seychelles', 'currency' => 'SCR', 'methods' => ['card', 'bank_transfer']],
     ],
 
-    'mobile_money' => ['wave', 'orange_money', 'free_money', 'mtn_momo', 'moov_money'],
+    'mobile_money' => ['wave', 'orange_money', 'free_money', 'mtn_momo', 'moov_money', 'airtel_money', 'mpesa', 'flooz', 'tmoney', 'mvola'],
 
     'bounty' => [
         'amounts' => [500, 1000, 2000], // FCFA
@@ -36,12 +56,12 @@ return [
     // Comptes de démonstration créés par le seeder. En ligne, définir des mots de passe forts dans .env.
     'demo' => [
         'owner_email' => env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'),
-        'owner_password' => env('DEMO_OWNER_PASSWORD', 'password'),
+        'teammate_email' => env('DEMO_TEAMMATE_EMAIL', 'njaayxaadim1312@gmail.com'),
         'password' => env('DEMO_PASSWORD', 'password'),
-        // Comptes proposés sur la page de connexion (jury, visiteurs) quand DEMO_ACCOUNTS_PUBLIC=true.
-        // Leur mot de passe commun (DEMO_PASSWORD) devient alors public : jamais le compte de la propriétaire.
+        // Comptes proposés sur la page de connexion (jury) quand DEMO_ACCOUNTS_PUBLIC=true : ceux de l'équipe.
+        // Leur mot de passe (DEMO_PASSWORD) devient alors public, par choix, le temps du concours.
         'accounts_public' => (bool) env('DEMO_ACCOUNTS_PUBLIC', false),
-        'public_accounts' => ['moussa@palabre.test', 'yasmine@palabre.test', 'fatou@palabre.test'],
+        'public_accounts' => [env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'), env('DEMO_TEAMMATE_EMAIL', 'njaayxaadim1312@gmail.com')],
     ],
 
     // Points de réputation gagnés ou perdus

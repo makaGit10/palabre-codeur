@@ -78,11 +78,11 @@ function Showcase({ title }: { title: string }) {
             </div>
           ))}
         </dl>
-        <div className="mt-3 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-[#E7EEEA]/75">
+        {/* Les 26 drapeaux, le nom au survol */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {COUNTRIES.map((c) => (
-            <span key={c} className="inline-flex items-center gap-1.5">
+            <span key={c} title={country(c)} className="inline-flex">
               <Flag code={c} />
-              {country(c)}
             </span>
           ))}
         </div>
@@ -313,14 +313,14 @@ export function RegisterPage() {
           <fieldset>
             <legend className="mb-1.5 text-sm font-bold">{t('auth.country')}</legend>
             <p className="mb-2 text-[12.5px] text-muted">{t('auth.country_hint')}</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {COUNTRIES.map((c) => (
                 <button
                   key={c}
                   type="button"
                   aria-pressed={form.country === c}
                   onClick={() => setForm({ ...form, country: c })}
-                  className={`flex items-center gap-2 rounded-[10px] border px-3 py-2 text-left text-[13.5px] font-semibold ${
+                  className={`flex items-center gap-2 rounded-[10px] border px-2.5 py-1.5 text-left text-[13px] font-semibold ${
                     form.country === c ? 'border-green bg-green-soft text-green' : 'border-line'
                   }`}
                 >
