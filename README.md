@@ -35,6 +35,8 @@ Palabre part de ces besoins :
 - **Snippets** : langage et API libres (on peut ajouter ceux qui manquent), aperçu coloré, bouton « Je l'ai testé ».
 - **Classement** : Coupe des pays et meilleurs développeurs. **Profils** avec badges et activité.
 - **Salons « Sous l'arbre »** : discussions publiques par sujet (#wave, #laravel…) et par pays (#sénégal, #maroc…). Tout le monde lit, les membres écrivent.
+- **Groupes privés** : créés par un membre, avec un nom, des invités et un administrateur ; lecture et écriture réservées aux membres, non-lus par groupe.
+- **Messages vivants** : mentions `@` avec autocomplétion (la personne est notifiée), emojis et réactions, modification pendant 1 heure (mention « modifié »), suppression pour tout le monde pendant 24 heures (« Message supprimé »). Chaque règle est vérifiée côté serveur.
 - **Messages privés** entre développeurs, depuis un profil (« Écrire à … »), avec compteur de non-lus.
 - **Partage** : un bouton « Partager » sur chaque question et chaque extrait envoie une carte cliquable dans une conversation ou un salon, avec un mot d'accompagnement. Les messages acceptent le Markdown : code coloré entre trois accents graves, liens cliquables.
 - **Notifications** : réponse reçue, réponse validée, prime versée, message privé. Les fils se rafraîchissent par interrogation régulière ; le passage au temps réel (Laravel Reverb, MIT) ne toucherait qu'un fichier côté front.
@@ -114,7 +116,7 @@ Comptes de démonstration : `moussa@palabre.test`, `fatou@palabre.test`, `yasmin
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 28 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 34 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```
