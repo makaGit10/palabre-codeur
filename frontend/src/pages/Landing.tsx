@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { Flag } from '../components/Brand'
 import { CodeTree } from '../components/CodeTree'
+import { DemoButton } from '../components/DemoVideo'
+import { SearchInput } from '../components/SearchSuggestions'
 import { Icon } from '../components/Icon'
 import { QuestionCard } from '../components/QuestionCard'
 import { COUNTRY_NAMES, formatFcfa, formatNumber, PAYMENT_LABELS } from '../lib/format'
@@ -37,7 +39,7 @@ export default function Landing() {
             Orange Money, paie OHADA, connexion 3G : ici, on connaît vos problèmes.
           </p>
           <form
-            className="flex max-w-[560px] items-center gap-2 rounded-[14px] border border-line bg-surface py-1.5 pr-1.5 pl-3.5 text-muted shadow-[0_10px_30px_-18px_rgb(0_0_0/.35)]"
+            className="relative flex max-w-[560px] items-center gap-2 rounded-[14px] border border-line bg-surface py-1.5 pr-1.5 pl-3.5 text-muted shadow-[0_10px_30px_-18px_rgb(0_0_0/.35)]"
             onSubmit={(e) => {
               e.preventDefault()
               const q = new FormData(e.currentTarget).get('q')?.toString().trim() ?? ''
@@ -45,9 +47,15 @@ export default function Landing() {
             }}
           >
             <Icon name="search" />
-            <input id="landing-search" name="q" placeholder="Comment intégrer Wave dans Laravel ?" className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none" />
+            <SearchInput id="landing-search" placeholder="Comment intégrer Wave dans Laravel ?" className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none" />
             <button className="rounded-[10px] bg-green px-4 py-2 text-sm font-semibold text-green-ink">Chercher</button>
           </form>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <DemoButton />
+            <Link to="/app" className="text-sm font-semibold text-green hover:underline">
+              Explorer sans compte
+            </Link>
+          </div>
         </div>
         <CodeTree />
       </section>

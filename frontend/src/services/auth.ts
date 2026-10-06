@@ -37,3 +37,20 @@ export async function register(input: RegisterInput): Promise<Me> {
 export async function logout() {
   await api.post('/logout')
 }
+
+// Comptes de démonstration proposés sur la page de connexion (jury, visiteurs).
+// null si l'API ne les publie pas (DEMO_ACCOUNTS_PUBLIC absent ou false : réponse 404)
+export interface DemoAccounts {
+  accounts: Me[]
+  password: string
+}
+
+export async function getDemoAccounts(): Promise<DemoAccounts | null> {
+  try {
+    const { data } = await api.get<{ data: Me[]; password: string }>('/demo-accounts')
+    return { accounts: data.data, password: data.password }
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) return null
+    throw error
+  }
+}

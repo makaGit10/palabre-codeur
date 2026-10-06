@@ -9,6 +9,23 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 
 ---
 
+## Pour le jury
+
+| | |
+|---|---|
+| **Démo en ligne** | _adresse communiquée après le déploiement sur Datacloud_ |
+| **Vidéo de présentation** | bouton « Voir la démo » sur la page d'accueil (3 minutes) |
+| **Code source** | https://github.com/makaGit10/palabre-codeur |
+| **Comptes de test** | proposés sur la page de connexion : un clic suffit, le mot de passe y est affiché |
+
+| Compte de démonstration | Pays | Ce qu'il permet de voir |
+|---|---|---|
+| Moussa Diop · `moussa@palabre.test` | Sénégal | Primes en FCFA, badges, retrait vers Wave, Orange Money ou Free Money |
+| Yasmine Benali · `yasmine@palabre.test` | Maroc | Montants convertis en dirhams, retrait par carte ou virement bancaire |
+| Fatou Ndiaye · `fatou@palabre.test` | Sénégal | Second compte pour tester les échanges à deux : messages privés, salons, groupes |
+
+Parcours conseillé, en cinq minutes : lire une question sans compte, se connecter avec un compte de démonstration, poser une question avec une prime (les questions proches apparaissent dès le titre), répondre et voter, puis ouvrir le portefeuille, le classement et la recherche globale (Ctrl K).
+
 ## Pourquoi Palabre
 
 Les plateformes de questions-réponses existantes sont pensées ailleurs. Un développeur à Dakar, Abidjan ou Douala y trouve rarement de l'aide sur ce qui fait son quotidien : intégrer un paiement Wave, calculer l'IPRES dans une paie, rendre une application utilisable en 3G, retirer de l'argent sans carte bancaire.
@@ -33,6 +50,7 @@ Palabre part de ces besoins :
 - **Portefeuille** : solde en crédits (1 crédit = 1 FCFA), historique, retrait vers Wave, Orange Money, Free Money, MTN MoMo, Moov Money, carte ou virement selon le pays. Les numéros sont masqués dans l'historique.
 - **Multi-pays** : Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Cameroun, Maroc. Montants convertis dans la monnaie locale (ex. 2 000 FCFA ≈ 33 MAD au Maroc).
 - **Snippets** : langage et API libres (on peut ajouter ceux qui manquent), aperçu coloré, bouton « Je l'ai testé ».
+- **Recherche globale** (Ctrl K) et suggestions pendant la frappe sous les barres de recherche : questions, extraits de code, salons et groupes, membres et messages, résultats groupés par section, dernières recherches mémorisées.
 - **Classement** : Coupe des pays et meilleurs développeurs. **Profils** avec badges et activité.
 - **Salons « Sous l'arbre »** : discussions publiques par sujet (#wave, #laravel…) et par pays (#sénégal, #maroc…). Tout le monde lit, les membres écrivent.
 - **Groupes privés** : créés par un membre, avec un nom, des invités et un administrateur ; lecture et écriture réservées aux membres, non-lus par groupe.
@@ -98,7 +116,7 @@ git clone https://github.com/makaGit10/palabre-codeur.git
 cd palabre-codeur
 
 # 1. Back-end : base de données, cache et API (http://localhost:8000)
-cp backend/.env.example backend/.env      # puis renseigner DB_PASSWORD et les mots de passe de démo
+cp backend/.env.example backend/.env      # puis renseigner DB_PASSWORD, les mots de passe de démo et DEMO_ACCOUNTS_PUBLIC=true
 docker compose build
 docker compose run --rm --no-deps api composer install   # dépendances dans un volume Docker (rapide sous Windows)
 docker compose up -d
@@ -107,22 +125,21 @@ docker compose exec api php artisan migrate --seed
 
 # 2. Front-end (http://localhost:5180)
 cd frontend
+cp .env.example .env   # facultatif : VITE_DEMO_VIDEO_URL, lien YouTube de la vidéo de démo
 npm install
 npm run dev
 ```
 
-Comptes de démonstration : `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`… avec le mot de passe défini dans `DEMO_PASSWORD`.
+Comptes de démonstration : `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`… avec le mot de passe défini dans `DEMO_PASSWORD`. Avec `DEMO_ACCOUNTS_PUBLIC=true`, la page de connexion les propose en un clic et affiche ce mot de passe : c'est le réglage prévu pour la démo du concours, à laisser sur `false` pour une vraie mise en service.
 
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 34 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 41 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```
 
-```bash
-```
 
 Les tests couvrent notamment : la prime bloquée puis versée une seule fois, le refus de valider la question d'un autre, un seul vote par personne, le refus de voter pour soi, les retraits limités au solde et aux moyens du pays, le masquage des numéros, la confidentialité des profils, la détection de doublons, l'inscription, la connexion, la limitation des tentatives et les messages en français.
 
@@ -148,7 +165,7 @@ Bilan : front-end 141 paquets MIT, 1 ISC, 1 BSD-3-Clause ; back-end (production)
 
 *« Octet-toi de là, on arrive ! »*
 
-- **Mareme MAKALOU** : back-end, front-end, design
-- **[Nom du coéquipier]** : [rôle]
+- **Mareme MAKALOU** : conception du produit, design de l'interface, développement front-end et back-end
+- **Khadim NDIAYE** : tests et qualité (scénarios de test, tests automatisés de l'API, test de bout en bout), vérification des règles métier, déploiement de la démo
 
 Dakar, Sénégal · 2026

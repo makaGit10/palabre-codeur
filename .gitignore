@@ -6,3 +6,4 @@ dist/
 vendor/
 *.log
 .DS_Store
+frontend/public/demo/

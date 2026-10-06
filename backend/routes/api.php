@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AnswerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommunityController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\DemoAccountController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
@@ -25,6 +26,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::get('/snippets', [SnippetController::class, 'index']);
     Route::get('/leaderboard', [CommunityController::class, 'leaderboard']);
     Route::get('/stats', [CommunityController::class, 'stats']);
+    Route::get('/demo-accounts', DemoAccountController::class); // comptes de démo, si DEMO_ACCOUNTS_PUBLIC=true
     Route::get('/users/{user}', [CommunityController::class, 'profile'])->whereNumber('user');
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::get('/rooms/{room:slug}/messages', [RoomController::class, 'messages']);

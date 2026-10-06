@@ -38,6 +38,10 @@ return [
         'owner_email' => env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'),
         'owner_password' => env('DEMO_OWNER_PASSWORD', 'password'),
         'password' => env('DEMO_PASSWORD', 'password'),
+        // Comptes proposés sur la page de connexion (jury, visiteurs) quand DEMO_ACCOUNTS_PUBLIC=true.
+        // Leur mot de passe commun (DEMO_PASSWORD) devient alors public : jamais le compte de la propriétaire.
+        'accounts_public' => (bool) env('DEMO_ACCOUNTS_PUBLIC', false),
+        'public_accounts' => ['moussa@palabre.test', 'yasmine@palabre.test', 'fatou@palabre.test'],
     ],
 
     // Points de réputation gagnés ou perdus
