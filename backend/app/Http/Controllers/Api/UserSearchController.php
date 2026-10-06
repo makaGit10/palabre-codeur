@@ -13,7 +13,7 @@ class UserSearchController extends Controller
 {
     public function __invoke(Request $request): AnonymousResourceCollection
     {
-        $q = trim((string) $request->query('q', ''));
+        $q = trim((string) $request->validate(['q' => ['nullable', 'string', 'max:80']])['q'] ?? '');
         $like = '%'.addcslashes($q, '%_\\').'%';
         $users = User::query()
             ->when($q !== '', fn ($query) => $query->where('name', 'ilike', $like))
