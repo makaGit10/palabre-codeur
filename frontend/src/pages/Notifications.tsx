@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { TopBounties, TopContributors, WithAside } from '../components/CommunityAside'
 import { Icon, type IconName } from '../components/Icon'
 import { useI18n } from '../i18n'
 import { timeAgo } from '../lib/format'
@@ -26,7 +27,8 @@ export default function Notifications() {
   }, [data, isPending, isSuccess, markRead])
 
   return (
-    <div className="max-w-[760px]">
+    <WithAside aside={<><TopContributors /><TopBounties /></>}>
+      <div>
       <div className="mb-5">
         <h1 className="text-[26px]">{t('nt.title')}</h1>
         <p className="mt-1 text-sm text-muted">{t('nt.subtitle')}</p>
@@ -71,6 +73,7 @@ export default function Notifications() {
           <p className="mt-3">{t('nt.empty')}</p>
         </div>
       )}
-    </div>
+      </div>
+    </WithAside>
   )
 }

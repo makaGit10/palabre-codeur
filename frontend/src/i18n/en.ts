@@ -129,6 +129,7 @@ export const en: Record<keyof typeof fr, string> = {
   'q.votes': 'votes',
   'q.answers.one': 'answer',
   'q.answers.other': 'answers',
+  'q.related': 'Related questions',
   'q.loading': 'Loading the question…',
   'q.not_found': 'Question not found',
   'q.asked': 'Asked {ago}',

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { TopBounties, TopContributors, WithAside } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
 import { useToast } from '../components/toastContext'
@@ -131,7 +132,8 @@ export default function NewSnippet() {
   const tab = (on: boolean) => `px-3 py-1.5 text-[13px] font-semibold rounded-md ${on ? 'bg-surface text-ink shadow-sm' : 'text-muted'}`
 
   return (
-    <div className="max-w-[860px]">
+    <WithAside aside={<><TopContributors /><TopBounties /></>}>
+      <div className="max-w-[860px]">
       <Link to="/app/snippets" className="mb-3.5 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted hover:text-ink">
         <Icon name="left" className="size-4" />
         {t('newsn.back')}
@@ -298,6 +300,7 @@ export default function NewSnippet() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </WithAside>
   )
 }

@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { Avatar, Flag } from '../components/Brand'
+import { useSearchParams } from 'react-router-dom'
+import { TopBounties, TopContributors } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
 import { QuestionCard } from '../components/QuestionCard'
 import { SearchInput } from '../components/SearchSuggestions'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n, type Key } from '../i18n'
-import { formatFcfa, formatNumber } from '../lib/format'
-import { getLeaderboard } from '../services/community'
 import { listQuestions } from '../services/questions'
 
 const TABS: { id: 'pour' | 'recentes' | 'sans' | 'primes'; label: Key }[] = [
@@ -41,12 +39,6 @@ export default function Feed() {
   }, [questions, tab, tag, search])
 
   const { user } = useAuth()
-  const { data: leaderboard } = useQuery({ queryKey: ['leaderboard'], queryFn: getLeaderboard })
-  const topUsers = leaderboard?.developers.slice(0, 5) ?? []
-  const topBounties = questions
-    .filter((q) => q.bounty && !q.solved)
-    .sort((a, b) => b.bounty!.amount - a.bounty!.amount)
-    .slice(0, 3)
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] 2xl:gap-8">
@@ -107,38 +99,8 @@ export default function Feed() {
       </div>
 
       <aside className="sticky top-7 hidden flex-col gap-4 xl:flex">
-        <section className="rounded-[14px] border border-line bg-surface p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-[15px]">
-            <Icon name="trophy" />
-            {t('feed.top_contributors')}
-          </h3>
-          {topUsers.map((u, i) => (
-            <div key={u.id} className="flex items-center gap-2.5 border-line py-1.5 text-sm not-first-of-type:border-t">
-              <span className="w-4 font-bold text-muted tabular-nums">{i + 1}</span>
-              <Avatar user={u} size="sm" />
-              <Link to={`/app/profil/${u.id}`} className="min-w-0 flex-1 truncate">
-                {u.name}
-              </Link>
-              <Flag code={u.country} />
-              <span className="text-[13px] font-bold tabular-nums">{formatNumber(u.reputation)}</span>
-            </div>
-          ))}
-        </section>
-        <section className="rounded-[14px] border border-line bg-surface p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-[15px]">
-            <Icon name="coin" />
-            {t('feed.top_bounties')}
-          </h3>
-          {topBounties.map((q) => (
-            <Link key={q.id} to={`/app/questions/${q.id}`} className="flex flex-col gap-1 border-line py-2 not-first-of-type:border-t">
-              <span className="text-[13.5px] leading-snug font-semibold">{q.title}</span>
-              <span className="inline-flex w-fit items-center gap-1 rounded-full bg-gold-soft px-2.5 py-0.5 text-xs font-bold text-gold">
-                <Icon name="coin" className="size-3.5" />
-                {formatFcfa(q.bounty!.amount)}
-              </span>
-            </Link>
-          ))}
-        </section>
+        <TopContributors />
+        <TopBounties />
       </aside>
     </div>
   )

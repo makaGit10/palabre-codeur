@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
+import { TopBounties, TopContributors, WithAside } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
 import { QuestionCard } from '../components/QuestionCard'
 import { useAuth } from '../hooks/useAuth'
@@ -40,7 +41,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-[1000px]">
+    <WithAside aside={<><TopContributors /><TopBounties /></>}>
+      <div>
       <header className="flex flex-wrap items-center gap-5">
         <Avatar user={p.user} size="lg" />
         <div>
@@ -106,6 +108,7 @@ export default function Profile() {
       ) : (
         <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">{t('pf.no_activity')}</div>
       )}
-    </div>
+      </div>
+    </WithAside>
   )
 }

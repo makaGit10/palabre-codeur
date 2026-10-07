@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { RelatedQuestions, TopBounties, WithAside } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
 import { AuthorChip, MarkdownEditor, VoteBox } from '../components/Post'
@@ -84,7 +85,8 @@ export default function QuestionPage() {
   const isMine = q.author.id === user?.id
 
   return (
-    <div className="max-w-[900px]">
+    <WithAside aside={<><RelatedQuestions question={q} /><TopBounties /></>}>
+      <div>
       <Link to="/app" className="mb-3.5 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-muted hover:text-ink">
         <Icon name="left" className="size-4" />
         {t('common.back_feed')}
@@ -205,7 +207,8 @@ export default function QuestionPage() {
       ))}
 
       <ReplyForm questionId={id} onDone={refresh} loggedIn={!!user} />
-    </div>
+      </div>
+    </WithAside>
   )
 }
 

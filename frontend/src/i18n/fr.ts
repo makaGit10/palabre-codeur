@@ -134,6 +134,7 @@ export const fr = {
   'q.votes': 'votes',
   'q.answers.one': 'réponse',
   'q.answers.other': 'réponses',
+  'q.related': 'Questions liées',
   'q.loading': 'Chargement de la question…',
   'q.not_found': 'Question introuvable',
   'q.asked': 'Posée {ago}',
