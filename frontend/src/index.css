@@ -77,30 +77,30 @@
   }
 }
 
-/* Drapeaux simplifiés des pays (les emojis drapeaux ne s'affichent pas sous Windows) */
+/* Drapeaux simplifiés des pays (les emojis drapeaux ne s'affichent pas sous Windows) : bandes en dégradés, emblèmes en SVG */
 .flag { display: inline-block; width: 18px; height: 12px; border-radius: 2px; vertical-align: -1px; box-shadow: 0 0 0 1px rgb(0 0 0 / .12); flex: none; }
-.flag-SN { background: linear-gradient(90deg, #00853F 33.3%, #FDEF42 33.3% 66.6%, #E31B23 66.6%); }
+.flag-SN { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%2300853F'/%3E%3C/svg%3E") center / 5px 5px no-repeat, linear-gradient(90deg, #00853F 33.3%, #FDEF42 33.3% 66.6%, #E31B23 66.6%); }
 .flag-CI { background: linear-gradient(90deg, #F77F00 33.3%, #FFFFFF 33.3% 66.6%, #009E60 66.6%); }
 .flag-ML { background: linear-gradient(90deg, #14B53A 33.3%, #FCD116 33.3% 66.6%, #CE1126 66.6%); }
-.flag-CM { background: linear-gradient(90deg, #007A5E 33.3%, #CE1126 33.3% 66.6%, #FCD116 66.6%); }
-.flag-BF { background: linear-gradient(180deg, #EF2B2D 50%, #009E49 50%); }
-.flag-MA { background: #C1272D; }
-.flag-NE { background: linear-gradient(180deg, #E05206 33.3%, #FFFFFF 33.3% 66.6%, #0DB02B 66.6%); }
+.flag-CM { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23FCD116'/%3E%3C/svg%3E") center / 5px 5px no-repeat, linear-gradient(90deg, #007A5E 33.3%, #CE1126 33.3% 66.6%, #FCD116 66.6%); }
+.flag-BF { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23FCD116'/%3E%3C/svg%3E") center / 5px 5px no-repeat, linear-gradient(180deg, #EF2B2D 50%, #009E49 50%); }
+.flag-MA { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23006233'/%3E%3C/svg%3E") center / 5.5px 5.5px no-repeat, #C1272D; }
+.flag-NE { background: radial-gradient(circle, #E05206 2px, transparent 2.5px), linear-gradient(180deg, #E05206 33.3%, #FFFFFF 33.3% 66.6%, #0DB02B 66.6%); }
 .flag-BJ { background: linear-gradient(90deg, #008751 40%, transparent 40%), linear-gradient(180deg, #FCD116 50%, #E8112D 50%); }
-.flag-TG { background: linear-gradient(#D21034, #D21034) 0 0 / 40% 60% no-repeat, repeating-linear-gradient(180deg, #006A4E 0 20%, #FFCE00 20% 40%); }
+.flag-TG { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23FFFFFF'/%3E%3C/svg%3E") 1.6px 1.6px / 4px 4px no-repeat, linear-gradient(#D21034, #D21034) 0 0 / 40% 60% no-repeat, repeating-linear-gradient(180deg, #006A4E 0 20%, #FFCE00 20% 40%); }
 .flag-GN { background: linear-gradient(90deg, #CE1126 33.3%, #FCD116 33.3% 66.6%, #009460 66.6%); }
-.flag-MR { background: linear-gradient(180deg, #D01C1F 20%, #00A95C 20% 80%, #D01C1F 80%); }
+.flag-MR { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.4 5A3.6 3.6 0 0 0 8.6 5A5.2 5.2 0 0 1 1.4 5z' fill='%23FFD700'/%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23FFD700' transform='translate(3.25 .6) scale(.35)'/%3E%3C/svg%3E") center / 7px 7px no-repeat, linear-gradient(180deg, #D01C1F 20%, #00A95C 20% 80%, #D01C1F 80%); }
 .flag-GA { background: linear-gradient(180deg, #009E60 33.3%, #FCD116 33.3% 66.6%, #3A75C4 66.6%); }
 .flag-CG { background: linear-gradient(135deg, #009543 42%, #FBDE4A 42% 58%, #DC241F 58%); }
-.flag-CD { background: linear-gradient(135deg, #007FFF 40%, #F7D618 40% 44%, #CE1021 44% 56%, #F7D618 56% 60%, #007FFF 60%); }
+.flag-CD { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23F7D618'/%3E%3C/svg%3E") 1px 1px / 4.5px 4.5px no-repeat, linear-gradient(135deg, #007FFF 40%, #F7D618 40% 44%, #CE1021 44% 56%, #F7D618 56% 60%, #007FFF 60%); }
 .flag-TD { background: linear-gradient(90deg, #002664 33.3%, #FECB00 33.3% 66.6%, #C60C30 66.6%); }
-.flag-CF { background: linear-gradient(90deg, transparent 40%, #D21034 40% 60%, transparent 60%), linear-gradient(180deg, #003082 25%, #FFFFFF 25% 50%, #289728 50% 75%, #FFCE00 75%); }
+.flag-CF { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23FFCE00'/%3E%3C/svg%3E") 1px .8px / 3.5px 3.5px no-repeat, linear-gradient(90deg, transparent 40%, #D21034 40% 60%, transparent 60%), linear-gradient(180deg, #003082 25%, #FFFFFF 25% 50%, #289728 50% 75%, #FFCE00 75%); }
 .flag-GQ { background: linear-gradient(90deg, #0073CE 22%, transparent 22%), linear-gradient(180deg, #3E9A00 33.3%, #FFFFFF 33.3% 66.6%, #E32118 66.6%); }
-.flag-DZ { background: linear-gradient(90deg, #006233 50%, #FFFFFF 50%); }
-.flag-TN { background: radial-gradient(circle, #FFFFFF 3.5px, #E70013 4px); }
+.flag-DZ { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 1.4A3.6 3.6 0 0 0 5 8.6A5.2 5.2 0 0 1 5 1.4z' fill='%23D21034'/%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23D21034' transform='translate(4.3 3.4) scale(.33)'/%3E%3C/svg%3E") center / 7px 7px no-repeat, linear-gradient(90deg, #006233 50%, #FFFFFF 50%); }
+.flag-TN { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M5 1.4A3.6 3.6 0 0 0 5 8.6A5.2 5.2 0 0 1 5 1.4z' fill='%23E70013'/%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23E70013' transform='translate(4.3 3.4) scale(.33)'/%3E%3C/svg%3E") center / 6px 6px no-repeat, radial-gradient(circle, #FFFFFF 3.5px, #E70013 4px); }
 .flag-MG { background: linear-gradient(90deg, #FFFFFF 33.3%, transparent 33.3%), linear-gradient(180deg, #FC3D32 50%, #007E3A 50%); }
 .flag-KM { background: linear-gradient(90deg, #3D8E33 28%, transparent 28%), linear-gradient(180deg, #FFC61E 25%, #FFFFFF 25% 50%, #CE1126 50% 75%, #3A75C4 75%); }
-.flag-DJ { background: linear-gradient(90deg, #FFFFFF 30%, transparent 30%), linear-gradient(180deg, #6AB2E7 50%, #12AD2B 50%); }
+.flag-DJ { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,.4 6.12,3.46 9.37,3.58 6.81,5.59 7.7,8.72 5,6.9 2.3,8.72 3.19,5.59 .63,3.58 3.88,3.46' fill='%23D7141A'/%3E%3C/svg%3E") .8px 4px / 4px 4px no-repeat, linear-gradient(90deg, #FFFFFF 30%, transparent 30%), linear-gradient(180deg, #6AB2E7 50%, #12AD2B 50%); }
 .flag-RW { background: linear-gradient(180deg, #00A1DE 50%, #FAD201 50% 75%, #20603D 75%); }
 .flag-BI { background: conic-gradient(from 45deg, #1EB53A 0 90deg, #CE1126 90deg 180deg, #1EB53A 180deg 270deg, #CE1126 270deg); }
 .flag-MU { background: linear-gradient(180deg, #EA2839 25%, #1A206D 25% 50%, #FFD500 50% 75%, #00A551 75%); }
