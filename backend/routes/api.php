@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SnippetController;
+use App\Http\Controllers\Api\TopupController;
 use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\WalletController;
@@ -34,6 +35,9 @@ Route::middleware('throttle:api')->group(function () {
     Route::get('/rooms/{room:slug}/messages', [RoomController::class, 'messages']);
     Route::get('/search', SearchController::class);
 });
+
+// Notification de paiement envoyée par PayTech (authentifiée par l'empreinte de nos clés, pas par une session)
+Route::post('/paytech/ipn', [TopupController::class, 'ipn'])->middleware('throttle:api');
 
 // Inscription et connexion (cookie de session) : tentatives limitées contre le vol de mot de passe
 Route::middleware('throttle:login')->group(function () {
@@ -73,6 +77,7 @@ Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(f
     Route::post('/snippets/{snippet}/tested', [SnippetController::class, 'toggleTested']);
 
     Route::post('/wallet/withdrawals', [WalletController::class, 'withdraw']);
+    Route::post('/wallet/topups', [TopupController::class, 'store']);
 
     Route::post('/rooms/{room:slug}/messages', [RoomController::class, 'store']);
     Route::post('/conversations/{user}/messages', [ConversationController::class, 'store'])->whereNumber('user');

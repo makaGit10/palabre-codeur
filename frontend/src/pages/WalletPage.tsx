@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Flag } from '../components/Brand'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n, type Key } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { formatFcfa, timeAgo } from '../lib/format'
 import { COUNTRIES, COUNTRY_CURRENCY, localHint, METHODS_BY_COUNTRY, MIN_WITHDRAWAL, MOBILE_MONEY, PHONE_PREFIX } from '../lib/money'
-import { getWallet, withdraw } from '../services/wallet'
+import { getWallet, startTopup, withdraw } from '../services/wallet'
 import type { CountryCode, PaymentMethod, WalletTransaction } from '../types'
 
 const TX_STYLE: Record<WalletTransaction['type'], { sign: string; className: string; tag: Key }> = {
@@ -16,12 +17,26 @@ const TX_STYLE: Record<WalletTransaction['type'], { sign: string; className: str
   withdrawal: { sign: '−', className: 'text-ink', tag: 'w.tx_withdrawal' },
   bounty_held: { sign: '', className: 'text-gold', tag: 'w.tx_held' },
   bounty_paid: { sign: '', className: 'text-muted', tag: 'w.tx_paid' },
+  topup: { sign: '+', className: 'text-green', tag: 'w.tx_topup' },
 }
 
 export default function WalletPage() {
   const { t, country: countryName, payment } = useI18n()
   const { data: w, isLoading } = useQuery({ queryKey: ['wallet'], queryFn: getWallet })
   const [open, setOpen] = useState(false)
+  const [topup, setTopup] = useState(false)
+  const [params, setParams] = useSearchParams()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+
+  // Retour de la page de paiement PayTech : message, puis le solde se met à jour dès la confirmation
+  const back = params.get('recharge')
+  useEffect(() => {
+    if (!back) return
+    toast(back === 'ok' ? t('w.topup_back_ok') : t('w.topup_back_canceled'), back === 'ok' ? 'coin' : 'close')
+    queryClient.invalidateQueries({ queryKey: ['wallet'] })
+    setParams({}, { replace: true })
+  }, [back, toast, t, queryClient, setParams])
   const { user } = useAuth()
   const country = user?.country ?? 'SN'
 
@@ -37,6 +52,8 @@ export default function WalletPage() {
         return t('w.label_held', { subject: tx.label })
       case 'bounty_paid':
         return t('w.label_paid', { subject: tx.label })
+      case 'topup':
+        return tx.label ? t('w.label_topup_via', { method: tx.label }) : t('w.label_topup')
       case 'withdrawal':
         return tx.label ? t('w.label_withdrawal', { subject: tx.label }) : t('w.label_withdrawal_card')
     }
@@ -65,11 +82,19 @@ export default function WalletPage() {
               <Icon name="wallet" />
               {open ? t('common.close') : t('w.withdraw')}
             </button>
+            <button
+              onClick={() => setTopup(!topup)}
+              className="inline-flex items-center gap-2 rounded-[10px] border border-green-ink/40 px-4 py-2.5 text-sm font-bold text-green-ink hover:bg-green-ink/10"
+            >
+              <Icon name="plus" />
+              {topup ? t('common.close') : t('w.topup')}
+            </button>
             {w.held > 0 && <span className="text-[13px] opacity-85">{t('w.held', { amount: formatFcfa(w.held) })}</span>}
           </div>
           {w.balance < MIN_WITHDRAWAL && <p className="mt-3 text-[13px] opacity-85">{t('w.min', { amount: formatFcfa(MIN_WITHDRAWAL) })}</p>}
         </section>
 
+        {topup && <TopupForm onDone={() => setTopup(false)} />}
         {open && <WithdrawForm balance={w.balance} country={country} onDone={() => setOpen(false)} />}
 
         <h2 className="mt-8 mb-3 text-lg">{t('w.history')}</h2>
@@ -253,6 +278,69 @@ function WithdrawForm({ balance, country, onDone }: { balance: number; country: 
         <button disabled={mutation.isPending} className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
           {mutation.isPending ? t('common.sending') : t('w.withdraw_amount', { amount: formatFcfa(Number(amount) || 0) })}
         </button>
+      </div>
+    </form>
+  )
+}
+
+const TOPUP_AMOUNTS = [1000, 2000, 5000, 10000]
+
+// Recharger le portefeuille : PayTech propose ensuite Wave, Orange Money, Free Money ou la carte bancaire
+function TopupForm({ onDone }: { onDone: () => void }) {
+  const { t } = useI18n()
+  const [amount, setAmount] = useState('2000')
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const mutation = useMutation({
+    mutationFn: () => startTopup(Number(amount)),
+    onSuccess: (result) => {
+      if (result.redirectUrl) {
+        window.location.assign(result.redirectUrl) // page de paiement PayTech
+        return
+      }
+      queryClient.invalidateQueries({ queryKey: ['wallet'] })
+      toast(t('w.topup_done', { amount: formatFcfa(Number(amount)) }), 'coin')
+      onDone()
+    },
+  })
+
+  return (
+    <form
+      className="mt-4 rounded-[14px] border border-line bg-surface p-5"
+      onSubmit={(e) => {
+        e.preventDefault()
+        mutation.mutate()
+      }}
+    >
+      <h2 className="text-base">{t('w.topup_title')}</h2>
+      <p className="mt-1 text-[13px] text-muted">{t('w.topup_text')}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {TOPUP_AMOUNTS.map((a) => (
+          <button
+            key={a}
+            type="button"
+            aria-pressed={Number(amount) === a}
+            onClick={() => setAmount(String(a))}
+            className={`rounded-[10px] border px-3.5 py-2 text-[13.5px] font-semibold ${Number(amount) === a ? 'border-green bg-green-soft text-green' : 'border-line bg-surface'}`}
+          >
+            {formatFcfa(a)}
+          </button>
+        ))}
+        <input
+          id="topup-amount"
+          inputMode="numeric"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+          aria-label={t('w.topup_custom')}
+          className="w-32 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13.5px] outline-none focus:border-green"
+        />
+      </div>
+      {mutation.isError && <p className="mt-3 rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(mutation.error)}</p>}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button disabled={mutation.isPending || !Number(amount)} className="rounded-[10px] bg-green px-4 py-2.5 text-sm font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
+          {mutation.isPending ? t('w.topup_pending') : t('w.topup_pay', { amount: formatFcfa(Number(amount) || 0) })}
+        </button>
+        <span className="text-xs text-muted">{t('w.topup_secure')}</span>
       </div>
     </form>
   )

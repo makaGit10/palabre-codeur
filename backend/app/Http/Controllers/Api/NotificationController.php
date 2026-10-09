@@ -45,6 +45,7 @@ class NotificationController extends Controller
             'answer' => ['title' => __(':author a répondu à votre question', ['author' => $data['author'] ?? '']), 'body' => $data['question'] ?? ''],
             'accepted' => ['title' => __('Votre réponse a été validée'), 'body' => $data['question'] ?? ''],
             'bounty' => ['title' => __('Votre réponse a été validée · :amount FCFA versés dans votre portefeuille', ['amount' => $amount]), 'body' => $data['question'] ?? ''],
+            'topup' => ['title' => __(':amount FCFA sont arrivés sur votre portefeuille', ['amount' => $amount]), 'body' => __('Recharge confirmée par PayTech.')],
             'message' => ['title' => __('Nouveau message de :sender', ['sender' => $data['sender'] ?? '']), 'body' => MessagingService::previewText($data)],
             'mention' => ['title' => __(':author vous a mentionné dans :room', ['author' => $data['author'] ?? '', 'room' => $data['room'] ?? '']), 'body' => MessagingService::previewText($data)],
             default => ['title' => $data['title'] ?? '', 'body' => $data['body'] ?? ''],

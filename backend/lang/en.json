@@ -133,5 +133,12 @@
     "Pour votre sécurité, rechargez la page puis recommencez.": "For your security, reload the page and try again.",
     "Doucement, on palabre à tour de rôle.": "Easy, we palaver one at a time.",
     "Trop de requêtes en peu de temps. Patientez une minute, puis réessayez.": "Too many requests in a short time. Wait a minute, then try again.",
-    "Palabre est en maintenance. Revenez dans quelques minutes.": "Palabre is under maintenance. Come back in a few minutes."
+    "Palabre est en maintenance. Revenez dans quelques minutes.": "Palabre is under maintenance. Come back in a few minutes.",
+    "Le montant doit être compris entre :min et :max FCFA.": "The amount must be between :min and :max FCFA.",
+    "Le service de paiement ne répond pas. Réessayez dans quelques instants.": "The payment service is not responding. Please try again in a moment.",
+    "Le paiement n'a pas pu être préparé. Réessayez dans quelques instants.": "The payment could not be prepared. Please try again in a moment.",
+    ":amount sont arrivés sur votre portefeuille": ":amount have arrived in your wallet",
+    "Votre recharge de :amount est confirmée : votre portefeuille Palabre est crédité.": "Your :amount top-up is confirmed: your Palabre wallet has been credited.",
+    ":amount FCFA sont arrivés sur votre portefeuille": ":amount FCFA have arrived in your wallet",
+    "Recharge confirmée par PayTech.": "Top-up confirmed by PayTech."
 }

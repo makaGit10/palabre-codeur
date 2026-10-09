@@ -8,7 +8,7 @@ import { timeAgo } from '../lib/format'
 import { listNotifications, markNotificationsRead } from '../services/messaging'
 import type { AppNotification } from '../types'
 
-const KIND_ICON: Record<AppNotification['kind'], IconName> = { answer: 'chat', accepted: 'check', bounty: 'coin', message: 'mail', mention: 'user', info: 'bell' }
+const KIND_ICON: Record<AppNotification['kind'], IconName> = { answer: 'chat', accepted: 'check', bounty: 'coin', message: 'mail', mention: 'user', topup: 'wallet', info: 'bell' }
 
 export default function Notifications() {
   const { t } = useI18n()

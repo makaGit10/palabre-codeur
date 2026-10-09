@@ -17,3 +17,17 @@ export interface WithdrawalInput {
 export async function withdraw(input: WithdrawalInput) {
   await api.post('/wallet/withdrawals', { ...input, account: input.account || null })
 }
+
+// Recharger son portefeuille avec PayTech : renvoie l'adresse de la page de paiement,
+// ou « paid » directement quand Palabre est en mode test (pas de clés PayTech)
+export interface TopupResult {
+  status: 'pending' | 'paid'
+  redirectUrl: string | null
+  reference: string
+  testMode: boolean
+}
+
+export async function startTopup(amount: number): Promise<TopupResult> {
+  const { data } = await api.post<TopupResult>('/wallet/topups', { amount })
+  return data
+}

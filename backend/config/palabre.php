@@ -94,6 +94,15 @@ return [
         'lock_minutes' => 30,
     ],
 
+    // PayTech (paytech.sn) : recharge du portefeuille. Sans clés, les recharges sont simulées (mode test).
+    'paytech' => [
+        'api_key' => env('PAYTECH_API_KEY'),
+        'api_secret' => env('PAYTECH_API_SECRET'),
+        'env' => env('PAYTECH_ENV', 'test'), // test | prod
+        'base_url' => env('PAYTECH_BASE_URL', 'https://paytech.sn/api'),
+        'topup' => ['min' => 500, 'max' => 500000], // FCFA
+    ],
+
     // Libellés des moyens de paiement dans les e-mails
     'payment_labels' => [
         'wave' => 'Wave', 'orange_money' => 'Orange Money', 'free_money' => 'Free Money', 'mtn_momo' => 'MTN MoMo',
