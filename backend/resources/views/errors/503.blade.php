@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '503')
+@section('title', __("On taille les branches de l'arbre."))
+@section('message', __('Palabre est en maintenance quelques minutes pour s’améliorer. Vos questions, réponses et gains sont en sécurité.'))
+@section('action', __('Réessayer'))

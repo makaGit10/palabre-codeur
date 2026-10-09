@@ -39,6 +39,8 @@ export interface User {
 // Compte de la personne connectée : profil public + e-mail
 export interface Me extends User {
   email: string
+  emailVerified: boolean
+  locale: 'fr' | 'en'
 }
 
 export type PaymentMethod =

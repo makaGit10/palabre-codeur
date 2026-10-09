@@ -3,6 +3,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { MaintenanceGate } from './components/MaintenanceGate'
 import { ToastProvider } from './components/Toast'
 import { LangProvider } from './i18n/LangProvider'
 import './index.css'
@@ -25,7 +27,11 @@ createRoot(document.getElementById('root')!).render(
       <LangProvider>
         <BrowserRouter>
           <ToastProvider>
-            <App />
+            <ErrorBoundary>
+              <MaintenanceGate>
+                <App />
+              </MaintenanceGate>
+            </ErrorBoundary>
           </ToastProvider>
         </BrowserRouter>
       </LangProvider>

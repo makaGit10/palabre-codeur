@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
+import { CodeInput } from '../components/CodeInput'
 import { CodeTree } from '../components/CodeTree'
 import { Icon, type IconName } from '../components/Icon'
+import { useToast } from '../components/toastContext'
+import { useAuth } from '../hooks/useAuth'
 import { useI18n, type Key } from '../i18n'
 import { errorMessage, fieldErrors } from '../lib/api'
 import { formatNumber } from '../lib/format'
 import { COUNTRIES } from '../lib/money'
-import { getDemoAccounts, login, register } from '../services/auth'
+import { forgotPassword, getDemoAccounts, login, register, resendVerificationCode, resetPassword, verifyEmail } from '../services/auth'
 import { getStats } from '../services/community'
 import type { CountryCode, Me } from '../types'
 
@@ -124,7 +127,8 @@ function useAfterAuth() {
   return (me: Me) => {
     queryClient.setQueryData(['me'], me)
     queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
-    navigate(from, { replace: true })
+    if (!me.emailVerified) navigate('/verification', { replace: true, state: { from } })
+    else navigate(from, { replace: true })
   }
 }
 
@@ -222,9 +226,14 @@ export function LoginPage() {
             <input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass()} />
           </div>
           <div>
-            <label htmlFor="login-password" className="mb-1.5 block text-sm font-bold">
-              {t('auth.password')}
-            </label>
+            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+              <label htmlFor="login-password" className="text-sm font-bold">
+                {t('auth.password')}
+              </label>
+              <Link to="/mot-de-passe-oublie" state={{ email }} className="text-[13px] font-semibold text-green hover:underline">
+                {t('auth.forgot')}
+              </Link>
+            </div>
             <input
               id="login-password"
               type="password"
@@ -344,6 +353,165 @@ export function RegisterPage() {
             {mutation.isPending ? t('auth.creating') : t('auth.create')}
           </button>
         </form>
+      </Card>
+    </AuthShell>
+  )
+}
+
+// Après l'inscription : code à 6 chiffres reçu par e-mail, valable 2 minutes
+export function VerifyEmailPage() {
+  const { t } = useI18n()
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: string } | null)?.from ?? '/app'
+  const [code, setCode] = useState('')
+  const [left, setLeft] = useState(120) // secondes avant expiration du code
+  const [cooldown, setCooldown] = useState(30) // secondes avant de pouvoir en redemander un
+  const toast = useToast()
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLeft((s) => Math.max(0, s - 1))
+      setCooldown((s) => Math.max(0, s - 1))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const verify = useMutation({
+    mutationFn: (value: string) => verifyEmail(value),
+    onSuccess: (me) => {
+      queryClient.setQueryData(['me'], me)
+      toast(t('verify.done'))
+      navigate(from, { replace: true })
+    },
+    onError: () => setCode(''),
+  })
+  const resend = useMutation({
+    mutationFn: resendVerificationCode,
+    onSuccess: () => {
+      setLeft(120)
+      setCooldown(30)
+      setCode('')
+      toast(t('verify.sent'))
+    },
+  })
+
+  if (user?.emailVerified) return <Navigate to={from} replace />
+  const error = verify.error ?? resend.error
+
+  return (
+    <AuthShell title={t('verify.title')} showcase={t('verify.showcase')} subtitle={user ? t('verify.subtitle', { email: user.email }) : ''}>
+      <Card>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (code.length === 6) verify.mutate(code)
+          }}
+        >
+          <CodeInput value={code} onChange={setCode} onComplete={(v) => verify.mutate(v)} invalid={verify.isError} disabled={verify.isPending} />
+          <p className={`text-center text-[13px] ${left === 0 ? 'font-semibold text-red' : 'text-muted'}`}>
+            {left === 0 ? t('verify.expired') : t('verify.expires', { time: `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` })}
+          </p>
+          {error && <p className="rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(error)}</p>}
+          <button disabled={code.length < 6 || verify.isPending} className="rounded-[10px] bg-green px-4 py-2.5 font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
+            {verify.isPending ? t('verify.checking') : t('verify.submit')}
+          </button>
+          <button
+            type="button"
+            disabled={cooldown > 0 || resend.isPending}
+            onClick={() => resend.mutate()}
+            className="text-sm font-semibold text-green disabled:text-muted"
+          >
+            {cooldown > 0 ? t('verify.resend_in', { s: cooldown }) : t('verify.resend')}
+          </button>
+        </form>
+      </Card>
+      <p className="mt-4 text-center text-[13px] text-muted">{t('verify.spam')}</p>
+    </AuthShell>
+  )
+}
+
+// Mot de passe oublié : adresse e-mail, puis code à 6 chiffres et nouveau mot de passe
+export function ForgotPasswordPage() {
+  const { t } = useI18n()
+  const location = useLocation()
+  const [email, setEmail] = useState((location.state as { email?: string } | null)?.email ?? '')
+  const [step, setStep] = useState<'email' | 'code'>('email')
+  const [code, setCode] = useState('')
+  const [password, setPassword] = useState('')
+  const done = useAfterAuth()
+  const toast = useToast()
+
+  const ask = useMutation({
+    mutationFn: () => forgotPassword(email),
+    onSuccess: () => {
+      setStep('code')
+      toast(t('forgot.sent'))
+    },
+  })
+  const reset = useMutation({ mutationFn: () => resetPassword({ email, code, password }), onSuccess: done })
+  const errors = fieldErrors(reset.error)
+
+  return (
+    <AuthShell
+      title={t('forgot.title')}
+      showcase={t('forgot.showcase')}
+      subtitle={
+        <Link to="/connexion" className="font-semibold text-green">
+          {t('forgot.back')}
+        </Link>
+      }
+    >
+      <Card>
+        {step === 'email' ? (
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              ask.mutate()
+            }}
+          >
+            <p className="text-sm text-muted">{t('forgot.intro')}</p>
+            <div>
+              <label htmlFor="forgot-email" className="mb-1.5 block text-sm font-bold">
+                {t('auth.email')}
+              </label>
+              <input id="forgot-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass()} />
+            </div>
+            {ask.isError && <p className="rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(ask.error)}</p>}
+            <button disabled={ask.isPending} className="rounded-[10px] bg-green px-4 py-2.5 font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
+              {ask.isPending ? t('common.sending') : t('forgot.send')}
+            </button>
+          </form>
+        ) : (
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              reset.mutate()
+            }}
+          >
+            <p className="text-sm text-muted">{t('forgot.code_intro', { email })}</p>
+            <CodeInput value={code} onChange={setCode} invalid={reset.isError && !errors.password} />
+            <div>
+              <label htmlFor="forgot-password" className="mb-1.5 block text-sm font-bold">
+                {t('forgot.new_password')}
+              </label>
+              <input id="forgot-password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass(errors.password)} />
+              <p className="mt-1.5 text-[12.5px] text-muted">{t('auth.password_hint')}</p>
+            </div>
+            {reset.isError && <p className="rounded-lg bg-red/10 px-3 py-2 text-[13px] text-red">{errorMessage(reset.error)}</p>}
+            <button disabled={code.length < 6 || reset.isPending} className="rounded-[10px] bg-green px-4 py-2.5 font-semibold text-green-ink hover:brightness-110 disabled:opacity-60">
+              {reset.isPending ? t('verify.checking') : t('forgot.save')}
+            </button>
+            <button type="button" onClick={() => ask.mutate()} disabled={ask.isPending} className="text-sm font-semibold text-green disabled:text-muted">
+              {t('verify.resend')}
+            </button>
+          </form>
+        )}
       </Card>
     </AuthShell>
   )

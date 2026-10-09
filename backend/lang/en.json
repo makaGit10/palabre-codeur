@@ -120,5 +120,18 @@
     "Votre retrait de :amount vers :method :account a bien été enregistré.": "Your withdrawal of :amount to :method :account has been recorded.",
     "Référence : :ref": "Reference: :ref",
     "Si vous n'êtes pas à l'origine de ce retrait, changez votre mot de passe immédiatement.": "If you did not make this withdrawal, change your password immediately.",
-    "L'arbre à palabres des développeurs africains": "The palaver tree of African developers"
+    "L'arbre à palabres des développeurs africains": "The palaver tree of African developers",
+    "Retour à l'accueil": "Back to home",
+    "Réessayer": "Try again",
+    "Cette page s'est perdue en chemin.": "This page got lost on the way.",
+    "Le lien est peut-être ancien, ou la page a changé d’adresse. Le fil des questions, lui, vous attend.": "The link may be old, or the page has moved. The question feed is waiting for you.",
+    "Une branche a cédé.": "A branch gave way.",
+    "Une erreur inattendue s’est produite. Réessayez dans quelques minutes.": "Something unexpected happened. Try again in a few minutes.",
+    "On taille les branches de l'arbre.": "We're pruning the tree.",
+    "Palabre est en maintenance quelques minutes pour s’améliorer. Vos questions, réponses et gains sont en sécurité.": "Palabre is under maintenance for a few minutes. Your questions, answers and earnings are safe.",
+    "Votre session a expiré.": "Your session has expired.",
+    "Pour votre sécurité, rechargez la page puis recommencez.": "For your security, reload the page and try again.",
+    "Doucement, on palabre à tour de rôle.": "Easy, we palaver one at a time.",
+    "Trop de requêtes en peu de temps. Patientez une minute, puis réessayez.": "Too many requests in a short time. Wait a minute, then try again.",
+    "Palabre est en maintenance. Revenez dans quelques minutes.": "Palabre is under maintenance. Come back in a few minutes."
 }

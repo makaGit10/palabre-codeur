@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,6 +35,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Une règle métier refusée (solde insuffisant…) est un cas normal, pas une erreur à journaliser
         $exceptions->dontReport(BusinessRuleException::class);
+
+        // Maintenance (php artisan down) : réponse JSON reconnaissable par le front-end, qui affiche sa page dédiée
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 503 && app()->isDownForMaintenance() && ($request->is('api/*') || $request->expectsJson())) {
+                return response()->json(['message' => __('Palabre est en maintenance. Revenez dans quelques minutes.'), 'code' => 'maintenance'], 503, $e->getHeaders());
+            }
+        });
 
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),

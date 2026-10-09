@@ -3,9 +3,8 @@ import { RequireAuth } from './components/RequireAuth'
 import AppLayout from './layouts/AppLayout'
 import PublicLayout from './layouts/PublicLayout'
 import Ask from './pages/Ask'
-import { LoginPage, RegisterPage } from './pages/AuthPages'
+import { ForgotPasswordPage, LoginPage, RegisterPage, VerifyEmailPage } from './pages/AuthPages'
 import Bounties from './pages/Bounties'
-import ComingSoon from './pages/ComingSoon'
 import Feed from './pages/Feed'
 import Landing from './pages/Landing'
 import Leaderboard from './pages/Leaderboard'
@@ -16,6 +15,7 @@ import Profile from './pages/Profile'
 import QuestionPage from './pages/QuestionPage'
 import Rooms from './pages/Rooms'
 import Snippets from './pages/Snippets'
+import StatusPage from './pages/StatusPage'
 import WalletPage from './pages/WalletPage'
 
 export default function App() {
@@ -26,6 +26,8 @@ export default function App() {
         <Route index element={<Landing />} />
         <Route path="connexion" element={<LoginPage />} />
         <Route path="inscription" element={<RegisterPage />} />
+        <Route path="mot-de-passe-oublie" element={<ForgotPasswordPage />} />
+        <Route path="verification" element={<RequireAuth><VerifyEmailPage /></RequireAuth>} />
       </Route>
 
       {/* Application : lecture libre, participation réservée aux membres */}
@@ -46,7 +48,7 @@ export default function App() {
         <Route path="portefeuille" element={<RequireAuth><WalletPage /></RequireAuth>} />
       </Route>
 
-      <Route path="*" element={<ComingSoon title="common.not_found" />} />
+      <Route path="*" element={<StatusPage kind="not_found" />} />
     </Routes>
   )
 }

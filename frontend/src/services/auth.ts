@@ -54,3 +54,25 @@ export async function getDemoAccounts(): Promise<DemoAccounts | null> {
     throw error
   }
 }
+
+// Vérification de l'adresse e-mail par code à 6 chiffres
+export async function verifyEmail(code: string): Promise<Me> {
+  const { data } = await api.post<{ data: Me }>('/email/verification/verify', { code })
+  return data.data
+}
+
+export async function resendVerificationCode() {
+  await api.post('/email/verification/send')
+}
+
+// Mot de passe oublié : code par e-mail, puis nouveau mot de passe (connecte la personne)
+export async function forgotPassword(email: string) {
+  await fetchCsrfCookie()
+  await api.post('/password/forgot', { email })
+}
+
+export async function resetPassword(input: { email: string; code: string; password: string }): Promise<Me> {
+  await fetchCsrfCookie()
+  const { data } = await api.post<{ data: Me }>('/password/reset', input)
+  return data.data
+}
