@@ -17,7 +17,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 // Données de démonstration (identiques à celles du prototype).
-// Les mots de passe viennent de .env (DEMO_OWNER_PASSWORD, DEMO_PASSWORD) : jamais écrits dans le code publié.
+// Le mot de passe des comptes vient de .env (DEMO_PASSWORD) : jamais écrit dans le code publié.
 // Les heredocs PHP retirent automatiquement l'indentation de leur balise de fin.
 class DatabaseSeeder extends Seeder
 {
@@ -43,13 +43,13 @@ class DatabaseSeeder extends Seeder
     private function seedUsers(): void
     {
         // En ligne, interdit de créer des comptes avec un mot de passe vide ou « password »
-        $weak = fn (?string $p) => in_array($p, [null, '', 'password'], true);
-        if (app()->isProduction() && ($weak(config('palabre.demo.owner_password')) || $weak(config('palabre.demo.password')))) {
-            throw new \RuntimeException('Définissez DEMO_OWNER_PASSWORD et DEMO_PASSWORD (mots de passe forts) dans .env avant de lancer le seeder.');
+        if (app()->isProduction() && in_array(config('palabre.demo.password'), [null, '', 'password'], true)) {
+            throw new \RuntimeException('Définissez DEMO_PASSWORD dans .env avant de lancer le seeder.');
         }
 
         $people = [
             'mareme' => ['Mareme MAKALOU', 'SN', 'Dakar', 1240, 2500],
+            'khadim' => ['Khadim NDIAYE', 'SN', 'Dakar', 860, 0],
             'moussa' => ['Moussa Diop', 'SN', 'Dakar', 3870, 6500],
             'fatou' => ['Fatou Ndiaye', 'SN', 'Thiès', 2950, 3000],
             'rodrigue' => ['Rodrigue Ntsama', 'CM', 'Douala', 2410, 1500],
@@ -60,14 +60,18 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($people as $key => [$name, $country, $city, $reputation, $earnings]) {
-            $isOwner = $key === 'mareme';
             $user = User::create([
                 'name' => $name,
-                'email' => $isOwner ? config('palabre.demo.owner_email') : "{$key}@palabre.test",
-                'password' => $isOwner ? config('palabre.demo.owner_password') : config('palabre.demo.password'),
+                'email' => match ($key) {
+                    'mareme' => config('palabre.demo.owner_email'),
+                    'khadim' => config('palabre.demo.teammate_email'),
+                    default => "{$key}@palabre.test",
+                },
+                'password' => config('palabre.demo.password'),
                 'country' => $country,
                 'city' => $city,
             ]);
+            // Colonnes protégées : modifiées directement, jamais via une requête
             // Colonnes protégées : modifiées directement, jamais via une requête ; comptes de démo déjà vérifiés
             $user->forceFill(['reputation' => $reputation, 'bounty_earnings' => $earnings, 'email_verified_at' => now()])->save();
             $this->users[$key] = $user;

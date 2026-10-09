@@ -18,11 +18,10 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 | **Code source** | https://github.com/makaGit10/palabre-codeur |
 | **Comptes de test** | proposés sur la page de connexion : un clic suffit, le mot de passe y est affiché |
 
-| Compte de démonstration | Pays | Ce qu'il permet de voir |
-|---|---|---|
-| Moussa Diop · `moussa@palabre.test` | Sénégal | Primes en FCFA, badges, retrait vers Wave, Orange Money ou Free Money |
-| Yasmine Benali · `yasmine@palabre.test` | Maroc | Montants convertis en dirhams, retrait par carte ou virement bancaire |
-| Fatou Ndiaye · `fatou@palabre.test` | Sénégal | Second compte pour tester les échanges à deux : messages privés, salons, groupes |
+| Compte de démonstration | E-mail | Mot de passe | Ce qu'il permet de voir |
+|---|---|---|---|
+| Mareme MAKALOU (Sénégal) | `marememakalou10@gmail.com` | `12345678` | Question Wave avec prime en attente, portefeuille garni avec historique, badges, messages et notifications |
+| Khadim NDIAYE (Sénégal) | `njaayxaadim1312@gmail.com` | `12345678` | Second compte pour tester à deux : répondre, voter, valider une réponse, messages privés, salons et groupes |
 
 Parcours conseillé, en cinq minutes : lire une question sans compte, se connecter avec un compte de démonstration, poser une question avec une prime (les questions proches apparaissent dès le titre), répondre et voter, puis ouvrir le portefeuille, le classement et la recherche globale (Ctrl K).
 
@@ -48,9 +47,10 @@ Palabre part de ces besoins :
 - **Suggestion automatique** : à la publication, si une question proche est déjà résolue, sa réponse validée est proposée comme première piste, signalée « à vérifier par la communauté ». Chacun peut la noter utile ou la signaler.
 - **Primes** de 500, 1 000 ou 2 000 FCFA : bloquées à la publication, versées au portefeuille de l'auteur de la réponse validée, remboursées après 7 jours sans validation.
 - **Portefeuille** : solde en crédits (1 crédit = 1 FCFA), historique, retrait vers Wave, Orange Money, Free Money, MTN MoMo, Moov Money, carte ou virement selon le pays. Les numéros sont masqués dans l'historique.
-- **Multi-pays** : Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Cameroun, Maroc. Montants convertis dans la monnaie locale (ex. 2 000 FCFA ≈ 33 MAD au Maroc).
+- **Multi-pays** : les 26 pays d'Afrique francophone (UEMOA, CEMAC, Guinée, Mauritanie, RD Congo, Maghreb, océan Indien et Afrique de l'Est), chacun avec sa monnaie, son indicatif et ses moyens de retrait (Wave, Orange Money, MTN MoMo, Moov Money, Airtel Money, M-Pesa, Flooz, T-Money, MVola, carte, virement). Montants convertis dans la monnaie locale (ex. 2 000 FCFA ≈ 33 MAD au Maroc).
 - **Snippets** : langage et API libres (on peut ajouter ceux qui manquent), aperçu coloré, bouton « Je l'ai testé ».
 - **Recherche globale** (Ctrl K) et suggestions pendant la frappe sous les barres de recherche : questions, extraits de code, salons et groupes, membres et messages, résultats groupés par section, dernières recherches mémorisées.
+- **Interface en français et en anglais** (bouton globe), messages de l'API dans la langue choisie.
 - **Classement** : Coupe des pays et meilleurs développeurs. **Profils** avec badges et activité.
 - **Salons « Sous l'arbre »** : discussions publiques par sujet (#wave, #laravel…) et par pays (#sénégal, #maroc…). Tout le monde lit, les membres écrivent.
 - **Groupes privés** : créés par un membre, avec un nom, des invités et un administrateur ; lecture et écriture réservées aux membres, non-lus par groupe.
@@ -116,7 +116,7 @@ git clone https://github.com/makaGit10/palabre-codeur.git
 cd palabre-codeur
 
 # 1. Back-end : base de données, cache et API (http://localhost:8000)
-cp backend/.env.example backend/.env      # puis renseigner DB_PASSWORD, les mots de passe de démo et DEMO_ACCOUNTS_PUBLIC=true
+cp backend/.env.example backend/.env      # puis renseigner DB_PASSWORD, DEMO_PASSWORD et DEMO_ACCOUNTS_PUBLIC=true
 docker compose build
 docker compose run --rm --no-deps api composer install   # dépendances dans un volume Docker (rapide sous Windows)
 docker compose up -d
@@ -130,12 +130,12 @@ npm install
 npm run dev
 ```
 
-Comptes de démonstration : `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`… avec le mot de passe défini dans `DEMO_PASSWORD`. Avec `DEMO_ACCOUNTS_PUBLIC=true`, la page de connexion les propose en un clic et affiche ce mot de passe : c'est le réglage prévu pour la démo du concours, à laisser sur `false` pour une vraie mise en service.
+Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `njaayxaadim1312@gmail.com`) et `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`…, tous avec le mot de passe `DEMO_PASSWORD`. Avec `DEMO_ACCOUNTS_PUBLIC=true`, la page de connexion propose les deux comptes de l'équipe en un clic et affiche ce mot de passe : réglage prévu pour la démo du concours, à laisser sur `false` pour une vraie mise en service.
 
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 41 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 43 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```

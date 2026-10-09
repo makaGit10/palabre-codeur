@@ -9,9 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Comptes de démonstration proposés sur la page de connexion (jury du concours, visiteurs).
+ * Comptes de démonstration proposés sur la page de connexion (jury du concours) : ceux de l'équipe.
  * Actif seulement si DEMO_ACCOUNTS_PUBLIC=true : le mot de passe commun des comptes de démo
- * est alors public, par choix. Le compte de la propriétaire n'est jamais listé.
+ * (DEMO_PASSWORD) est alors public, par choix, le temps du concours.
  */
 class DemoAccountController extends Controller
 {
