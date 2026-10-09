@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Services\BountyRefundService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -17,3 +18,15 @@ Artisan::command('palabre:refund-expired-bounties', function (BountyRefundServic
 
 // Toutes les 15 minutes, sans chevauchement : un remboursement arrive au plus tard 15 min après l'échéance
 Schedule::command('palabre:refund-expired-bounties')->everyFifteenMinutes()->withoutOverlapping();
+
+// Donner ou retirer le rôle d'administrateur (modération) : seulement depuis le serveur, jamais par l'API
+Artisan::command('palabre:admin {email} {--remove}', function (string $email) {
+    $user = User::where('email', mb_strtolower($email))->first();
+    if (! $user) {
+        $this->error("Aucun compte avec l'adresse {$email}.");
+
+        return 1;
+    }
+    $user->forceFill(['is_admin' => ! $this->option('remove')])->save();
+    $this->info($user->is_admin ? "{$user->name} est administrateur." : "{$user->name} n'est plus administrateur.");
+})->purpose('Donne (ou retire avec --remove) le rôle administrateur');

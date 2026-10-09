@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../components/Brand'
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
+import { ReportButton } from '../components/ReportButton'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
@@ -148,6 +149,7 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
           {s.author.name}
         </Link>
         <ShareButton item={{ type: 'snippet', id: s.id, title: s.title }} compact />
+        <ReportButton type="snippet" id={s.id} authorId={s.author.id} />
         <button onClick={copy} className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 font-semibold text-ink hover:border-green">
           <Icon name="copy" className="size-4" />
           {t('common.copy')}

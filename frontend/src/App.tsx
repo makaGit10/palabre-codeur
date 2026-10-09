@@ -9,6 +9,7 @@ import Feed from './pages/Feed'
 import Landing from './pages/Landing'
 import Leaderboard from './pages/Leaderboard'
 import Messages from './pages/Messages'
+import Moderation from './pages/Moderation'
 import NewSnippet from './pages/NewSnippet'
 import Notifications from './pages/Notifications'
 import Profile from './pages/Profile'
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="poser" element={<RequireAuth><Ask /></RequireAuth>} />
         <Route path="snippets/nouveau" element={<RequireAuth><NewSnippet /></RequireAuth>} />
         <Route path="portefeuille" element={<RequireAuth><WalletPage /></RequireAuth>} />
+        <Route path="moderation" element={<RequireAuth><Moderation /></RequireAuth>} />
       </Route>
 
       <Route path="*" element={<StatusPage kind="not_found" />} />

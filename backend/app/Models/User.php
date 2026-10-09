@@ -35,6 +35,7 @@ class User extends Authenticatable implements HasLocalePreference
             'bounty_earnings' => 'integer',
             'wallet_balance' => 'integer',
             'wallet_held' => 'integer',
+            'is_admin' => 'boolean',
         ];
     }
 

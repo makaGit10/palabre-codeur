@@ -5,6 +5,7 @@ import { RelatedQuestions, TopBounties, WithAside } from '../components/Communit
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
 import { AuthorChip, MarkdownEditor, VoteBox } from '../components/Post'
+import { ReportButton } from '../components/ReportButton'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
@@ -118,6 +119,7 @@ export default function QuestionPage() {
                 </Link>
               ))}
               <ShareButton item={{ type: 'question', id: q.id, title: q.title }} compact />
+              <ReportButton type="question" id={q.id} authorId={q.author.id} />
             </div>
             <AuthorChip user={q.author} date={q.createdAt} label={t('q.asked_by')} />
           </div>
@@ -200,7 +202,10 @@ export default function QuestionPage() {
               ) : (
                 <span />
               )}
-              <AuthorChip user={a.author} date={a.createdAt} label={t('q.answer_by')} />
+              <div className="flex items-center gap-2">
+                <ReportButton type="answer" id={a.id} authorId={a.author.id} />
+                <AuthorChip user={a.author} date={a.createdAt} label={t('q.answer_by')} />
+              </div>
             </div>
           </div>
         </article>

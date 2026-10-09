@@ -41,6 +41,7 @@ export interface Me extends User {
   email: string
   emailVerified: boolean
   locale: 'fr' | 'en'
+  isAdmin: boolean
 }
 
 export type PaymentMethod =

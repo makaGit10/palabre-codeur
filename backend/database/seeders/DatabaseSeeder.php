@@ -76,6 +76,8 @@ class DatabaseSeeder extends Seeder
             $user->forceFill(['reputation' => $reputation, 'bounty_earnings' => $earnings, 'email_verified_at' => now()])->save();
             $this->users[$key] = $user;
         }
+        // La propriétaire du projet modère : rôle donné ici, jamais par une requête
+        $this->users['mareme']->forceFill(['is_admin' => true])->save();
     }
 
     private function seedBadges(): void

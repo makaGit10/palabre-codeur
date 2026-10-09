@@ -144,5 +144,13 @@
     "Votre prime de :amount vous a été remboursée": "Your :amount bounty has been refunded",
     "Aucune réponse n'a été validée à temps pour « :title ».": "No answer was accepted in time for “:title”.",
     "La prime de :amount est revenue dans votre portefeuille Palabre. Votre question reste ouverte.": "The :amount bounty is back in your Palabre wallet. Your question stays open.",
-    "Prime de :amount FCFA remboursée dans votre portefeuille": ":amount FCFA bounty refunded to your wallet"
+    "Prime de :amount FCFA remboursée dans votre portefeuille": ":amount FCFA bounty refunded to your wallet",
+    "Vous ne pouvez pas signaler votre propre contenu.": "You cannot report your own content.",
+    "Vous avez déjà signalé ce contenu. Merci, la modération va l'examiner.": "You already reported this content. Thank you, moderators will review it.",
+    "Type de contenu inconnu.": "Unknown content type.",
+    "Merci : le signalement a été transmis à la modération.": "Thank you: the report has been sent to the moderators.",
+    "Contenu masqué.": "Content hidden.",
+    "Signalement classé sans suite.": "Report dismissed.",
+    "Contenu de nouveau visible.": "Content visible again.",
+    "Réservé à la modération.": "Moderators only."
 }

@@ -81,6 +81,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'emailVerified' => $user->email_verified_at !== null,
             'locale' => $user->locale ?? 'fr',
+            'isAdmin' => (bool) $user->is_admin,
         ];
     }
 }

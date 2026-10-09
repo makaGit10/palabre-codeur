@@ -145,6 +145,13 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
             {n.count && <CountBadge n={counts[n.count]} gold={n.count === 'bounties'} floating={collapsed} />}
           </NavLink>
         ))}
+        {/* Modération : visible pour les administrateurs seulement (l'API vérifie de son côté) */}
+        {user?.isAdmin && (
+          <NavLink to="/app/moderation" title={t('nav.moderation')} className={({ isActive }) => itemClass(collapsed, isActive)}>
+            <Icon name="shield" />
+            {!collapsed && t('nav.moderation')}
+          </NavLink>
+        )}
         {!collapsed && (
           <div className="mt-4 rounded-xl border border-line bg-bg p-3.5 text-[13px] text-muted">
             <b className="mb-1 block font-display text-ink">{t('nav.principle_title')}</b>

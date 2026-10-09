@@ -9,9 +9,11 @@ use App\Http\Controllers\Api\DemoAccountController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\ModerationController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SnippetController;
@@ -79,6 +81,9 @@ Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(f
     Route::post('/wallet/withdrawals', [WalletController::class, 'withdraw']);
     Route::post('/wallet/topups', [TopupController::class, 'store']);
 
+    // Signaler un contenu (un signalement par personne et par contenu)
+    Route::post('/reports', [ReportController::class, 'store']);
+
     Route::post('/rooms/{room:slug}/messages', [RoomController::class, 'store']);
     Route::post('/conversations/{user}/messages', [ConversationController::class, 'store'])->whereNumber('user');
 
@@ -92,4 +97,11 @@ Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(f
     Route::post('/groups/{room:slug}/members', [GroupController::class, 'addMembers']);
     Route::delete('/groups/{room:slug}/members/me', [GroupController::class, 'leave']);
     Route::delete('/groups/{room:slug}/members/{user}', [GroupController::class, 'removeMember'])->whereNumber('user');
+});
+
+// Modération : administrateurs seulement (vérifié côté serveur)
+Route::middleware(['auth:sanctum', 'throttle:api', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/reports', [ModerationController::class, 'index']);
+    Route::post('/reports/{report}/resolve', [ModerationController::class, 'resolve']);
+    Route::post('/content/{type}/{id}/restore', [ModerationController::class, 'restore'])->whereIn('type', ['question', 'answer', 'snippet'])->whereNumber('id');
 });

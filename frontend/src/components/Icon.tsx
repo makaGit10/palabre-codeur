@@ -73,6 +73,8 @@ const PATHS = {
   bell: <path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21a2 2 0 0 0 4 0" />,
   moon: <path d="M20 14A8 8 0 1 1 10 4a6 6 0 0 0 10 10z" />,
   play: <path d="M8 5.5v13l11-6.5z" />,
+  flag: <path d="M5 21V4m0 0h11l-2 4 2 4H5" />,
+  shield: <path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" />,
   globe: (
     <>
       <circle cx="12" cy="12" r="9" />
