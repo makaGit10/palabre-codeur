@@ -110,6 +110,12 @@ return [
     |
     */
 
+    // Gabarits Markdown des e-mails, habillés aux couleurs de Palabre (resources/views/vendor/mail)
+    'markdown' => [
+        'theme' => 'palabre',
+        'paths' => [resource_path('views/vendor/mail')],
+    ],
+
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),

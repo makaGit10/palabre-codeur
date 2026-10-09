@@ -68,8 +68,8 @@ class DatabaseSeeder extends Seeder
                 'country' => $country,
                 'city' => $city,
             ]);
-            // Colonnes protégées : modifiées directement, jamais via une requête
-            $user->forceFill(['reputation' => $reputation, 'bounty_earnings' => $earnings])->save();
+            // Colonnes protégées : modifiées directement, jamais via une requête ; comptes de démo déjà vérifiés
+            $user->forceFill(['reputation' => $reputation, 'bounty_earnings' => $earnings, 'email_verified_at' => now()])->save();
             $this->users[$key] = $user;
         }
     }

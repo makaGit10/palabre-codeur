@@ -6,9 +6,11 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommunityController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DemoAccountController;
+use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\QuestionController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\SearchController;
@@ -37,12 +39,18 @@ Route::middleware('throttle:api')->group(function () {
 Route::middleware('throttle:login')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    // Mot de passe oublié : un code à 6 chiffres par e-mail, puis un nouveau mot de passe
+    Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+    Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 });
 
 // Son propre compte
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    // Vérification de l'adresse e-mail par code : 5 essais par code et 30 s entre deux envois, limités par le service
+    Route::post('/email/verification/send', [EmailVerificationController::class, 'send']);
+    Route::post('/email/verification/verify', [EmailVerificationController::class, 'verify']);
     Route::get('/wallet', [WalletController::class, 'show']);
     Route::get('/conversations', [ConversationController::class, 'index']);
     Route::get('/conversations/{user}', [ConversationController::class, 'show'])->whereNumber('user');
@@ -52,8 +60,8 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/users/search', UserSearchController::class);
 });
 
-// Participation : compte obligatoire, et nombre d'écritures limité par personne
-Route::middleware(['auth:sanctum', 'throttle:writes'])->group(function () {
+// Participation : compte obligatoire avec adresse e-mail vérifiée, et nombre d'écritures limité par personne
+Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(function () {
     Route::post('/questions', [QuestionController::class, 'store']);
     Route::post('/questions/{question}/answers', [AnswerController::class, 'store']);
     Route::post('/questions/{question}/answers/{answer}/accept', [AnswerController::class, 'accept']);

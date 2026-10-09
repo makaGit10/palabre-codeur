@@ -73,4 +73,31 @@ return [
         'accepting_answer' => 2,
         'bounty_won' => 50,
     ],
+
+    // Adresse du front-end : liens dans les e-mails (voir la question, mon portefeuille…)
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5180'),
+
+    'features' => [
+        // Vérification de l'adresse e-mail par code à l'inscription (false pour une démo sans serveur de mail)
+        'email_verification' => (bool) env('EMAIL_VERIFICATION', true),
+    ],
+
+    // Codes à usage unique envoyés par e-mail (en minutes)
+    'codes' => [
+        'verification_minutes' => 2,
+        'reset_minutes' => 10,
+    ],
+
+    // Connexion : après N échecs, le compte est bloqué M minutes et son titulaire est prévenu par e-mail
+    'security' => [
+        'login_attempts' => 5,
+        'lock_minutes' => 30,
+    ],
+
+    // Libellés des moyens de paiement dans les e-mails
+    'payment_labels' => [
+        'wave' => 'Wave', 'orange_money' => 'Orange Money', 'free_money' => 'Free Money', 'mtn_momo' => 'MTN MoMo',
+        'moov_money' => 'Moov Money', 'airtel_money' => 'Airtel Money', 'mpesa' => 'M-Pesa', 'flooz' => 'Flooz',
+        'tmoney' => 'T-Money', 'mvola' => 'MVola', 'card' => 'carte bancaire', 'bank_transfer' => 'virement bancaire',
+    ],
 ];

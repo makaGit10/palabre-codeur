@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Le front-end React s'authentifie par cookie de session (Sanctum SPA), avec protection CSRF
         $middleware->statefulApi();
+        // Participer demande une adresse e-mail vérifiée par code
+        $middleware->alias(['verified.code' => EnsureEmailIsVerified::class]);
         // En-têtes de sécurité sur toutes les réponses
         $middleware->append(SecurityHeaders::class);
         // Langue des réponses (Accept-Language : fr ou en)

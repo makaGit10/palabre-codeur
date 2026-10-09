@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\BusinessRuleException;
 use App\Models\User;
 use App\Models\WalletTransaction;
+use App\Notifications\WithdrawalMade;
 use App\Payments\PaymentGateway;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,7 @@ class WalletService
             throw new BusinessRuleException(__('Le retrait minimum est de :min FCFA.', ['min' => $min]));
         }
 
-        return DB::transaction(function () use ($user, $amount, $method, $account) {
+        $tx = DB::transaction(function () use ($user, $amount, $method, $account) {
             $locked = User::lockForUpdate()->findOrFail($user->id);
             if ($amount > $locked->wallet_balance) {
                 throw new BusinessRuleException(__('Le montant dépasse votre solde disponible.'));
@@ -44,6 +45,11 @@ class WalletService
                 'provider_reference' => $reference,
             ]);
         });
+
+        // Confirmation par e-mail, une fois l'opération enregistrée
+        $user->notify(new WithdrawalMade($tx));
+
+        return $tx;
     }
 
     // On ne garde jamais le numéro ou le RIB complet : seulement les 4 derniers caractères

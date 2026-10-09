@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,9 +14,9 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 // Réputation, gains et solde ne sont jamais remplissables depuis une requête : seuls les services les modifient
-#[Fillable(['name', 'email', 'password', 'country', 'city'])]
+#[Fillable(['name', 'email', 'password', 'country', 'city', 'locale'])]
 #[Hidden(['password', 'remember_token', 'email', 'wallet_balance', 'wallet_held'])]
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -36,6 +36,12 @@ class User extends Authenticatable
             'wallet_balance' => 'integer',
             'wallet_held' => 'integer',
         ];
+    }
+
+    /** Langue des e-mails et notifications envoyés à cette personne */
+    public function preferredLocale(): string
+    {
+        return $this->locale ?: 'fr';
     }
 
     public function questions(): HasMany
