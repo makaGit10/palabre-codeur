@@ -18,6 +18,7 @@ const TX_STYLE: Record<WalletTransaction['type'], { sign: string; className: str
   bounty_held: { sign: '', className: 'text-gold', tag: 'w.tx_held' },
   bounty_paid: { sign: '', className: 'text-muted', tag: 'w.tx_paid' },
   topup: { sign: '+', className: 'text-green', tag: 'w.tx_topup' },
+  bounty_refunded: { sign: '+', className: 'text-green', tag: 'w.tx_refunded' },
 }
 
 export default function WalletPage() {
@@ -52,6 +53,8 @@ export default function WalletPage() {
         return t('w.label_held', { subject: tx.label })
       case 'bounty_paid':
         return t('w.label_paid', { subject: tx.label })
+      case 'bounty_refunded':
+        return t('w.label_refunded', { subject: tx.label })
       case 'topup':
         return tx.label ? t('w.label_topup_via', { method: tx.label }) : t('w.label_topup')
       case 'withdrawal':
@@ -63,7 +66,12 @@ export default function WalletPage() {
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 max-w-[860px]">
         <h1 className="text-[26px]">{t('w.title')}</h1>
-        <p className="mt-1 mb-5 text-sm text-muted">{t('w.subtitle')}</p>
+        <p className="mt-1 text-sm text-muted">{t('w.subtitle')}</p>
+        {/* Honnêteté : pendant le concours, aucun paiement n'est réel */}
+        <p className="mt-3 mb-5 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold-soft px-3 py-1 text-[12.5px] font-semibold text-gold">
+          <Icon name="coin" className="size-3.5" />
+          {t('w.simulation')}
+        </p>
 
         <section className="rounded-2xl bg-green p-6 text-green-ink">
           <p className="text-sm opacity-85">{t('w.balance')}</p>

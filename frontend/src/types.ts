@@ -110,7 +110,7 @@ export interface NewQuestion {
 
 export interface WalletTransaction {
   id: number
-  type: 'bounty_received' | 'bounty_held' | 'bounty_paid' | 'withdrawal' | 'topup'
+  type: 'bounty_received' | 'bounty_held' | 'bounty_paid' | 'bounty_refunded' | 'withdrawal' | 'topup'
   amount: number // en FCFA
   label: string
   method: PaymentMethod | null
@@ -196,7 +196,7 @@ export interface DirectMessage extends MessageBase {
 
 export interface AppNotification {
   id: string
-  kind: 'answer' | 'accepted' | 'bounty' | 'message' | 'mention' | 'topup' | 'info'
+  kind: 'answer' | 'accepted' | 'bounty' | 'message' | 'mention' | 'topup' | 'refund' | 'info'
   title: string
   body: string
   url: string | null

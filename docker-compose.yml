@@ -40,6 +40,20 @@ services:
       valkey:
         condition: service_started
 
+  # Tâches planifiées (remboursement des primes expirées…) : même image que l'API
+  scheduler:
+    build: ./backend/docker/php
+    command: php artisan schedule:work
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - vendor:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+
 volumes:
   pgdata:
   vendor:

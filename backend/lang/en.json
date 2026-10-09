@@ -140,5 +140,9 @@
     ":amount sont arrivés sur votre portefeuille": ":amount have arrived in your wallet",
     "Votre recharge de :amount est confirmée : votre portefeuille Palabre est crédité.": "Your :amount top-up is confirmed: your Palabre wallet has been credited.",
     ":amount FCFA sont arrivés sur votre portefeuille": ":amount FCFA have arrived in your wallet",
-    "Recharge confirmée par PayTech.": "Top-up confirmed by PayTech."
+    "Recharge confirmée par PayTech.": "Top-up confirmed by PayTech.",
+    "Votre prime de :amount vous a été remboursée": "Your :amount bounty has been refunded",
+    "Aucune réponse n'a été validée à temps pour « :title ».": "No answer was accepted in time for “:title”.",
+    "La prime de :amount est revenue dans votre portefeuille Palabre. Votre question reste ouverte.": "The :amount bounty is back in your Palabre wallet. Your question stays open.",
+    "Prime de :amount FCFA remboursée dans votre portefeuille": ":amount FCFA bounty refunded to your wallet"
 }

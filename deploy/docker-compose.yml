@@ -27,6 +27,18 @@ services:
       retries: 5
       start_period: 40s
 
+  # Tâches planifiées (remboursement des primes expirées toutes les 15 minutes) : même image, sans serveur web
+  scheduler:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      app:
+        condition: service_healthy
+
   # Base de données : jamais exposée hors du réseau Docker
   db:
     image: postgres:17-alpine
