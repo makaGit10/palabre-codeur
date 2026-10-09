@@ -13,6 +13,11 @@ class Answer extends Model
 {
     use Moderatable;
 
+    protected function casts(): array
+    {
+        return ['edited_at' => 'datetime'];
+    }
+
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);

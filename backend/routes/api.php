@@ -69,6 +69,11 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 // Participation : compte obligatoire avec adresse e-mail vérifiée, et nombre d'écritures limité par personne
 Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(function () {
     Route::post('/questions', [QuestionController::class, 'store']);
+    Route::patch('/questions/{question}', [QuestionController::class, 'update'])->whereNumber('question');
+    Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->whereNumber('question');
+    Route::patch('/answers/{answer}', [AnswerController::class, 'update'])->whereNumber('answer');
+    Route::delete('/answers/{answer}', [AnswerController::class, 'destroy'])->whereNumber('answer');
+    Route::patch('/me', [AuthController::class, 'updateProfile']);
     Route::post('/questions/{question}/answers', [AnswerController::class, 'store']);
     Route::post('/questions/{question}/answers/{answer}/accept', [AnswerController::class, 'accept']);
     Route::post('/questions/{question}/vote', [VoteController::class, 'question']);

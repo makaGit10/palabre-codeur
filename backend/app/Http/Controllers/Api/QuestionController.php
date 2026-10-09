@@ -10,7 +10,9 @@ use App\Models\AiFeedback;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Models\Vote;
+use App\Services\PostEditingService;
 use App\Services\QuestionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Cache;
@@ -64,6 +66,27 @@ class QuestionController extends Controller
         $question = $this->questions->create($request->user(), $request->validated());
 
         return $this->show($request, $question);
+    }
+
+    /** Modifier sa question (titre, texte, étiquettes) ; la prime ne se modifie pas */
+    public function update(Request $request, Question $question, PostEditingService $editing): QuestionDetailResource
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'min:15', 'max:200'],
+            'body' => ['required', 'string', 'min:20', 'max:20000'],
+            'tags' => ['required', 'array', 'min:1', 'max:4'],
+            'tags.*' => ['string', 'regex:/^[a-z0-9-]{1,40}$/'],
+        ]);
+        $editing->updateQuestion($question, $request->user(), $data);
+
+        return $this->show($request, $question->refresh());
+    }
+
+    public function destroy(Request $request, Question $question, PostEditingService $editing): JsonResponse
+    {
+        $editing->deleteQuestion($question, $request->user());
+
+        return response()->json(['message' => __('Question supprimée.')]);
     }
 
     /** Détection de doublons pendant la saisie du titre */

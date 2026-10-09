@@ -1,6 +1,6 @@
 // Questions, réponses, votes et primes : appels à l'API Laravel.
 import { api } from '../lib/api'
-import type { Bounty, NewQuestion, Question, QuestionDetail, User, VoteValue } from '../types'
+import type { Answer, Bounty, NewQuestion, Question, QuestionDetail, User, VoteValue } from '../types'
 
 export async function listQuestions(): Promise<Question[]> {
   const { data } = await api.get<{ data: Question[] }>('/questions')
@@ -45,4 +45,23 @@ export async function acceptAnswer(questionId: number, answerId: number): Promis
 
 export async function rateSuggestion(suggestionId: number, feedback: 'up' | 'down') {
   await api.post(`/ai-suggestions/${suggestionId}/feedback`, { value: feedback })
+}
+
+// Modifier ou supprimer son propre contenu (l'API vérifie l'auteur et les règles : réponses, prime, réponse validée)
+export async function updateQuestion(id: number, input: { title: string; body: string; tags: string[] }): Promise<QuestionDetail> {
+  const { data } = await api.patch<{ data: QuestionDetail }>(`/questions/${id}`, input)
+  return data.data
+}
+
+export async function deleteQuestion(id: number) {
+  await api.delete(`/questions/${id}`)
+}
+
+export async function updateAnswer(id: number, body: string): Promise<Answer> {
+  const { data } = await api.patch<{ data: Answer }>(`/answers/${id}`, { body })
+  return data.data
+}
+
+export async function deleteAnswer(id: number) {
+  await api.delete(`/answers/${id}`)
 }

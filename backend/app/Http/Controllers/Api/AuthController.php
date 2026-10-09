@@ -66,6 +66,19 @@ class AuthController extends Controller
         return response()->json(['message' => __('Vous êtes déconnecté.')]);
     }
 
+    /** Modifier son profil public : nom et ville seulement (réputation, solde, rôle, e-mail : jamais par cette voie) */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:80'],
+            'city' => ['nullable', 'string', 'max:80'],
+        ]);
+        $user = $request->user();
+        $user->forceFill(['name' => trim($data['name']), 'city' => $data['city'] !== null ? trim($data['city']) : null])->save();
+
+        return response()->json(['data' => self::account($user)]);
+    }
+
     /** Compte de la personne connectée */
     public function me(Request $request): JsonResponse
     {

@@ -76,3 +76,9 @@ export async function resetPassword(input: { email: string; code: string; passwo
   const { data } = await api.post<{ data: Me }>('/password/reset', input)
   return data.data
 }
+
+// Modifier son profil public (nom, ville)
+export async function updateProfile(input: { name: string; city: string }): Promise<Me> {
+  const { data } = await api.patch<{ data: Me }>('/me', input)
+  return data.data
+}

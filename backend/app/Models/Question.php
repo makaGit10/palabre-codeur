@@ -16,6 +16,11 @@ class Question extends Model
 {
     use Moderatable;
 
+    protected function casts(): array
+    {
+        return ['edited_at' => 'datetime'];
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

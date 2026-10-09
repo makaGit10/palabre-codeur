@@ -74,6 +74,7 @@ export interface Answer {
   myVote: VoteValue
   accepted: boolean
   createdAt: string
+  editedAt: string | null
 }
 
 export interface Question {
@@ -97,6 +98,7 @@ export interface AiSuggestion {
 
 export interface QuestionDetail extends Question {
   body: string // Markdown
+  editedAt: string | null
   myVote: VoteValue
   answers: Answer[]
   aiSuggestion: AiSuggestion | null

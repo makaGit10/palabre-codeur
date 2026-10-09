@@ -4,16 +4,18 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { RelatedQuestions, TopBounties, WithAside } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
+import { AnswerEditor, ConfirmDialog, OwnerActions, QuestionEditor } from '../components/PostEditing'
 import { AuthorChip, MarkdownEditor, VoteBox } from '../components/Post'
 import { ReportButton } from '../components/ReportButton'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
+import { useDeleteAnswer, useDeleteQuestion } from '../hooks/usePostDeletion'
 import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { formatFcfa, timeAgo } from '../lib/format'
 import { acceptAnswer, addAnswer, getQuestion, rateSuggestion, vote } from '../services/questions'
-import type { PaymentMethod, QuestionDetail, VoteValue } from '../types'
+import type { Answer, PaymentMethod, QuestionDetail, VoteValue } from '../types'
 
 export default function QuestionPage() {
   const { t, tn, payment } = useI18n()
@@ -24,6 +26,9 @@ export default function QuestionPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { data: q, isLoading, isError } = useQuery({ queryKey: ['question', id], queryFn: () => getQuestion(id) })
+  const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const removeQuestion = useDeleteQuestion(id)
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['question', id] })
@@ -97,6 +102,7 @@ export default function QuestionPage() {
       <div className="mt-2 flex flex-wrap items-center gap-2 text-[13px] text-muted">
         <span>{t('q.asked', { ago: timeAgo(q.createdAt) })}</span>
         <span>{t('q.views', { n: q.views })}</span>
+        {q.editedAt && <span>· {t('edit.edited')}</span>}
         {q.solved && (
           <span className="inline-flex items-center gap-1 rounded-full bg-green-soft px-2.5 py-0.5 text-xs font-bold text-green">
             <Icon name="check" className="size-3.5" />
@@ -110,7 +116,7 @@ export default function QuestionPage() {
       <article className="grid grid-cols-[38px_1fr] gap-2.5 border-b border-line py-5 sm:grid-cols-[44px_1fr] sm:gap-4">
         <VoteBox votes={q.votes} myVote={q.myVote} onVote={(value) => castVote({ target: { type: 'question' }, value })} />
         <div className="min-w-0">
-          <Markdown>{q.body}</Markdown>
+          {editing ? <QuestionEditor q={q} onDone={() => setEditing(false)} /> : <Markdown>{q.body}</Markdown>}
           <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap gap-2">
               {q.tags.map((tag) => (
@@ -120,11 +126,30 @@ export default function QuestionPage() {
               ))}
               <ShareButton item={{ type: 'question', id: q.id, title: q.title }} compact />
               <ReportButton type="question" id={q.id} authorId={q.author.id} />
+              {isMine && !editing && (
+                <OwnerActions
+                  onEdit={() => setEditing(true)}
+                  onDelete={() => setConfirmDelete(true)}
+                  canDelete={q.answers.length === 0 && !q.bounty}
+                  deleteHint={t(q.bounty ? 'edit.cant_delete_bounty' : 'edit.cant_delete_answers')}
+                />
+              )}
             </div>
             <AuthorChip user={q.author} date={q.createdAt} label={t('q.asked_by')} />
           </div>
         </div>
       </article>
+      {confirmDelete && (
+        <ConfirmDialog
+          title={t('edit.delete_question_title')}
+          text={t('edit.delete_question_text')}
+          confirm={t('edit.delete')}
+          pending={removeQuestion.isPending}
+          error={removeQuestion.error}
+          onConfirm={() => removeQuestion.mutate()}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
 
       {q.aiSuggestion && (
         <section className="mt-5 rounded-[14px] border border-green/35 bg-green-soft p-4">
@@ -187,7 +212,7 @@ export default function QuestionPage() {
                 {t('q.accepted_by', { name: q.author.name })}
               </p>
             )}
-            <Markdown>{a.body}</Markdown>
+            <AnswerBody questionId={q.id} answer={a} mine={a.author.id === user?.id} />
             <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
               {isMine && !q.solved ? (
                 <button
@@ -292,5 +317,39 @@ function ReplyForm({ questionId, onDone, loggedIn }: { questionId: number; onDon
         </button>
       </div>
     </form>
+  )
+}
+
+// Texte d'une réponse ; pour son auteur : modifier sur place, ou supprimer (sauf si elle est validée)
+function AnswerBody({ questionId, answer, mine }: { questionId: number; answer: Answer; mine: boolean }) {
+  const { t } = useI18n()
+  const [editing, setEditing] = useState(false)
+  const [confirm, setConfirm] = useState(false)
+  const remove = useDeleteAnswer(questionId, answer.id, () => setConfirm(false))
+
+  if (editing) return <AnswerEditor questionId={questionId} answer={answer} onDone={() => setEditing(false)} />
+  return (
+    <>
+      <Markdown>{answer.body}</Markdown>
+      {(mine || answer.editedAt) && (
+        <div className="mt-3 flex items-center gap-2 text-xs text-muted">
+          {answer.editedAt && <span>{t('edit.edited')}</span>}
+          {mine && (
+            <OwnerActions onEdit={() => setEditing(true)} onDelete={() => setConfirm(true)} canDelete={!answer.accepted} deleteHint={t('edit.cant_delete_accepted')} />
+          )}
+        </div>
+      )}
+      {confirm && (
+        <ConfirmDialog
+          title={t('edit.delete_answer_title')}
+          text={t('edit.delete_answer_text')}
+          confirm={t('edit.delete')}
+          pending={remove.isPending}
+          error={remove.error}
+          onConfirm={() => remove.mutate()}
+          onClose={() => setConfirm(false)}
+        />
+      )}
+    </>
   )
 }

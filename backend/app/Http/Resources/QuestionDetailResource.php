@@ -13,6 +13,7 @@ class QuestionDetailResource extends QuestionResource
 
         return parent::toArray($request) + [
             'body' => $this->body,
+            'editedAt' => $this->edited_at?->toIso8601String(),
             'myVote' => (int) ($this->my_vote ?? 0),
             'answers' => AnswerResource::collection(
                 $this->answers->sortBy([

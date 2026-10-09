@@ -9,6 +9,7 @@ use App\Http\Resources\BountyResource;
 use App\Http\Resources\UserResource;
 use App\Models\Answer;
 use App\Models\Question;
+use App\Services\PostEditingService;
 use App\Services\QuestionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,22 @@ class AnswerController extends Controller
         $answer->load('author')->setRelation('question', $question);
 
         return new AnswerResource($answer);
+    }
+
+    public function update(Request $request, Answer $answer, PostEditingService $editing): AnswerResource
+    {
+        $data = $request->validate(['body' => ['required', 'string', 'min:20', 'max:20000']]);
+        $editing->updateAnswer($answer, $request->user(), $data['body']);
+        $answer->load(['author', 'question']);
+
+        return new AnswerResource($answer);
+    }
+
+    public function destroy(Request $request, Answer $answer, PostEditingService $editing): JsonResponse
+    {
+        $editing->deleteAnswer($answer, $request->user());
+
+        return response()->json(['message' => __('Réponse supprimée.')]);
     }
 
     /** Valide une réponse et verse la prime éventuelle */

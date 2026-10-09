@@ -152,5 +152,11 @@
     "Contenu masqué.": "Content hidden.",
     "Signalement classé sans suite.": "Report dismissed.",
     "Contenu de nouveau visible.": "Content visible again.",
-    "Réservé à la modération.": "Moderators only."
+    "Réservé à la modération.": "Moderators only.",
+    "Une prime est liée à cette question : elle ne peut pas être supprimée.": "A bounty is attached to this question: it cannot be deleted.",
+    "Des réponses ont déjà été publiées : la question reste en ligne pour respecter le travail de la communauté. Vous pouvez encore la modifier.": "Answers have already been posted: the question stays online out of respect for the community's work. You can still edit it.",
+    "Une réponse validée ne peut pas être supprimée.": "An accepted answer cannot be deleted.",
+    "Vous ne pouvez modifier que vos propres contenus.": "You can only change your own content.",
+    "Question supprimée.": "Question deleted.",
+    "Réponse supprimée.": "Answer deleted."
 }
