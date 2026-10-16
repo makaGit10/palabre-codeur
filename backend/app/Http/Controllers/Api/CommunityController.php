@@ -40,6 +40,9 @@ class CommunityController extends Controller
             'solvedQuestions' => Question::whereNotNull('accepted_answer_id')->count(),
             'countries' => User::distinct()->count('country'),
             'bountiesPaid' => (int) Bounty::where('status', Bounty::PAID)->sum('amount'),
+            // Primes ouvertes : compteur de la navigation et page « Primes », sans charger toutes les questions
+            'openBounties' => Bounty::where('status', Bounty::HELD)->whereHas('question', fn ($q) => $q->whereNull('accepted_answer_id'))->count(),
+            'openBountiesTotal' => (int) Bounty::where('status', Bounty::HELD)->whereHas('question', fn ($q) => $q->whereNull('accepted_answer_id'))->sum('amount'),
         ]);
     }
 

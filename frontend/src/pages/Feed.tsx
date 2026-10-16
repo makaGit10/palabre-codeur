@@ -1,8 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { TopBounties, TopContributors } from '../components/CommunityAside'
 import { Icon } from '../components/Icon'
+import { LoadMore } from '../components/LoadMore'
 import { QuestionCard } from '../components/QuestionCard'
 import { SearchInput } from '../components/SearchSuggestions'
 import { useAuth } from '../hooks/useAuth'
@@ -23,20 +24,16 @@ export default function Feed() {
   const [tab, setTab] = useState<Tab>('pour')
   const tag = params.get('tag')
   const search = params.get('q') ?? ''
-  const { data: questions = [], isLoading } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
-
-  const list = useMemo(() => {
-    let l = questions
-    if (tab === 'recentes') l = [...l].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    if (tab === 'sans') l = l.filter((q) => q.answersCount === 0)
-    if (tab === 'primes') l = l.filter((q) => q.bounty && !q.solved)
-    if (tag) l = l.filter((q) => q.tags.includes(tag))
-    if (search) {
-      const s = search.toLowerCase()
-      l = l.filter((q) => `${q.title} ${q.tags.join(' ')}`.toLowerCase().includes(s))
-    }
-    return l
-  }, [questions, tab, tag, search])
+  // Le serveur filtre (onglet, étiquette, recherche) et renvoie 20 questions à la fois ; la suite arrive au défilement
+  const filters = { tab: tab === 'sans' || tab === 'primes' ? tab : undefined, tag: tag ?? undefined, q: search || undefined }
+  const feed = useInfiniteQuery({
+    queryKey: ['questions', 'feed', filters],
+    queryFn: ({ pageParam }) => listQuestions({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.lastPage ? last.page + 1 : undefined),
+  })
+  const list = feed.data?.pages.flatMap((p) => p.data) ?? []
+  const isLoading = feed.isLoading
 
   const { user } = useAuth()
 
@@ -96,6 +93,7 @@ export default function Feed() {
         ) : (
           <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">{t('feed.empty')}</div>
         )}
+        {list.length > 0 && <LoadMore hasMore={!!feed.hasNextPage} loading={feed.isFetchingNextPage} onLoad={() => feed.fetchNextPage()} />}
       </div>
 
       <aside className="sticky top-7 hidden flex-col gap-4 xl:flex">

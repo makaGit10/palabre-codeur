@@ -19,9 +19,15 @@ class SnippetController extends Controller
             ->with('author')
             ->withCount('testers')
             ->when($viewer, fn ($q) => $q->withExists(['testers as tested_by_me' => fn ($t) => $t->whereKey($viewer->id)]))
-            ->latest()
-            ->limit(100)
-            ->get();
+            // Filtres côté serveur : API concernée et recherche, 20 extraits par page
+            ->when($request->query('api'), fn ($q, string $api) => $q->whereJsonContains('apis', $api))
+            ->when($request->query('q'), function ($q, string $search) {
+                $like = '%'.addcslashes($search, '%_\\').'%';
+                $q->where(fn ($w) => $w->where('title', 'ilike', $like)->orWhere('description', 'ilike', $like)->orWhere('language', 'ilike', $like));
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(max(1, min(50, (int) $request->query('per_page', 20))));
 
         return SnippetResource::collection($snippets);
     }

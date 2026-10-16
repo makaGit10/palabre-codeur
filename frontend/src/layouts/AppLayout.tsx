@@ -12,7 +12,7 @@ import { useI18n, type Key } from '../i18n'
 import { formatNumber } from '../lib/format'
 import { logout } from '../services/auth'
 import { listConversations, listNotifications } from '../services/messaging'
-import { listQuestions } from '../services/questions'
+import { getStats } from '../services/community'
 
 type NavItem = { to: string; icon: IconName; label: Key; end?: boolean; count?: 'bounties' | 'messages' }
 
@@ -28,11 +28,11 @@ const NAV: NavItem[] = [
 
 // Compteurs de la navigation : primes ouvertes, messages et notifications non lus (rafraîchis régulièrement)
 function useCounts(loggedIn: boolean) {
-  const { data: questions = [] } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
+  const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: getStats })
   const { data: conversations } = useQuery({ queryKey: ['conversations'], queryFn: listConversations, enabled: loggedIn, refetchInterval: 10_000 })
   const { data: notifications } = useQuery({ queryKey: ['notifications'], queryFn: listNotifications, enabled: loggedIn, refetchInterval: 15_000 })
   return {
-    bounties: questions.filter((q) => q.bounty && !q.solved).length,
+    bounties: stats?.openBounties ?? 0,
     messages: conversations?.unreadCount ?? 0,
     notifications: notifications?.unreadCount ?? 0,
   }

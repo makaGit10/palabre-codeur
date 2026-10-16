@@ -2,9 +2,31 @@
 import { api } from '../lib/api'
 import type { Answer, Bounty, NewQuestion, Question, QuestionDetail, User, VoteValue } from '../types'
 
-export async function listQuestions(): Promise<Question[]> {
-  const { data } = await api.get<{ data: Question[] }>('/questions')
-  return data.data
+// Liste paginée : le serveur filtre, trie et renvoie 20 questions par page (50 au plus)
+export interface QuestionFilters {
+  tab?: 'sans' | 'primes' | 'payees'
+  tag?: string
+  tags?: string[]
+  exclude?: number
+  q?: string
+  sort?: 'bounty'
+  perPage?: number
+  page?: number
+}
+
+export interface Page<T> {
+  data: T[]
+  page: number
+  lastPage: number
+  total: number
+}
+
+export async function listQuestions(filters: QuestionFilters = {}): Promise<Page<Question>> {
+  const { tags, perPage, ...rest } = filters
+  const { data } = await api.get<{ data: Question[]; meta: { current_page: number; last_page: number; total: number } }>('/questions', {
+    params: { ...rest, tags: tags?.join(','), per_page: perPage },
+  })
+  return { data: data.data, page: data.meta.current_page, lastPage: data.meta.last_page, total: data.meta.total }
 }
 
 export async function getQuestion(id: number): Promise<QuestionDetail> {

@@ -21,13 +21,22 @@ class QuestionController extends Controller
 {
     public function __construct(private readonly QuestionService $questions) {}
 
-    /** Fil : onglets (sans réponse, avec prime), filtre par étiquette et recherche */
+    /**
+     * Fil paginé (20 par page par défaut, 50 au plus) : le serveur filtre et trie, le téléphone ne charge que ce qu'il affiche.
+     * Paramètres : tab (sans | primes | payees), tag, tags (liste, au moins une en commun), exclude, q, sort (bounty), per_page, page.
+     */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = max(1, min(50, (int) $request->query('per_page', 20)));
+        $tags = array_filter(array_map('trim', explode(',', (string) $request->query('tags', ''))));
+
         $query = Question::query()
+            ->select('questions.*')
             ->with(['author', 'tags', 'bounty'])
             ->withCount('answers')
             ->when($request->query('tag'), fn ($q, $tag) => $q->whereHas('tags', fn ($t) => $t->where('name', $tag)))
+            ->when($tags, fn ($q) => $q->whereHas('tags', fn ($t) => $t->whereIn('name', $tags)))
+            ->when($request->integer('exclude'), fn ($q, $id) => $q->whereKeyNot($id))
             ->when($request->query('q'), function ($q, string $search) {
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $q->where(fn ($w) => $w
@@ -38,10 +47,15 @@ class QuestionController extends Controller
         match ($request->query('tab')) {
             'sans' => $query->doesntHave('answers'),
             'primes' => $query->whereNull('accepted_answer_id')->whereHas('bounty', fn ($b) => $b->where('status', 'held')),
+            'payees' => $query->whereHas('bounty', fn ($b) => $b->where('status', 'paid')),
             default => null,
         };
 
-        return QuestionResource::collection($query->latest()->limit(50)->get());
+        if ($request->query('sort') === 'bounty') {
+            $query->leftJoin('bounties', 'bounties.question_id', '=', 'questions.id')->orderByDesc('bounties.amount');
+        }
+
+        return QuestionResource::collection($query->orderByDesc('questions.created_at')->orderByDesc('questions.id')->paginate($perPage));
     }
 
     public function show(Request $request, Question $question): QuestionDetailResource

@@ -1,10 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Avatar } from '../components/Brand'
 import { Icon } from '../components/Icon'
 import { Markdown } from '../components/Markdown'
+import { LoadMore } from '../components/LoadMore'
 import { ReportButton } from '../components/ReportButton'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
@@ -24,17 +26,17 @@ export default function Snippets() {
   const { t } = useI18n()
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const { data: snippets = [], isLoading } = useQuery({ queryKey: ['snippets'], queryFn: listSnippets })
+  // Filtres côté serveur (API, recherche après une courte pause de frappe), 20 extraits à la fois
+  const q = useDebouncedValue(search.trim(), 300)
+  const query = useInfiniteQuery({
+    queryKey: ['snippets', filter, q],
+    queryFn: ({ pageParam }) => listSnippets({ api: filter === 'all' ? undefined : filter, q: q || undefined, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.lastPage ? last.page + 1 : undefined),
+  })
+  const list = query.data?.pages.flatMap((p) => p.data) ?? []
+  const isLoading = query.isLoading
   const filters = [{ id: 'all', label: t('common.all') }, ...API_FILTERS]
-
-  const list = useMemo(() => {
-    const s = search.trim().toLowerCase()
-    return snippets.filter(
-      (sn) =>
-        (filter === 'all' || sn.tags.includes(filter)) &&
-        (!s || `${sn.title} ${sn.description} ${sn.language}`.toLowerCase().includes(s)),
-    )
-  }, [snippets, filter, search])
 
   return (
     <div className="max-w-[1100px]">
@@ -90,6 +92,7 @@ export default function Snippets() {
       ) : (
         <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">{t('sn.empty')}</div>
       )}
+      {list.length > 0 && <LoadMore hasMore={!!query.hasNextPage} loading={query.isFetchingNextPage} onLoad={() => query.fetchNextPage()} />}
     </div>
   )
 }

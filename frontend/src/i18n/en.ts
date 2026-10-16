@@ -22,6 +22,7 @@ export const en: Record<keyof typeof fr, string> = {
   'common.pts.one': 'pt',
   'common.pts.other': 'pts',
   'common.just_now': 'just now',
+  'common.load_more': "Show more",
   'edit.edit': "Edit",
   'edit.delete': "Delete",
   'edit.edited': "edited",

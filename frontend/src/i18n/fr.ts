@@ -22,6 +22,7 @@ export const fr = {
   'common.pts.one': 'pt',
   'common.pts.other': 'pts',
   'common.just_now': "à l'instant",
+  'common.load_more': "Voir la suite",
   'edit.edit': "Modifier",
   'edit.delete': "Supprimer",
   'edit.edited': "modifiée",

@@ -60,11 +60,8 @@ export function TopContributors() {
 // Les trois primes ouvertes les plus élevées
 export function TopBounties() {
   const { t } = useI18n()
-  const { data: questions = [] } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
-  const top = questions
-    .filter((q) => q.bounty && !q.solved)
-    .sort((a, b) => b.bounty!.amount - a.bounty!.amount)
-    .slice(0, 3)
+  const { data } = useQuery({ queryKey: ['questions', 'top-bounties'], queryFn: () => listQuestions({ tab: 'primes', sort: 'bounty', perPage: 3 }) })
+  const top = data?.data ?? []
   if (top.length === 0) return null
 
   return (
@@ -85,11 +82,13 @@ export function TopBounties() {
 // Questions qui partagent au moins une étiquette avec celle qui est affichée (les plus proches d'abord)
 export function RelatedQuestions({ question }: { question: Question }) {
   const { t, tn } = useI18n()
-  const { data: questions = [] } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
-  const related = questions
-    .filter((q) => q.id !== question.id)
+  // Le serveur renvoie les questions qui partagent au moins une étiquette ; on garde les plus proches
+  const { data } = useQuery({
+    queryKey: ['questions', 'related', question.id],
+    queryFn: () => listQuestions({ tags: question.tags, exclude: question.id, perPage: 15 }),
+  })
+  const related = (data?.data ?? [])
     .map((q) => ({ q, shared: q.tags.filter((tag) => question.tags.includes(tag)).length }))
-    .filter((x) => x.shared > 0)
     .sort((a, b) => b.shared - a.shared || b.q.votes - a.q.votes)
     .slice(0, 5)
   if (related.length === 0) return null

@@ -16,9 +16,10 @@ export interface Snippet {
   code: string
 }
 
-export async function listSnippets(): Promise<Snippet[]> {
-  const { data } = await api.get<{ data: Snippet[] }>('/snippets')
-  return data.data
+// Extraits paginés, filtrés côté serveur par API et par recherche
+export async function listSnippets(filters: { api?: string; q?: string; page?: number } = {}): Promise<{ data: Snippet[]; page: number; lastPage: number }> {
+  const { data } = await api.get<{ data: Snippet[]; meta: { current_page: number; last_page: number } }>('/snippets', { params: filters })
+  return { data: data.data, page: data.meta.current_page, lastPage: data.meta.last_page }
 }
 
 // « Je l'ai testé » : ajoute ou retire la confirmation de la personne connectée
@@ -69,6 +70,8 @@ export interface CommunityStats {
   solvedQuestions: number
   countries: number
   bountiesPaid: number
+  openBounties: number
+  openBountiesTotal: number
 }
 
 export async function getStats(): Promise<CommunityStats> {

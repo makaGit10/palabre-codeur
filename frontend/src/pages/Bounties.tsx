@@ -1,18 +1,30 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Icon } from '../components/Icon'
 import { QuestionCard } from '../components/QuestionCard'
 import { useI18n, type Key } from '../i18n'
 import { formatFcfa } from '../lib/format'
+import { getStats } from '../services/community'
 import { listQuestions } from '../services/questions'
+import { LoadMore } from '../components/LoadMore'
 
 const STEPS = [1, 2, 3] as const
 
 export default function Bounties() {
   const { t, tn } = useI18n()
-  const { data: questions = [], isLoading } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
-  const open = questions.filter((q) => q.bounty && !q.solved).sort((a, b) => b.bounty!.amount - a.bounty!.amount)
-  const paid = questions.filter((q) => q.bounty?.status === 'paid')
-  const total = open.reduce((sum, q) => sum + q.bounty!.amount, 0)
+  // Primes ouvertes, les plus élevées d'abord, 20 par page ; total et nombre viennent des chiffres du serveur
+  const openQuery = useInfiniteQuery({
+    queryKey: ['questions', 'bounties-open'],
+    queryFn: ({ pageParam }) => listQuestions({ tab: 'primes', sort: 'bounty', page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.lastPage ? last.page + 1 : undefined),
+  })
+  const { data: paidPage } = useQuery({ queryKey: ['questions', 'bounties-paid'], queryFn: () => listQuestions({ tab: 'payees', perPage: 5 }) })
+  const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: getStats })
+  const open = openQuery.data?.pages.flatMap((p) => p.data) ?? []
+  const paid = paidPage?.data ?? []
+  const total = stats?.openBountiesTotal ?? 0
+  const openCount = stats?.openBounties ?? open.length
+  const isLoading = openQuery.isLoading
 
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -26,8 +38,8 @@ export default function Bounties() {
             <span className="text-[13px] text-muted">{t('bt.at_stake')}</span>
           </div>
           <div className="bg-surface p-4">
-            <b className="block font-display text-[28px] tabular-nums">{open.length}</b>
-            <span className="text-[13px] text-muted">{tn('bt.with_bounty', open.length)}</span>
+            <b className="block font-display text-[28px] tabular-nums">{openCount}</b>
+            <span className="text-[13px] text-muted">{tn('bt.with_bounty', openCount)}</span>
           </div>
         </div>
 
@@ -38,6 +50,7 @@ export default function Bounties() {
             {open.map((q) => (
               <QuestionCard key={q.id} question={q} />
             ))}
+            <LoadMore hasMore={!!openQuery.hasNextPage} loading={openQuery.isFetchingNextPage} onLoad={() => openQuery.fetchNextPage()} />
           </div>
         ) : (
           <div className="rounded-[14px] border border-dashed border-line bg-surface px-5 py-10 text-center text-muted">{t('bt.empty')}</div>

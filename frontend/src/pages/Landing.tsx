@@ -17,9 +17,11 @@ const STEPS = [1, 2, 3] as const
 export default function Landing() {
   const navigate = useNavigate()
   const { t, tn, country, payment } = useI18n()
-  const { data: questions = [] } = useQuery({ queryKey: ['questions'], queryFn: listQuestions })
+  const { data: recent } = useQuery({ queryKey: ['questions', 'recent'], queryFn: () => listQuestions({ perPage: 3 }) })
+  const { data: topBounties } = useQuery({ queryKey: ['questions', 'top-bounties-home'], queryFn: () => listQuestions({ tab: 'primes', sort: 'bounty', perPage: 5 }) })
+  const questions = recent?.data ?? []
   const { data: stats } = useQuery({ queryKey: ['stats'], queryFn: getStats })
-  const bounties = questions.filter((q) => q.bounty && !q.solved).sort((a, b) => b.bounty!.amount - a.bounty!.amount)
+  const bounties = topBounties?.data ?? []
   const plural = (n: number | undefined) => n ?? 2 // libellé au pluriel pendant le chargement des chiffres
 
   return (
