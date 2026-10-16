@@ -35,9 +35,12 @@ class DatabaseSeeder extends Seeder
         $this->seedUsers();
         $this->seedBadges();
         $this->seedQuestions();
+        $this->seedMoreQuestions();
         $this->seedSnippets();
+        $this->seedMoreSnippets();
         $this->seedWallet();
         $this->seedMessaging();
+        $this->seedMoreConversations();
     }
 
     private function seedUsers(): void
@@ -215,9 +218,16 @@ class DatabaseSeeder extends Seeder
         return $answer;
     }
 
+    // Primes de démonstration : ouvertes plus longtemps (DEMO_BOUNTY_DAYS, 30 jours par défaut) pour rester visibles
+    // pendant toute l'évaluation ; les vraies primes gardent la règle des 7 jours. Le montant est bloqué chez l'auteur.
     private function bounty(Question $question, int $amount, string $method): void
     {
-        $question->bounty()->create(['amount' => $amount, 'payment_method' => $method, 'expires_at' => now()->addDays(7)]);
+        $question->bounty()->create(['amount' => $amount, 'payment_method' => $method, 'expires_at' => now()->addDays((int) config('palabre.demo.bounty_days'))]);
+        $author = $question->author;
+        if ($author->email !== config('palabre.demo.owner_email')) { // le portefeuille de Mareme est fixé dans seedWallet()
+            $author->increment('wallet_held', $amount);
+            $author->walletTransactions()->create(['type' => 'bounty_held', 'amount' => $amount, 'label' => $question->title, 'payment_method' => $method]);
+        }
     }
 
     private function seedSnippets(): void
@@ -391,5 +401,204 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $u['moussa']->id, 'emoji' => '👍'],
             ['user_id' => $u['mariam']->id, 'emoji' => '🙏'],
         ]);
+    }
+
+    /** Davantage de questions réalistes : primes ouvertes, questions résolues, sujets propres à l'Afrique francophone */
+    private function seedMoreQuestions(): void
+    {
+        $u = $this->users;
+
+        $q = $this->question($u['aminata'], 50, 'Valider un numéro malien avant un paiement Orange Money', ['validation', 'orange-money', 'php'], 9, 130,
+            "Mes utilisateurs à Bamako saisissent leur numéro de mille façons : `76 12 34 56`, `0022376123456`, `+223 76…`. Comment le valider et le normaliser avant d'appeler l'API de paiement ?",
+            "Une question proche n'a pas encore de réponse validée. Normalisez le numéro au format international E.164 avant tout appel de paiement, et refusez-le côté serveur s'il n'est pas valide pour le pays.");
+        $this->bounty($q, 1000, 'orange_money');
+        $this->answer($q, $u['moussa'], 35, 6, <<<'MD'
+            Utilise la bibliothèque **libphonenumber** (licence Apache-2.0) avec le pays par défaut `ML` :
+
+            ```php
+            $util = \libphonenumber\PhoneNumberUtil::getInstance();
+            $numero = $util->parse($saisie, 'ML');
+            if (! $util->isValidNumber($numero)) {
+                throw new InvalidArgumentException('Numéro invalide');
+            }
+            $e164 = $util->format($numero, \libphonenumber\PhoneNumberFormat::E164); // +22376123456
+            ```
+
+            Stocke toujours la version E.164, et affiche la version locale à l'utilisateur.
+            MD);
+
+        $q = $this->question($u['awa'], 400, 'Montants en FCFA : pourquoi éviter les nombres à virgule en JavaScript ?', ['javascript', 'fcfa', 'paiement'], 18, 420,
+            "Mon panier affiche parfois `4249.999999` FCFA au lieu de 4 250. D'où vient le problème et comment l'éviter ?",
+            "Les nombres à virgule flottante ne représentent pas exactement certaines valeurs. Pour de l'argent, calculez en entiers (le FCFA n'a pas de centimes) et formatez seulement à l'affichage.");
+        $accepted = $this->answer($q, $u['fatou'], 380, 14, <<<'MD'
+            Le FCFA n'a pas de centimes : calcule **toujours en entiers**, et formate seulement à l'affichage.
+
+            ```js
+            const fcfa = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 })
+            const total = [1500, 2000, 750].reduce((s, n) => s + n, 0) // 4250, exact
+            fcfa.format(total)
+            ```
+
+            Côté base de données, une colonne entière (`integer`), jamais `float`.
+            MD);
+        $q->forceFill(['accepted_answer_id' => $accepted->id])->save();
+
+        $q = $this->question($u['mariam'], 700, "PayTech : l'IPN arrive en double, comment éviter de créditer deux fois ?", ['paytech', 'laravel', 'idempotence'], 15, 310,
+            'Quand le réseau est lent, PayTech renvoie la notification IPN plusieurs fois et mon code crédite le client à chaque fois. Comment rendre le traitement sûr ?',
+            "Rendez le traitement idempotent : une référence de commande unique, une vérification de l'état sous verrou dans une transaction, et un crédit seulement si la commande est encore en attente.");
+        $accepted = $this->answer($q, $u['moussa'], 650, 12, <<<'MD'
+            Rends le traitement **idempotent** : la même notification reçue dix fois ne doit créditer qu'une fois.
+
+            ```php
+            DB::transaction(function () use ($ref, $montant) {
+                $commande = Commande::where('reference', $ref)->lockForUpdate()->firstOrFail();
+                if ($commande->statut !== 'en_attente' || $commande->montant !== $montant) {
+                    return; // déjà traitée, ou montant inattendu : on ignore
+                }
+                $commande->update(['statut' => 'payee']);
+                $commande->client->increment('solde', $montant);
+            });
+            ```
+
+            Et vérifie d'abord que la notification vient bien de PayTech (empreintes de tes clés), avant toute écriture.
+            MD);
+        $q->forceFill(['accepted_answer_id' => $accepted->id])->save();
+
+        $q = $this->question($u['moussa'], 90, "Wave : vérifier la signature d'un webhook en PHP", ['wave', 'securite', 'php'], 11, 205,
+            "Je veux m'assurer que les notifications reçues viennent bien de Wave et pas de quelqu'un qui appelle mon URL. Comment vérifier la signature ?",
+            "Calculez un HMAC SHA-256 du corps brut de la requête avec le secret du webhook, comparez-le à la signature reçue avec une comparaison à temps constant, et suivez le format d'en-tête décrit dans la documentation Wave.");
+        $this->bounty($q, 1000, 'wave');
+        $this->answer($q, $u['yasmine'], 60, 5, <<<'MD'
+            Le principe : recalculer la signature avec ton secret de webhook et comparer **à temps constant**.
+
+            ```php
+            $attendue = hash_hmac('sha256', $request->getContent(), config('services.wave.webhook_secret'));
+            abort_unless(hash_equals($attendue, $signatureRecue), 401);
+            ```
+
+            Le format exact de l'en-tête (et l'éventuel horodatage inclus dans le calcul) est décrit dans la documentation Wave : suis-la à la lettre.
+            MD);
+
+        $this->question($u['yasmine'], 220, 'Paiement par carte au Maroc : passerelle locale ou internationale ?', ['paiement', 'maroc', 'carte'], 7, 160,
+            'Je lance une boutique en ligne à Casablanca. Vaut-il mieux passer par une passerelle marocaine ou par un acteur international pour accepter les cartes ? Quels critères regarder ?',
+            "Aucune question proche n'est encore résolue. Comparez les frais, les délais de reversement, la prise en charge du dirham et les exigences de conformité (3-D Secure) avant de choisir.");
+        $this->bounty(Question::where('title', 'Paiement par carte au Maroc : passerelle locale ou internationale ?')->first(), 2000, 'card');
+
+        // Questions déjà résolues par Mareme : primes reçues visibles dans son portefeuille et dans « Récemment versées »
+        foreach ([
+            [$u['rodrigue'], 4 * 1440 + 60, 'Envoi de SMS OTP au Cameroun : quel fournisseur ?', ['sms', 'cameroun', 'otp'], 1000, 'mtn_momo',
+                'Je dois envoyer des codes à usage unique à des utilisateurs de Douala et Yaoundé. Quels fournisseurs proposent une API fiable, et comment limiter les abus ?',
+                "Choisis un fournisseur qui a des accords directs avec les opérateurs camerounais, et limite les envois : un code toutes les 30 secondes et cinq essais par code au plus. Garde seulement l'empreinte du code, jamais le code en clair."],
+            [$u['fatou'], 9 * 1440 + 60, 'Pagination Laravel lente sur 50 000 lignes', ['laravel', 'postgresql', 'performance'], 1500, 'wave',
+                "Ma liste de factures met plusieurs secondes à s'afficher dès qu'on dépasse la page 100. Comment accélérer la pagination ?",
+                "Passe à la pagination par curseur (`cursorPaginate`) au lieu d'`OFFSET`, et ajoute un index sur la colonne de tri : PostgreSQL n'a plus à parcourir toutes les lignes précédentes."],
+        ] as [$author, $minutesAgo, $title, $tags, $amount, $method, $body, $reply]) {
+            $q = $this->question($author, $minutesAgo, $title, $tags, 13, 280, $body, 'Une première piste : cherchez dans les questions résolues proches, et précisez votre volume de données et votre version.');
+            $answer = $this->answer($q, $u['mareme'], $minutesAgo - 30, 9, $reply);
+            $q->forceFill(['accepted_answer_id' => $answer->id])->save();
+            $q->bounty()->create(['amount' => $amount, 'payment_method' => $method, 'expires_at' => now()->subDays(1)])
+                ->forceFill(['status' => 'paid', 'paid_to_user_id' => $u['mareme']->id, 'paid_at' => Carbon::now()->subMinutes($minutesAgo - 40)])->save();
+        }
+    }
+
+    /** Trois extraits supplémentaires, documentés par leur passeport */
+    private function seedMoreSnippets(): void
+    {
+        $u = $this->users;
+        $snippets = [
+            ['fatou', 'Formater et additionner des montants en FCFA', 'Calculs exacts en entiers, affichage localisé avec Intl.', 'JavaScript', 'javascript', ['fcfa'], 22, ['awa', 'moussa'],
+                ['ECMAScript Intl.NumberFormat · devise XOF', 'Aucun paquet : navigateur récent ou Node.js 18 ou plus.', 'Chrome, Firefox et Node.js 20.', "Le FCFA n'a pas de centimes : additionner des entiers, ne formater qu'à l'affichage. Le symbole affiché dépend de la langue."],
+                <<<'JS'
+                // Montants en entiers (FCFA) : jamais de nombres à virgule pour de l'argent
+                const fcfa = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 })
+
+                const panier = [1500, 2000, 750]
+                const total = panier.reduce((somme, montant) => somme + montant, 0) // 4250, exact
+
+                console.log(fcfa.format(total))
+                JS],
+            ['moussa', 'Valider et normaliser un numéro de téléphone africain', 'Format international E.164 avant tout paiement mobile money.', 'PHP', 'php', ['orange-money', 'wave', 'mtn-momo'], 35, ['aminata', 'rodrigue', 'fatou'],
+                ['libphonenumber-for-php 8.x · format E.164', 'composer require giggsey/libphonenumber-for-php (licence Apache-2.0) ; PHP 8.1 ou plus.', 'PHP 8.3 en ligne de commande.', "La bibliothèque doit être tenue à jour : les plans de numérotation changent. Le code pays par défaut doit être celui de l'utilisateur."],
+                <<<'PHP'
+                use libphonenumber\PhoneNumberFormat;
+                use libphonenumber\PhoneNumberUtil;
+
+                $util = PhoneNumberUtil::getInstance();
+                $numero = $util->parse('77 123 45 67', 'SN'); // pays par défaut : Sénégal
+
+                if (! $util->isValidNumber($numero)) {
+                    throw new InvalidArgumentException('Numéro invalide');
+                }
+
+                echo $util->format($numero, PhoneNumberFormat::E164); // +221771234567
+                PHP],
+            ['awa', 'Requête robuste pour une connexion 3G instable', 'Délai maximal, nouvelles tentatives espacées, pas de réessai inutile.', 'JavaScript', 'javascript', ['reseau', 'mobile'], 29, ['yasmine', 'mariam'],
+                ['API Fetch et AbortController (standard du web)', 'Aucun paquet : navigateur récent ou Node.js 18 ou plus.', 'Chrome sur Android, réseau limité en 3G dans les outils du navigateur.', 'À réserver aux requêtes sans effet de bord (lecture) ou rendues idempotentes côté serveur : sinon un paiement pourrait partir deux fois.'],
+                <<<'JS'
+                // Réessaie quand le réseau coupe, avec un délai qui double à chaque essai
+                async function fetchRobuste(url, options = {}, essais = 3) {
+                  for (let i = 0; i < essais; i++) {
+                    const controle = new AbortController()
+                    const minuteur = setTimeout(() => controle.abort(), 10000) // 10 s au plus par essai
+                    try {
+                      const reponse = await fetch(url, { ...options, signal: controle.signal })
+                      if (reponse.status < 500) return reponse // une erreur 4xx ne se règle pas en réessayant
+                    } catch (erreur) {
+                      if (i === essais - 1) throw erreur
+                    } finally {
+                      clearTimeout(minuteur)
+                    }
+                    await new Promise((r) => setTimeout(r, 1000 * 2 ** i))
+                  }
+                  throw new Error('Serveur indisponible')
+                }
+                JS],
+        ];
+
+        foreach ($snippets as [$author, $title, $description, $language, $fence, $apis, $votes, $testers, [$version, $requirements, $environment, $limitations], $code]) {
+            $snippet = new Snippet(compact('title', 'description', 'language', 'fence', 'apis', 'code') + ['api_version' => $version, 'requirements' => $requirements, 'environment' => $environment, 'license' => 'MIT', 'limitations' => $limitations]);
+            $snippet->author()->associate($this->users[$author]);
+            $snippet->forceFill(['votes' => $votes])->save();
+            $snippet->testers()->attach(collect($testers)->map(fn (string $t) => $u[$t]->id));
+        }
+    }
+
+    /** Une communauté vivante : plus de messages dans les salons, et une conversation d'équipe */
+    private function seedMoreConversations(): void
+    {
+        $u = $this->users;
+        $rooms = Room::whereIn('slug', ['orange-money', 'paytech', 'laravel', 'react', 'flutter', 'mtn-momo'])->get()->keyBy('slug');
+        $chat = [
+            ['orange-money', 'mariam', 300, "Rappel : le token Orange expire, gardez-le en cache au lieu d'en redemander un à chaque paiement."],
+            ['orange-money', 'aminata', 280, "Merci ! Et pensez à normaliser les numéros en +223… avant l'appel, ça m'a évité plein d'erreurs."],
+            ['paytech', 'moussa', 500, "Pour l'IPN PayTech : vérifiez les empreintes des clés AVANT toute écriture en base."],
+            ['paytech', 'mariam', 480, 'Et une référence de commande unique, sinon double crédit garanti quand le réseau est lent 😅'],
+            ['laravel', 'rodrigue', 900, "Astuce : `cursorPaginate()` au lieu d'`OFFSET` sur les grosses tables, c'est le jour et la nuit."],
+            ['laravel', 'fatou', 880, 'Validé chez moi : la liste des factures est passée de 4 s à 80 ms.'],
+            ['react', 'awa', 1200, "Quelqu'un a testé le mode hors ligne avec Workbox sur des téléphones d'entrée de gamme ?"],
+            ['flutter', 'yasmine', 1300, 'Pensez à activer le mode release pour mesurer les performances, le mode debug ment beaucoup.'],
+            ['mtn-momo', 'rodrigue', 260, 'En sandbox MoMo, le callback doit être en HTTPS public : utilisez un tunnel pour tester en local.'],
+        ];
+        foreach ($chat as [$room, $author, $minutesAgo, $body]) {
+            if (! isset($rooms[$room])) {
+                continue;
+            }
+            $date = Carbon::now()->subMinutes($minutesAgo);
+            $message = $rooms[$room]->messages()->make(['body' => $body]);
+            $message->forceFill(['user_id' => $u[$author]->id, 'created_at' => $date, 'updated_at' => $date])->save();
+        }
+
+        // Conversation d'équipe Mareme ↔ coéquipière
+        $conversation = Conversation::between($u['mareme'], $u['mlletech']);
+        foreach ([
+            ['mlletech', 90, "J'ai relancé tous les tests ce matin : tout est vert ✅", true],
+            ['mareme', 85, 'Top ! Tu peux vérifier le parcours mobile avant le tournage de la vidéo ?', true],
+            ['mlletech', 80, "C'est fait, la barre d'onglets et le portefeuille passent bien sur téléphone 📱", true],
+        ] as [$sender, $minutesAgo, $body, $read]) {
+            $date = Carbon::now()->subMinutes($minutesAgo);
+            $message = $conversation->messages()->make(['body' => $body]);
+            $message->forceFill(['sender_id' => $u[$sender]->id, 'read_at' => $read ? $date->copy()->addMinute() : null, 'created_at' => $date, 'updated_at' => $date])->save();
+        }
+        $conversation->forceFill(['last_message_at' => Carbon::now()->subMinutes(80)])->save();
     }
 }
