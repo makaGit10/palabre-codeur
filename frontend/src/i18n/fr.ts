@@ -186,7 +186,7 @@ export const fr = {
   'landing.cta_title': "Votre savoir vaut de l'or.",
   'landing.cta_text': 'Rejoignez les développeurs qui construisent le web africain ensemble.',
   'demo.watch': 'Voir la démo',
-  'demo.duration': '3 min',
+  'demo.duration': '2 min 30',
   'demo.title': 'Palabre en 3 minutes',
   'demo.dialog': 'Démonstration de Palabre',
   'demo.unavailable': "La vidéo n'est pas disponible pour le moment.",
