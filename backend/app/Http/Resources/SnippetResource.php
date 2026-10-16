@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 
 class SnippetResource extends JsonResource
 {
@@ -21,6 +22,16 @@ class SnippetResource extends JsonResource
             'testedByMe' => (bool) ($this->tested_by_me ?? false),
             'votes' => $this->votes,
             'code' => $this->code,
+            // Passeport : « testé » est une déclaration des membres ; aucun test automatisé n'est exécuté sur les extraits
+            'passport' => [
+                'apiVersion' => $this->api_version,
+                'requirements' => $this->requirements,
+                'environment' => $this->environment,
+                'license' => $this->license ?? 'MIT',
+                'limitations' => $this->limitations,
+                'lastVerifiedAt' => $this->last_verified_at ? Carbon::parse($this->last_verified_at)->toIso8601String() : null,
+                'automatedTest' => false,
+            ],
         ];
     }
 }

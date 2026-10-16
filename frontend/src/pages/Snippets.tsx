@@ -10,8 +10,9 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { ShareButton } from '../components/ShareDialog'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
-import { useI18n } from '../i18n'
+import { useI18n, type Key } from '../i18n'
 import { errorMessage } from '../lib/api'
+import { timeAgo } from '../lib/format'
 import { listSnippets, toggleTested, type Snippet } from '../services/community'
 
 // Filtres par API (noms de marques, identiques dans toutes les langues)
@@ -127,6 +128,7 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
         </div>
         <span className="rounded-md bg-sunk px-2 py-[3px] font-mono text-[11.5px]">{s.language}</span>
       </header>
+      <Passport snippet={s} />
       {/* Le code est rendu comme un bloc Markdown pour profiter de la coloration */}
       <div className="flex-1 [&_.md_pre]:rounded-none">
         <Markdown>{'```' + s.fence + '\n' + s.code + '\n```'}</Markdown>
@@ -159,5 +161,50 @@ function SnippetCard({ snippet: s }: { snippet: Snippet }) {
         </button>
       </footer>
     </article>
+  )
+}
+
+// Passeport de fiabilité : version de l'API, licence, statut de vérification, puis détails dépliables
+function Passport({ snippet: s }: { snippet: Snippet }) {
+  const { t, tn } = useI18n()
+  const p = s.passport
+  const details: [Key, string | null][] = [
+    ['sn.pp_requirements', p.requirements],
+    ['sn.pp_environment', p.environment],
+    ['sn.pp_limitations', p.limitations],
+  ]
+  const hasDetails = details.some(([, v]) => v)
+
+  return (
+    <div className="border-t border-line px-4 py-3 text-[12.5px]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <span className="inline-flex items-center gap-1.5 font-bold text-ink">
+          <Icon name="shield" className="size-4 text-green" />
+          {t('sn.pp_title')}
+        </span>
+        {p.apiVersion && <span className="rounded-md bg-sunk px-2 py-0.5 font-mono text-[11.5px]">{p.apiVersion}</span>}
+        <span className="rounded-md bg-sunk px-2 py-0.5">{t('sn.pp_license', { license: p.license })}</span>
+        <span className="text-muted">
+          {s.testedBy > 0 ? tn('sn.pp_declared', s.testedBy) : t('sn.pp_not_tested')}
+          {p.lastVerifiedAt && ` · ${t('sn.pp_last', { ago: timeAgo(p.lastVerifiedAt) })}`}
+        </span>
+        <span className="text-muted">· {t('sn.pp_no_auto')}</span>
+      </div>
+      {hasDetails && (
+        <details className="mt-2">
+          <summary className="cursor-pointer font-semibold text-green">{t('sn.pp_details')}</summary>
+          <dl className="mt-2 grid gap-1.5">
+            {details.map(([label, value]) =>
+              value ? (
+                <div key={label}>
+                  <dt className="inline font-semibold">{t(label)} : </dt>
+                  <dd className="inline text-muted">{value}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
+        </details>
+      )}
+    </div>
   )
 }

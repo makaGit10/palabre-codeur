@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['title', 'description', 'language', 'fence', 'apis', 'code'])]
+#[Fillable(['title', 'description', 'language', 'fence', 'apis', 'code', 'api_version', 'requirements', 'environment', 'license', 'limitations'])]
 class Snippet extends Model
 {
     use Moderatable;

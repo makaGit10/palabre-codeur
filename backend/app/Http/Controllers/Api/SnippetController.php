@@ -18,6 +18,7 @@ class SnippetController extends Controller
         $snippets = Snippet::query()
             ->with('author')
             ->withCount('testers')
+            ->withMax('testers as last_verified_at', 'snippet_tests.created_at')
             ->when($viewer, fn ($q) => $q->withExists(['testers as tested_by_me' => fn ($t) => $t->whereKey($viewer->id)]))
             // Filtres côté serveur : API concernée et recherche, 20 extraits par page
             ->when($request->query('api'), fn ($q, string $api) => $q->whereJsonContains('apis', $api))
@@ -35,7 +36,7 @@ class SnippetController extends Controller
     public function store(StoreSnippetRequest $request): SnippetResource
     {
         $data = $request->validated();
-        $snippet = new Snippet([...$data, 'apis' => $data['tags']]);
+        $snippet = new Snippet([...$data, 'apis' => $data['tags'], 'license' => $data['license'] ?? 'MIT']);
         $snippet->author()->associate($request->user())->save();
 
         return new SnippetResource($snippet->load('author')->loadCount('testers'));

@@ -14,6 +14,18 @@ export interface Snippet {
   testedByMe: boolean
   votes: number
   code: string
+  passport: SnippetPassport
+}
+
+// Passeport de fiabilité : ce qu'il faut savoir avant de copier le code
+export interface SnippetPassport {
+  apiVersion: string | null
+  requirements: string | null
+  environment: string | null
+  license: string
+  limitations: string | null
+  lastVerifiedAt: string | null // dernière confirmation « Je l'ai testé » d'un membre
+  automatedTest: boolean // toujours false : aucun test automatisé n'est exécuté sur les extraits
 }
 
 // Extraits paginés, filtrés côté serveur par API et par recherche
@@ -34,6 +46,11 @@ export interface NewSnippet {
   fence: string
   tags: string[]
   code: string
+  api_version?: string
+  requirements?: string
+  environment?: string
+  license?: string
+  limitations?: string
 }
 
 export async function createSnippet(input: NewSnippet): Promise<{ id: number }> {

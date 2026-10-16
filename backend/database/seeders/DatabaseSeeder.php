@@ -284,6 +284,17 @@ class DatabaseSeeder extends Seeder
             $snippet->forceFill(['user_id' => $u[$author]->id, 'votes' => $votes])->save();
             $snippet->testers()->attach(collect($testers)->map(fn (string $t) => $u[$t]->id));
         }
+
+        // Passeport de fiabilité des extraits de démonstration (informations issues des documentations publiques des API)
+        $passports = [
+            'Initier un paiement PayTech' => ['API PayTech · payment/request-payment', 'Clés API_KEY et API_SECRET de l\'espace PayTech ; Node.js 18 ou plus (fetch intégré).', 'Mode test de PayTech (env=test).', 'Montant entier en XOF. Le paiement n\'est confirmé que par la notification IPN, jamais par le seul retour du navigateur.'],
+            'Demander un paiement MTN MoMo' => ['MTN MoMo Collection API v1_0 · requesttopay', 'Python 3 et la bibliothèque requests ; clé d\'abonnement et jeton d\'accès de MoMo Developer.', 'Sandbox MTN MoMo Developer.', 'La sandbox utilise l\'euro ; en production, la devise et l\'environnement cible dépendent du pays.'],
+            'Obtenir un token Orange Money' => ['API Orange Developer · OAuth 2.0 (client credentials)', 'Identifiants de l\'application Orange Developer ; Node.js 18 ou plus.', 'Compte développeur Orange.', 'Le jeton expire : le garder en cache et le renouveler avant l\'échéance. Les adresses d\'API varient selon le pays.'],
+            'Créer un paiement Wave Checkout' => ['Wave Checkout API v1 · checkout/sessions', 'Laravel 10 ou plus (client HTTP intégré) ; clé API Wave Business.', 'Compte Wave Business.', 'Montant entier en XOF. Vérifier la signature des webhooks avant de marquer une commande comme payée.'],
+        ];
+        foreach ($passports as $title => [$version, $requirements, $environment, $limitations]) {
+            Snippet::where('title', $title)->update(['api_version' => $version, 'requirements' => $requirements, 'environment' => $environment, 'license' => 'MIT', 'limitations' => $limitations]);
+        }
     }
 
     private function seedWallet(): void

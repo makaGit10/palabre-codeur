@@ -65,6 +65,7 @@ export default function NewSnippet() {
   const [apiInput, setApiInput] = useState('')
   const [code, setCode] = useState('')
   const [preview, setPreview] = useState(false)
+  const [passport, setPassport] = useState({ api_version: '', requirements: '', environment: '', license: 'MIT', limitations: '' })
   const [errors, setErrors] = useState<Errors>({})
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -82,6 +83,7 @@ export default function NewSnippet() {
         fence,
         tags,
         code: code.replace(/\s+$/, ''),
+        ...Object.fromEntries(Object.entries(passport).map(([k, v]) => [k, v.trim() || undefined])),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['snippets'] })
@@ -290,6 +292,37 @@ export default function NewSnippet() {
           </div>
           {errors.code && <p className="mt-1.5 text-[13px] text-red">{errors.code}</p>}
         </div>
+
+        <fieldset className="rounded-[14px] border border-line p-4">
+          <legend className="px-1 text-sm font-bold">{t('newsn.pp_title')}</legend>
+          <p className="mb-3 text-[12.5px] text-muted">{t('newsn.pp_hint')}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="sn-version" className="mb-1 block text-[13px] font-semibold">{t('newsn.pp_version')}</label>
+              <input id="sn-version" value={passport.api_version} onChange={(e) => setPassport({ ...passport, api_version: e.target.value })} placeholder={t('newsn.pp_version_ph')} maxLength={120} className={input()} />
+            </div>
+            <div>
+              <label htmlFor="sn-license" className="mb-1 block text-[13px] font-semibold">{t('newsn.pp_license')}</label>
+              <select id="sn-license" value={passport.license} onChange={(e) => setPassport({ ...passport, license: e.target.value })} className={input()}>
+                {['MIT', 'Apache-2.0', 'BSD-3-Clause', 'CC0-1.0'].map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="sn-requirements" className="mb-1 block text-[13px] font-semibold">{t('newsn.pp_requirements')}</label>
+              <input id="sn-requirements" value={passport.requirements} onChange={(e) => setPassport({ ...passport, requirements: e.target.value })} placeholder={t('newsn.pp_requirements_ph')} maxLength={500} className={input()} />
+            </div>
+            <div>
+              <label htmlFor="sn-environment" className="mb-1 block text-[13px] font-semibold">{t('newsn.pp_environment')}</label>
+              <input id="sn-environment" value={passport.environment} onChange={(e) => setPassport({ ...passport, environment: e.target.value })} placeholder={t('newsn.pp_environment_ph')} maxLength={160} className={input()} />
+            </div>
+            <div>
+              <label htmlFor="sn-limitations" className="mb-1 block text-[13px] font-semibold">{t('newsn.pp_limitations')}</label>
+              <input id="sn-limitations" value={passport.limitations} onChange={(e) => setPassport({ ...passport, limitations: e.target.value })} placeholder={t('newsn.pp_limitations_ph')} maxLength={500} className={input()} />
+            </div>
+          </div>
+        </fieldset>
 
         <div className="flex flex-wrap justify-end gap-2.5 border-t border-line pt-5">
           <Link to="/app/snippets" className="rounded-[10px] px-4 py-2.5 text-sm font-semibold hover:bg-sunk">
