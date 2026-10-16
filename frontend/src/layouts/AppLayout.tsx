@@ -146,7 +146,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           </NavLink>
         ))}
         {/* Modération : visible pour les administrateurs seulement (l'API vérifie de son côté) */}
-        {user?.isAdmin && (
+        {(user?.isAdmin || user?.isModerator) && (
           <NavLink to="/app/moderation" title={t('nav.moderation')} className={({ isActive }) => itemClass(collapsed, isActive)}>
             <Icon name="shield" />
             {!collapsed && t('nav.moderation')}

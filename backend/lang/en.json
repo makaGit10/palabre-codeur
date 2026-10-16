@@ -158,5 +158,15 @@
     "Une réponse validée ne peut pas être supprimée.": "An accepted answer cannot be deleted.",
     "Vous ne pouvez modifier que vos propres contenus.": "You can only change your own content.",
     "Question supprimée.": "Question deleted.",
-    "Réponse supprimée.": "Answer deleted."
+    "Réponse supprimée.": "Answer deleted.",
+    "Vous ne pouvez pas modifier votre propre rôle.": "You cannot change your own role.",
+    "Impossible de retirer le dernier administrateur.": "The last administrator cannot be removed.",
+    "Votre compte Palabre est prêt": "Your Palabre account is ready",
+    "membre": "member",
+    "modérateur": "moderator",
+    "administrateur": "administrator",
+    ":creator vous a créé un compte sur Palabre, avec le rôle de :role.": ":creator created a Palabre account for you, with the :role role.",
+    "Pour choisir votre mot de passe, demandez un code avec le bouton ci-dessous, puis saisissez-le avec votre nouveau mot de passe.": "To choose your password, request a code with the button below, then enter it along with your new password.",
+    "Choisir mon mot de passe": "Choose my password",
+    "Votre identifiant est votre adresse e-mail : :email": "Your login is your email address: :email"
 }

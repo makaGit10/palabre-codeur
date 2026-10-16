@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
 import { CodeInput } from '../components/CodeInput'
 import { CodeTree } from '../components/CodeTree'
@@ -438,7 +438,8 @@ export function VerifyEmailPage() {
 export function ForgotPasswordPage() {
   const { t } = useI18n()
   const location = useLocation()
-  const [email, setEmail] = useState((location.state as { email?: string } | null)?.email ?? '')
+  const [params] = useSearchParams() // ?email=… : lien de l'invitation envoyée par un administrateur
+  const [email, setEmail] = useState((location.state as { email?: string } | null)?.email ?? params.get('email') ?? '')
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')

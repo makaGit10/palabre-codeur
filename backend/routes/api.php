@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DemoAccountController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\MembersController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ModerationController;
 use App\Http\Controllers\Api\NotificationController;
@@ -104,9 +105,16 @@ Route::middleware(['auth:sanctum', 'throttle:writes', 'verified.code'])->group(f
     Route::delete('/groups/{room:slug}/members/{user}', [GroupController::class, 'removeMember'])->whereNumber('user');
 });
 
-// Modération : administrateurs seulement (vérifié côté serveur)
+// Modération : administrateurs et modérateurs (vérifié côté serveur)
 Route::middleware(['auth:sanctum', 'throttle:api', 'admin'])->prefix('admin')->group(function () {
     Route::get('/reports', [ModerationController::class, 'index']);
     Route::post('/reports/{report}/resolve', [ModerationController::class, 'resolve']);
     Route::post('/content/{type}/{id}/restore', [ModerationController::class, 'restore'])->whereIn('type', ['question', 'answer', 'snippet'])->whereNumber('id');
+});
+
+// Membres et rôles : administrateurs seulement
+Route::middleware(['auth:sanctum', 'throttle:api', 'admin:manage'])->prefix('admin')->group(function () {
+    Route::get('/members', [MembersController::class, 'index']);
+    Route::post('/members', [MembersController::class, 'store']);
+    Route::patch('/members/{user}/role', [MembersController::class, 'setRole'])->whereNumber('user');
 });

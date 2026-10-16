@@ -36,7 +36,14 @@ class User extends Authenticatable implements HasLocalePreference
             'wallet_balance' => 'integer',
             'wallet_held' => 'integer',
             'is_admin' => 'boolean',
+            'is_moderator' => 'boolean',
         ];
+    }
+
+    /** Peut traiter les signalements : administrateur ou modérateur */
+    public function canModerate(): bool
+    {
+        return (bool) $this->is_admin || (bool) $this->is_moderator;
     }
 
     /** Langue des e-mails et notifications envoyés à cette personne */

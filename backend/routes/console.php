@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\BountyRefundService;
+use App\Services\MemberService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -20,13 +21,19 @@ Artisan::command('palabre:refund-expired-bounties', function (BountyRefundServic
 Schedule::command('palabre:refund-expired-bounties')->everyFifteenMinutes()->withoutOverlapping();
 
 // Donner ou retirer le rôle d'administrateur (modération) : seulement depuis le serveur, jamais par l'API
-Artisan::command('palabre:admin {email} {--remove}', function (string $email) {
+Artisan::command('palabre:admin {email} {--role=admin : admin, moderator ou member} {--remove : équivaut à --role=member}', function (string $email) {
     $user = User::where('email', mb_strtolower($email))->first();
     if (! $user) {
         $this->error("Aucun compte avec l'adresse {$email}.");
 
         return 1;
     }
-    $user->forceFill(['is_admin' => ! $this->option('remove')])->save();
-    $this->info($user->is_admin ? "{$user->name} est administrateur." : "{$user->name} n'est plus administrateur.");
-})->purpose('Donne (ou retire avec --remove) le rôle administrateur');
+    $role = $this->option('remove') ? 'member' : $this->option('role');
+    if (! in_array($role, MemberService::ROLES, true)) {
+        $this->error('Rôle inconnu : admin, moderator ou member.');
+
+        return 1;
+    }
+    $user->forceFill(['is_admin' => $role === 'admin', 'is_moderator' => $role === 'moderator'])->save();
+    $this->info("{$user->name} : rôle {$role}.");
+})->purpose('Donne un rôle (admin, moderator, member) depuis le serveur');
