@@ -21,7 +21,7 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 | Compte de démonstration | E-mail | Mot de passe | Ce qu'il permet de voir |
 |---|---|---|---|
 | Mareme MAKALOU (Sénégal) | `marememakalou10@gmail.com` | `12345678` | Question Wave avec prime en attente, portefeuille garni avec historique, badges, messages et notifications |
-| Khadim NDIAYE (Sénégal) | `njaayxaadim1312@gmail.com` | `12345678` | Second compte pour tester à deux : répondre, voter, valider une réponse, messages privés, salons et groupes |
+| mlle_tech (Sénégal) | `mlletech11@gmail.com` | `12345678` | Second compte pour tester à deux : répondre, voter, valider une réponse, messages privés, salons et groupes |
 
 Parcours conseillé, en cinq minutes : lire une question sans compte, se connecter avec un compte de démonstration, poser une question avec une prime (les questions proches apparaissent dès le titre), répondre et voter, puis ouvrir le portefeuille, le classement et la recherche globale (Ctrl K).
 
@@ -130,7 +130,7 @@ npm install
 npm run dev
 ```
 
-Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `njaayxaadim1312@gmail.com`) et `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`…, tous avec le mot de passe `DEMO_PASSWORD`. Avec `DEMO_ACCOUNTS_PUBLIC=true`, la page de connexion propose les deux comptes de l'équipe en un clic et affiche ce mot de passe : réglage prévu pour la démo du concours, à laisser sur `false` pour une vraie mise en service.
+Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `mlletech11@gmail.com`) et `moussa@palabre.test`, `fatou@palabre.test`, `yasmine@palabre.test`…, tous avec le mot de passe `DEMO_PASSWORD`. Avec `DEMO_ACCOUNTS_PUBLIC=true`, la page de connexion propose les deux comptes de l'équipe en un clic et affiche ce mot de passe : réglage prévu pour la démo du concours, à laisser sur `false` pour une vraie mise en service.
 
 ## Tests et qualité
 
@@ -166,6 +166,6 @@ Bilan : front-end 141 paquets MIT, 1 ISC, 1 BSD-3-Clause ; back-end (production)
 *« Octet-toi de là, on arrive ! »*
 
 - **Mareme MAKALOU** : conception du produit, design de l'interface, développement front-end et back-end
-- **Khadim NDIAYE** : tests et qualité (scénarios de test, tests automatisés de l'API, test de bout en bout), vérification des règles métier, déploiement de la démo
+- **mlle_tech** : tests et qualité (scénarios de test, tests automatisés de l'API, test de bout en bout), vérification des règles métier, déploiement de la démo
 
 Dakar, Sénégal · 2026

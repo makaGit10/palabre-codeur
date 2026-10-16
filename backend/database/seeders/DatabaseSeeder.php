@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
 
         $people = [
             'mareme' => ['Mareme MAKALOU', 'SN', 'Dakar', 1240, 2500],
-            'khadim' => ['Khadim NDIAYE', 'SN', 'Dakar', 860, 0],
+            'mlletech' => ['mlle_tech', 'SN', 'Dakar', 860, 0],
             'moussa' => ['Moussa Diop', 'SN', 'Dakar', 3870, 6500],
             'fatou' => ['Fatou Ndiaye', 'SN', 'Thiès', 2950, 3000],
             'rodrigue' => ['Rodrigue Ntsama', 'CM', 'Douala', 2410, 1500],
@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $name,
                 'email' => match ($key) {
                     'mareme' => config('palabre.demo.owner_email'),
-                    'khadim' => config('palabre.demo.teammate_email'),
+                    'mlletech' => config('palabre.demo.teammate_email'),
                     default => "{$key}@palabre.test",
                 },
                 'password' => config('palabre.demo.password'),

@@ -56,12 +56,12 @@ return [
     // Comptes de démonstration créés par le seeder. En ligne, définir des mots de passe forts dans .env.
     'demo' => [
         'owner_email' => env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'),
-        'teammate_email' => env('DEMO_TEAMMATE_EMAIL', 'njaayxaadim1312@gmail.com'),
+        'teammate_email' => env('DEMO_TEAMMATE_EMAIL', 'mlletech11@gmail.com'),
         'password' => env('DEMO_PASSWORD', 'password'),
         // Comptes proposés sur la page de connexion (jury) quand DEMO_ACCOUNTS_PUBLIC=true : ceux de l'équipe.
         // Leur mot de passe (DEMO_PASSWORD) devient alors public, par choix, le temps du concours.
         'accounts_public' => (bool) env('DEMO_ACCOUNTS_PUBLIC', false),
-        'public_accounts' => [env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'), env('DEMO_TEAMMATE_EMAIL', 'njaayxaadim1312@gmail.com')],
+        'public_accounts' => [env('DEMO_OWNER_EMAIL', 'marememakalou10@gmail.com'), env('DEMO_TEAMMATE_EMAIL', 'mlletech11@gmail.com')],
     ],
 
     // Points de réputation gagnés ou perdus
