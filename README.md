@@ -14,7 +14,7 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 | | |
 |---|---|
 | **Démo en ligne** | _adresse communiquée après le déploiement sur Datacloud_ |
-| **Vidéo de présentation** | bouton « Voir la démo » sur la page d'accueil (3 minutes) |
+| **Vidéo de présentation** | bouton « Voir la démo » sur la page d'accueil (2 minutes) |
 | **Code source** | https://github.com/makaGit10/palabre-codeur |
 | **Comptes de test** | proposés sur la page de connexion : un clic suffit, le mot de passe y est affiché |
 
@@ -135,7 +135,7 @@ Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `mll
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 43 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 84 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```
