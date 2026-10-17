@@ -143,6 +143,10 @@ cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du co
 
 Les tests couvrent notamment : la prime bloquée puis versée une seule fois, le refus de valider la question d'un autre, un seul vote par personne, le refus de voter pour soi, les retraits limités au solde et aux moyens du pays, le masquage des numéros, la confidentialité des profils, la détection de doublons, l'inscription, la connexion, la limitation des tentatives et les messages en français.
 
+## Droits sur Palabre
+
+Palabre est une œuvre protégée : **tous droits réservés** à ses auteurs (Mareme MAKALOU et mlle_tech, équipe ByteByByte). Aucune réutilisation du code n'est permise sans autorisation écrite ; seule la licence limitée d'évaluation prévue par le règlement du concours est accordée à l'organisateur (voir le fichier `LICENSE`).
+
 ## Licences des composants
 
 Le règlement n'autorise que des composants sous licence permissive. Toutes les dépendances ont été vérifiées.
