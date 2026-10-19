@@ -145,7 +145,7 @@ Les tests couvrent notamment : la prime bloquée puis versée une seule fois, le
 
 ## Droits sur Palabre
 
-Palabre est une œuvre protégée : **tous droits réservés** à ses auteurs (Mareme MAKALOU et mlle_tech, équipe ByteByByte). Aucune réutilisation du code n'est permise sans autorisation écrite ; seule la licence limitée d'évaluation prévue par le règlement du concours est accordée à l'organisateur (voir le fichier `LICENSE`).
+Palabre est une œuvre protégée : **tous droits réservés** à ses auteurs (Mareme MAKALOU, mlle_tech et Astou Sow, équipe ByteByByte). Aucune réutilisation du code n'est permise sans autorisation écrite ; seule la licence limitée d'évaluation prévue par le règlement du concours est accordée à l'organisateur (voir le fichier `LICENSE`).
 
 ## Licences des composants
 
@@ -171,5 +171,6 @@ Bilan : front-end 141 paquets MIT, 1 ISC, 1 BSD-3-Clause ; back-end (production)
 
 - **Mareme MAKALOU** : conception du produit, design de l'interface, développement front-end et back-end
 - **mlle_tech** : tests et qualité (scénarios de test, tests automatisés de l'API, test de bout en bout), vérification des règles métier, déploiement de la démo
+- **Astou Sow** : tests utilisateurs et retours d'usage, contenus et données de démonstration, communication (vidéo de présentation, campagne du vote)
 
 Dakar, Sénégal · 2026
