@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\DemoAccountController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\LiveController;
 use App\Http\Controllers\Api\MembersController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ModerationController;
@@ -37,6 +38,7 @@ Route::middleware('throttle:api')->group(function () {
     Route::get('/rooms', [RoomController::class, 'index']);
     Route::get('/rooms/{room:slug}/messages', [RoomController::class, 'messages']);
     Route::get('/search', SearchController::class);
+    Route::get('/live', LiveController::class); // paramètres de connexion temps réel (clé publique seulement)
 });
 
 // Notification de paiement envoyée par PayTech (authentifiée par l'empreinte de nos clés, pas par une session)

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Avatar, Logo } from '../components/Brand'
 import { Icon, type IconName } from '../components/Icon'
+import { LiveSync } from '../components/LiveSync'
 import { SearchProvider } from '../components/SearchPalette'
 import { VerifyBanner } from '../components/VerifyBanner'
 import { useAuth } from '../hooks/useAuth'
@@ -351,6 +352,7 @@ export default function AppLayout() {
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
         <main className="min-w-0 px-4 pt-5 pb-28 md:px-8 md:pt-7 md:pb-10 2xl:px-12">
           <VerifyBanner />
+          <LiveSync />
           <Outlet />
         </main>
         <MobileTabbar />

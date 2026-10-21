@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Payments\PaymentGateway;
 use App\Payments\SandboxGateway;
+use App\Services\Live\WriteCollector;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Une seule liste des écritures par requête (voir le middleware BroadcastWrites)
+        $this->app->singleton(WriteCollector::class);
         // Paiements simulés pendant le concours ; un vrai agrégateur implémentera la même interface
         $this->app->bind(PaymentGateway::class, SandboxGateway::class);
     }

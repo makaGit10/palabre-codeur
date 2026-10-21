@@ -74,7 +74,7 @@ export default function Rooms() {
     queryKey: ['room', slug],
     queryFn: () => roomMessages(slug!),
     enabled: !!slug,
-    refetchInterval: 4_000, // la discussion se rafraîchit toutes les 4 secondes
+    refetchInterval: 20_000, // secours : le temps réel (LiveSync) rafraîchit dès qu'un message arrive
     retry: false,
   })
   const refresh = () => {

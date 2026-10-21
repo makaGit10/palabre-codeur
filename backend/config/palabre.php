@@ -111,4 +111,28 @@ return [
         'moov_money' => 'Moov Money', 'airtel_money' => 'Airtel Money', 'mpesa' => 'M-Pesa', 'flooz' => 'Flooz',
         'tmoney' => 'T-Money', 'mvola' => 'MVola', 'card' => 'carte bancaire', 'bank_transfer' => 'virement bancaire',
     ],
+
+    // Temps réel : après une écriture réussie, les autres navigateurs reçoivent le nom des rubriques touchées
+    // (jamais de données) et rechargent leurs écrans par l'API. Les tables absentes d'ici sont techniques
+    // (sessions, cache, files, journaux) ou ont leur propre rafraîchissement (messagerie, notifications).
+    'live' => [
+        'tables' => [
+            'questions' => ['questions'], 'answers' => ['questions'], 'votes' => ['questions'], 'bounties' => ['questions', 'wallet'],
+            'question_tag' => ['questions'], 'tags' => ['questions'], 'ai_suggestions' => ['questions'], 'ai_feedback' => ['questions'],
+            'snippets' => ['snippets'], 'snippet_tests' => ['snippets'],
+            'rooms' => ['rooms'], 'room_messages' => ['rooms'], 'room_user' => ['rooms'],
+            'wallet_transactions' => ['wallet'], 'wallet_topups' => ['wallet'],
+            'users' => ['members', 'wallet'], 'badge_user' => ['members'], 'badges' => ['members'],
+            'reports' => ['moderation'],
+        ],
+        // Colonnes des membres dont la mise à jour ne change rien pour les autres (connexion, langue…)
+        'technical_user_columns' => ['remember_token', 'updated_at', 'password', 'email_verified_at', 'locale'],
+        // Ce que le navigateur utilise pour se connecter au serveur WebSocket (Reverb)
+        'public' => [
+            'host' => env('REVERB_PUBLIC_HOST', 'localhost'),
+            'port' => env('REVERB_PUBLIC_PORT', 8080),
+            'scheme' => env('REVERB_PUBLIC_SCHEME', 'http'),
+            'path' => env('REVERB_PUBLIC_PATH', ''), // préfixe derrière un serveur web (ex. « reverb » en production)
+        ],
+    ],
 ];

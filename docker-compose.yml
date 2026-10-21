@@ -40,6 +40,22 @@ services:
       valkey:
         condition: service_started
 
+  # Temps réel : serveur WebSocket Laravel Reverb (licence MIT), même image que l'API, port 8090 sur ce PC pour le navigateur
+  reverb:
+    build: ./backend/docker/php
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - vendor:/var/www/html/vendor
+    ports:
+      - "8090:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+
   # Tâches planifiées (remboursement des primes expirées…) : même image que l'API
   scheduler:
     build: ./backend/docker/php

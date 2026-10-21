@@ -17,6 +17,11 @@
 		-Server
 	}
 
+	# Temps réel : WebSocket Reverb derrière /reverb (ex. wss://domaine/reverb/app/CLÉ), préfixe retiré au passage
+	handle_path /reverb/* {
+		reverse_proxy reverb:8080
+	}
+
 	# L'API Laravel et sa page de santé
 	@api path /api/* /sanctum/* /up
 	handle @api {

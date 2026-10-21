@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessRuleException;
+use App\Http\Middleware\BroadcastWrites;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\SecurityHeaders;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -23,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         // Participer demande une adresse e-mail vérifiée par code
         $middleware->alias(['verified.code' => EnsureEmailIsVerified::class, 'admin' => EnsureAdmin::class]);
+        // Temps réel : après une écriture réussie, les autres navigateurs sont prévenus (un seul point d'envoi)
+        $middleware->api(append: [BroadcastWrites::class]);
         // En-têtes de sécurité sur toutes les réponses
         $middleware->append(SecurityHeaders::class);
         // Langue des réponses (Accept-Language : fr ou en)

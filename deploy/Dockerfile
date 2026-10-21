@@ -21,7 +21,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative --no-dev
 
 # ── 3. Serveur ────────────────────────────────────────────────────────────────
 FROM dunglas/frankenphp:1-php8.4
-RUN install-php-extensions pdo_pgsql bcmath opcache zip \
+RUN install-php-extensions pdo_pgsql bcmath opcache zip pcntl \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY deploy/php.ini /usr/local/etc/php/conf.d/zz-palabre.ini
 COPY deploy/Caddyfile /etc/caddy/Caddyfile

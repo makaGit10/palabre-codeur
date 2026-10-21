@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\BountyRefundService;
+use App\Services\Live\LiveBroadcaster;
 use App\Services\MemberService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -12,8 +13,11 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Primes sans réponse validée après 7 jours : remboursées à l'auteur de la question (idempotent, journalisé)
-Artisan::command('palabre:refund-expired-bounties', function (BountyRefundService $refunds) {
+Artisan::command('palabre:refund-expired-bounties', function (BountyRefundService $refunds, LiveBroadcaster $live) {
     $count = $refunds->refundExpired();
+    if ($count > 0) {
+        $live->changed(['questions', 'wallet']);
+    }
     $this->info($count === 0 ? 'Aucune prime à rembourser.' : "{$count} prime(s) remboursée(s).");
 })->purpose('Rembourse les primes expirées sans réponse validée');
 

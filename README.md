@@ -57,7 +57,8 @@ Palabre part de ces besoins :
 - **Messages vivants** : mentions `@` avec autocomplétion (la personne est notifiée), emojis et réactions, modification pendant 1 heure (mention « modifié »), suppression pour tout le monde pendant 24 heures (« Message supprimé »). Chaque règle est vérifiée côté serveur.
 - **Messages privés** entre développeurs, depuis un profil (« Écrire à … »), avec compteur de non-lus.
 - **Partage** : un bouton « Partager » sur chaque question et chaque extrait envoie une carte cliquable dans une conversation ou un salon, avec un mot d'accompagnement. Les messages acceptent le Markdown : code coloré entre trois accents graves, liens cliquables.
-- **Notifications** : réponse reçue, réponse validée, prime versée, message privé. Les fils se rafraîchissent par interrogation régulière ; le passage au temps réel (Laravel Reverb, MIT) ne toucherait qu'un fichier côté front.
+- **Temps réel** : quand quelqu'un publie, répond, vote, valide ou modère, les autres personnes connectées voient le changement s'afficher en une à deux secondes, sans recharger la page (WebSocket Laravel Reverb, MIT). Le serveur n'envoie jamais de données, seulement le nom des rubriques touchées ; chaque écran recharge alors en silence par l'API, avec ses contrôles d'accès. Un seul point d'envoi (middleware), déclenché uniquement par une écriture réussie en base ; les écritures techniques (sessions, cache, journaux) ne comptent pas ; les signaux rapprochés sont regroupés ; un onglet caché attend d'être visible ; un formulaire en cours de saisie n'est jamais touché ; l'auteur de la modification n'est pas rechargé ; si le serveur temps réel tombe, rien ne casse.
+- **Notifications** : réponse reçue, réponse validée, prime versée, message privé. La messagerie et les notifications gardent leur propre rafraîchissement.
 - **Lecture libre, participation réservée aux membres** : tout le monde peut lire, il faut un compte pour poser, répondre, voter ou payer.
 - Interface **responsive** (barre latérale repliable sur ordinateur, barre d'onglets sur téléphone) et **mode sombre**.
 
@@ -76,6 +77,8 @@ Palabre part de ces besoins :
                                                ▼                            ▼                      ▼
                                       PostgreSQL 17               Valkey 8 (cache,         PaymentGateway
                                       (données, pg_trgm)          sessions, files)         (mode test)
+
+                       navigateurs ◀── « rubrique X a changé » ── Reverb (WebSocket) ◀── API, après chaque écriture réussie
 ```
 
 **Choix techniques**
@@ -135,13 +138,15 @@ Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `mll
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 84 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 89 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```
 
 
-Les tests couvrent notamment : la prime bloquée puis versée une seule fois, le refus de valider la question d'un autre, un seul vote par personne, le refus de voter pour soi, les retraits limités au solde et aux moyens du pays, le masquage des numéros, la confidentialité des profils, la détection de doublons, l'inscription, la connexion, la limitation des tentatives et les messages en français.
+Les tests couvrent notamment : la prime bloquée puis versée une seule fois, le refus de valider la question d'un autre, un seul vote par personne, le refus de voter pour soi, les retraits limités au solde et aux moyens du pays, le masquage des numéros, la confidentialité des profils, la détection de doublons, l'inscription, la connexion, la limitation des tentatives, les messages en français et le temps réel (signal après une écriture réussie seulement, jamais après une lecture ni une écriture technique, et jamais fatal si le serveur WebSocket est injoignable).
+
+Le temps réel a aussi son test de bout en bout, avec deux navigateurs ouverts en même temps (`demo/check-live.mjs`, Playwright) : B voit la modification de A sans recharger et en un seul rechargement ; l'écran de A ne se recharge pas lui-même ; aucun rechargement pendant 12 secondes sans modification ; une fenêtre ouverte chez B reste ouverte et se met à jour ; un onglet caché se met à jour quand il redevient visible ; un tour de tous les écrans pendant une modification ne produit aucune erreur JavaScript.
 
 ## Droits sur Palabre
 
@@ -153,11 +158,11 @@ Le règlement n'autorise que des composants sous licence permissive. Toutes les 
 
 | Partie | Composants principaux | Licence |
 |---|---|---|
-| Back-end | Laravel 13, Sanctum, Predis, Carbon, Symfony | MIT |
+| Back-end | Laravel 13, Sanctum, Reverb, Predis, Carbon, Symfony | MIT |
 | Back-end | Bibliothèques Symfony et PHP diverses | MIT, BSD-3-Clause, Apache-2.0 |
 | Back-end | `nette/schema`, `nette/utils` (dépendances indirectes de Laravel) | Triple licence BSD-3-Clause / GPL-2.0 / GPL-3.0 : **utilisés sous BSD-3-Clause** |
 | Front-end | React, React Router, TanStack Query, Axios, Vite, Tailwind CSS | MIT |
-| Front-end | react-markdown, remark-gfm, rehype-highlight | MIT |
+| Front-end | react-markdown, remark-gfm, rehype-highlight, laravel-echo, pusher-js | MIT |
 | Front-end | highlight.js (coloration du code) | BSD-3-Clause |
 | Base de données | PostgreSQL 17 | PostgreSQL License (permissive) |
 | Cache | Valkey 8 | BSD-3-Clause |

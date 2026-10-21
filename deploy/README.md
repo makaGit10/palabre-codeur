@@ -20,7 +20,8 @@ Si vous avez un nom de domaine, faites pointer son enregistrement `A` vers l'adr
 git clone https://github.com/makaGit10/palabre-codeur.git /opt/palabre
 cd /opt/palabre/deploy
 cp .env.example .env
-nano .env        # SERVER_NAME, APP_URL, DB_PASSWORD, mots de passe de démonstration…
+nano .env        # SERVER_NAME, APP_URL, DB_PASSWORD, mots de passe de démonstration, REVERB_PUBLIC_HOST (= le domaine)…
+openssl rand -hex 16 ; openssl rand -hex 24   # à coller dans REVERB_APP_KEY et REVERB_APP_SECRET
 docker compose run --rm --no-deps app php artisan key:generate --show   # à coller dans APP_KEY
 ```
 
@@ -50,11 +51,12 @@ gunzip -c palabre-2026-10-20.sql.gz | docker compose exec -T db psql -U palabre 
 
 ## Sans nom de domaine
 
-Let's Encrypt exige un nom de domaine : avec une adresse IP seule, l'application fonctionne en HTTP. Dans `.env` : `SERVER_NAME=:80`, `APP_URL=http://ADRESSE_IP`, `SANCTUM_STATEFUL_DOMAINS=ADRESSE_IP`, `SESSION_SECURE_COOKIE=false`. Un domaine coûte environ 10 000 FCFA par an et rend le HTTPS automatique.
+Let's Encrypt exige un nom de domaine : avec une adresse IP seule, l'application fonctionne en HTTP. Dans `.env` : `SERVER_NAME=:80`, `APP_URL=http://ADRESSE_IP`, `SANCTUM_STATEFUL_DOMAINS=ADRESSE_IP`, `SESSION_SECURE_COOKIE=false`, `REVERB_PUBLIC_HOST=ADRESSE_IP`, `REVERB_PUBLIC_PORT=80`, `REVERB_PUBLIC_SCHEME=http`. Un domaine coûte environ 10 000 FCFA par an et rend le HTTPS automatique.
 
 ## Ce que cette configuration garantit
 
 - HTTPS avec renouvellement automatique, HSTS, compression, HTTP/3.
+- Temps réel : le WebSocket (conteneur `reverb`) n'est joignable qu'à travers Caddy, sous `/reverb`, avec le même certificat ; il ne transporte jamais de données, seulement « telle rubrique a changé ».
 - En-têtes de sécurité sur chaque réponse, politique de contenu (CSP) stricte pour le front-end.
 - Cookies de session `Secure`, `HttpOnly`, `SameSite=Lax` ; protection CSRF ; limites de requêtes par personne et par adresse IP.
 - `APP_DEBUG=false`, version de PHP masquée, téléversement de fichiers désactivé.

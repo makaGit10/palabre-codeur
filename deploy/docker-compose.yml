@@ -39,6 +39,18 @@ services:
       app:
         condition: service_healthy
 
+  # Temps réel : serveur WebSocket Laravel Reverb, joint par Caddy sous /reverb (jamais exposé directement)
+  reverb:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    depends_on:
+      app:
+        condition: service_healthy
+
   # Base de données : jamais exposée hors du réseau Docker
   db:
     image: postgres:17-alpine
