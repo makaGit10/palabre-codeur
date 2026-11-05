@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { Flag } from '../components/Brand'
 import { CodeTree } from '../components/CodeTree'
+import { DemoAccounts } from '../components/DemoAccounts'
 import { DemoButton } from '../components/DemoVideo'
 import { Icon } from '../components/Icon'
 import { QuestionCard } from '../components/QuestionCard'
 import { SearchInput } from '../components/SearchSuggestions'
+import { useAuth } from '../hooks/useAuth'
 import { useI18n, type Key } from '../i18n'
 import { formatFcfa, formatNumber } from '../lib/format'
 import { COUNTRIES } from '../lib/money'
@@ -15,6 +17,7 @@ import { listQuestions } from '../services/questions'
 const STEPS = [1, 2, 3] as const
 
 export default function Landing() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const { t, tn, country, payment } = useI18n()
   const { data: recent } = useQuery({ queryKey: ['questions', 'recent'], queryFn: () => listQuestions({ perPage: 3 }) })
@@ -59,6 +62,13 @@ export default function Landing() {
         </div>
         <CodeTree />
       </section>
+
+      {/* Jury et visiteurs : connexion en un clic, sans passer par la page de connexion */}
+      {!user && (
+        <div className="mb-8">
+          <DemoAccounts layout="row" />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
         {/* Vrais chiffres de la base de données */}

@@ -1,17 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { Avatar, Flag } from '../components/Brand'
+import { Flag } from '../components/Brand'
+import { DemoAccounts } from '../components/DemoAccounts'
 import { CodeInput } from '../components/CodeInput'
 import { CodeTree } from '../components/CodeTree'
 import { Icon, type IconName } from '../components/Icon'
 import { useToast } from '../components/toastContext'
+import { useAfterAuth } from '../hooks/useAfterAuth'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n, type Key } from '../i18n'
 import { errorMessage, fieldErrors } from '../lib/api'
 import { formatNumber } from '../lib/format'
 import { COUNTRIES } from '../lib/money'
-import { forgotPassword, getDemoAccounts, login, register, resendVerificationCode, resetPassword, verifyEmail } from '../services/auth'
+import { forgotPassword, login, register, resendVerificationCode, resetPassword, verifyEmail } from '../services/auth'
 import { getStats } from '../services/community'
 import type { CountryCode, Me } from '../types'
 
@@ -121,68 +123,6 @@ function AuthShell({ title, subtitle, showcase, children }: { title: string; sub
 
 function Card({ children }: { children: ReactNode }) {
   return <div className="rounded-2xl border border-line bg-surface p-6 shadow-[0_24px_60px_-36px_rgb(0_0_0/.45)]">{children}</div>
-}
-
-// Après connexion : retour à la page demandée, sinon le fil
-function useAfterAuth() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const queryClient = useQueryClient()
-  const from = (location.state as { from?: string } | null)?.from ?? '/app'
-  return (me: Me) => {
-    queryClient.setQueryData(['me'], me)
-    queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
-    if (!me.emailVerified) navigate('/verification', { replace: true, state: { from } })
-    else navigate(from, { replace: true })
-  }
-}
-
-// Comptes de démonstration (jury, visiteurs) : affichés seulement si l'API les publie
-function DemoAccounts({ onPick, pendingEmail }: { onPick: (account: Me, password: string) => void; pendingEmail: string | null }) {
-  const { t, country } = useI18n()
-  const { data } = useQuery({ queryKey: ['demo-accounts'], queryFn: getDemoAccounts, staleTime: Infinity })
-  if (!data || data.accounts.length === 0) return null
-
-  return (
-    <section aria-labelledby="demo-accounts" className="mt-5 rounded-2xl border border-dashed border-gold/50 bg-gold-soft/40 p-5">
-      <h2 id="demo-accounts" className="flex items-center gap-2 text-[15px]">
-        <Icon name="spark" className="size-4 text-gold" />
-        {t('auth.demo_title')}
-      </h2>
-      <p className="mt-1 text-[13px] text-muted">
-        {t('auth.demo_text')} <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[12.5px] text-ink">{data.password}</code>
-      </p>
-      <ul className="mt-3 grid gap-2">
-        {data.accounts.map((account) => {
-          const pending = pendingEmail === account.email
-          return (
-            <li key={account.id}>
-              <button
-                type="button"
-                disabled={pendingEmail !== null}
-                onClick={() => onPick(account, data.password)}
-                className="flex w-full items-center gap-3 rounded-[10px] border border-line bg-surface px-3 py-2 text-left transition hover:border-green disabled:opacity-60"
-              >
-                <Avatar user={account} size="sm" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[13.5px] font-semibold">{account.name}</span>
-                  <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
-                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                      <Flag code={account.country} />
-                      {account.city ? `${account.city}, ` : ''}
-                      {country(account.country)}
-                    </span>
-                    <span className="truncate">{account.email}</span>
-                  </span>
-                </span>
-                <span className="text-xs font-semibold whitespace-nowrap text-green">{pending ? t('auth.logging_in') : t('auth.demo_use')}</span>
-              </button>
-            </li>
-          )
-        })}
-      </ul>
-    </section>
-  )
 }
 
 export function LoginPage() {

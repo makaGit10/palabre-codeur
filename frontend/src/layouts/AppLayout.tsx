@@ -47,7 +47,7 @@ function useLogout() {
     onSuccess: () => {
       queryClient.setQueryData(['me'], null)
       queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
-      navigate('/')
+      navigate('/connexion')
     },
   })
 }
