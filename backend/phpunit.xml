@@ -24,6 +24,8 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="PAYTECH_API_KEY" value=""/>
+        <env name="PAYTECH_API_SECRET" value=""/>
         <env name="CACHE_STORE" value="array"/>
         <!-- Tests sur PostgreSQL (pg_trgm, jsonb) : base séparée, vidée à chaque test -->
         <env name="DB_CONNECTION" value="pgsql"/>

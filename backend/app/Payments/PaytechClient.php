@@ -14,9 +14,15 @@ use Throwable;
  */
 class PaytechClient
 {
+    /**
+     * Clés présentes et application joignable en HTTPS : PayTech refuse une adresse de notification en HTTP,
+     * donc en local (http://localhost) les recharges restent simulées même avec des clés.
+     */
     public function configured(): bool
     {
-        return filled(config('palabre.paytech.api_key')) && filled(config('palabre.paytech.api_secret'));
+        return filled(config('palabre.paytech.api_key'))
+            && filled(config('palabre.paytech.api_secret'))
+            && (str_starts_with((string) config('app.url'), 'https://') || app()->runningUnitTests());
     }
 
     /**

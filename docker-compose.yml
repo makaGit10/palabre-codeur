@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: palabre
       POSTGRES_PASSWORD: palabre
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432" # changer DB_PORT dans un fichier .env à la racine si le port est pris
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -33,7 +33,7 @@ services:
       # vendor dans un volume Docker (côté Linux) : lecture des milliers de fichiers bien plus rapide sous Windows
       - vendor:/var/www/html/vendor
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000" # idem avec API_PORT (penser à VITE_API_PROXY dans frontend/.env)
     depends_on:
       db:
         condition: service_healthy
@@ -49,7 +49,7 @@ services:
       - ./backend:/var/www/html
       - vendor:/var/www/html/vendor
     ports:
-      - "8090:8080"
+      - "${REVERB_PORT:-8090}:8080"
     depends_on:
       db:
         condition: service_healthy
