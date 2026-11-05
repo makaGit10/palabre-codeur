@@ -66,6 +66,27 @@ services:
       interval: 5s
       retries: 10
 
+  # Sauvegarde : chaque nuit, un export complet de la base (pg_dump, version identique au serveur) dans le volume
+  # « backups », sept jours conservés. Restaurer : docker compose exec -T db psql -U palabre palabre < fichier.sql
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USERNAME:-palabre}
+      PGPASSWORD: ${DB_PASSWORD:?Définir DB_PASSWORD dans deploy/.env}
+      PGDATABASE: ${DB_DATABASE:-palabre}
+    command: >
+      sh -c 'while true; do
+        pg_dump --no-owner | gzip > /backups/palabre-$$(date +%F-%H%M).sql.gz
+        && find /backups -name "palabre-*.sql.gz" -mtime +7 -delete;
+        sleep 86400; done'
+    volumes:
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
   # Valkey (licence BSD) : cache et sessions. Les sessions expirent d'elles-mêmes ; en cas de manque de
   # mémoire, seules les clés qui ont une durée de vie sont évincées.
   valkey:
@@ -78,6 +99,7 @@ services:
 volumes:
   pgdata:
   valkeydata:
+  backups:
   caddy_data:
   caddy_config:
   app_storage:

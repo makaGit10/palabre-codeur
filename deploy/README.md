@@ -45,7 +45,9 @@ cd /opt/palabre && git pull && cd deploy && docker compose up -d --build
 
 ```bash
 docker compose logs -f app                                                        # journaux
-docker compose exec db pg_dump -U palabre palabre | gzip > palabre-$(date +%F).sql.gz   # sauvegarde
+docker compose exec db pg_dump -U palabre palabre | gzip > palabre-$(date +%F).sql.gz   # sauvegarde à la demande
+# Sauvegardes automatiques : chaque nuit dans le volume « backups » (7 jours), listées par
+# docker compose exec backup ls -l /backups ; copier localement : docker compose cp backup:/backups ./sauvegardes
 gunzip -c palabre-2026-10-20.sql.gz | docker compose exec -T db psql -U palabre palabre  # restauration
 ```
 

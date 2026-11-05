@@ -14,7 +14,7 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 | | |
 |---|---|
 | **Démo en ligne** | _adresse communiquée après le déploiement sur Datacloud_ |
-| **Vidéo de présentation** | bouton « Voir la démo » sur la page d'accueil (2 minutes) |
+| **Vidéo de présentation** | deux boutons sur la page d'accueil : « L'essentiel » (2 min) et « La visite complète » (2 min 50) |
 | **Code source** | https://github.com/makaGit10/palabre-codeur |
 | **Comptes de test** | proposés sur la page de connexion : un clic suffit, le mot de passe y est affiché |
 
@@ -168,7 +168,7 @@ Le règlement n'autorise que des composants sous licence permissive. Toutes les 
 | Cache | Valkey 8 | BSD-3-Clause |
 | Polices | Bricolage Grotesque, DM Sans, JetBrains Mono (Google Fonts) | SIL Open Font License 1.1 |
 
-Bilan : front-end 141 paquets MIT, 1 ISC, 1 BSD-3-Clause ; back-end (production) 70 MIT, 7 BSD-3-Clause, 1 Apache-2.0. **Aucun composant sous licence GPL, AGPL ou LGPL n'est utilisé.** Redis (passé sous licence AGPL) a été écarté au profit de Valkey, et MySQL (GPL) au profit de PostgreSQL.
+Bilan (5 novembre 2026) : front-end livré au navigateur, 148 paquets dont 145 MIT, 1 ISC, 1 BSD-3-Clause et 1 Unlicense ; back-end (production), 92 paquets dont 84 MIT, 7 BSD-3-Clause et 1 Apache-2.0. **Aucun composant sous licence GPL, AGPL ou LGPL n'est utilisé.** Redis (passé sous licence AGPL) a été écarté au profit de Valkey, et MySQL (GPL) au profit de PostgreSQL.
 
 ## Équipe ByteByByte
 
