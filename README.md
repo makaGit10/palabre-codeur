@@ -62,7 +62,7 @@ Palabre part de ces besoins :
 - **Lecture libre, participation réservée aux membres** : tout le monde peut lire, il faut un compte pour poser, répondre, voter ou payer.
 - Interface **responsive** (barre latérale repliable sur ordinateur, barre d'onglets sur téléphone) et **mode sombre**.
 
-> Les paiements fonctionnent en **mode test** pendant le concours : aucun argent réel ne circule. En production, ils passeront par un agrégateur de paiement agréé (PayTech, CinetPay…) branché sur l'interface `PaymentGateway`.
+> Les paiements fonctionnent en **mode test** pendant le concours : aucun argent réel ne circule. La **recharge du portefeuille passe par PayTech** (paytech.sn, environnement de test) : page de paiement PayTech, retour sur Palabre, notification IPN authentifiée par l'empreinte SHA-256 des clés, crédit unique par référence. PayTech exige une adresse en HTTPS : ce parcours est actif sur la démo en ligne ; en local, la recharge est simulée. Les retraits (Wave, Orange Money, MTN MoMo…) sont simulés, car les API de versement demandent un compte marchand validé. Tout passe par l'interface `PaymentGateway`, prête pour la production.
 
 ## Architecture
 
