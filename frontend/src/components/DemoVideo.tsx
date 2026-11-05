@@ -16,32 +16,36 @@ function youtubeId(url: string): string | null {
   return match ? match[1] : null
 }
 
-// Bouton « Voir la démo » : ouvre la vidéo de présentation dans une fenêtre, sans quitter la page
+// Deux boutons sur l'accueil : « L'essentiel · 2 min » (halo qui pulse) et « La visite complète · 2 min 50 ».
+// Chacun ouvre la vidéo correspondante dans une fenêtre, sans quitter la page ; on peut encore changer dedans.
 export function DemoButton() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState<Version | null>(null)
   const { t } = useI18n()
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="group inline-flex items-center gap-2.5 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-sm font-semibold shadow-[0_10px_30px_-18px_rgb(0_0_0/.35)] transition hover:border-green"
-      >
-        <span className="relative grid size-8 place-items-center rounded-full bg-green text-green-ink transition group-hover:scale-105">
-          {/* Halo qui pulse autour du bouton de lecture, pour attirer l'œil (désactivé si l'utilisateur limite les animations) */}
-          <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-green opacity-50 motion-reduce:hidden" />
-          <Icon name="play" className="relative size-4" />
-        </span>
-        {t('demo.watch')}
-        <span className="font-medium text-muted">{t('demo.duration')}</span>
-      </button>
-      {open && <DemoVideoDialog onClose={() => setOpen(false)} />}
-    </>
+    <div role="group" aria-label={t('demo.watch')} className="flex flex-wrap items-center gap-2">
+      {(['short', 'full'] as const).map((v) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => setOpen(v)}
+          className="group inline-flex items-center gap-2.5 rounded-full border border-line bg-surface py-1.5 pr-4 pl-1.5 text-sm font-semibold shadow-[0_10px_30px_-18px_rgb(0_0_0/.35)] transition hover:border-green"
+        >
+          <span className={`relative grid size-8 place-items-center rounded-full transition group-hover:scale-105 ${v === 'short' ? 'bg-green text-green-ink' : 'bg-green-soft text-green'}`}>
+            {/* Halo qui pulse autour du bouton principal, pour attirer l'œil (désactivé si l'utilisateur limite les animations) */}
+            {v === 'short' && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-green opacity-50 motion-reduce:hidden" />}
+            <Icon name="play" className="relative size-4" />
+          </span>
+          {t(VIDEOS[v].label)}
+          <span className="font-medium text-muted">{t(VIDEOS[v].duration)}</span>
+        </button>
+      ))}
+      {open && <DemoVideoDialog initial={open} onClose={() => setOpen(null)} />}
+    </div>
   )
 }
 
-function DemoVideoDialog({ onClose }: { onClose: () => void }) {
-  const [version, setVersion] = useState<Version>('full')
+function DemoVideoDialog({ initial, onClose }: { initial: Version; onClose: () => void }) {
+  const [version, setVersion] = useState<Version>(initial)
   const [failed, setFailed] = useState(false)
   const { t } = useI18n()
   const { url } = VIDEOS[version]
