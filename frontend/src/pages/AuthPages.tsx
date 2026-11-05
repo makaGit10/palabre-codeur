@@ -97,6 +97,7 @@ function Showcase({ title }: { title: string }) {
 // Deux colonnes sur ordinateur : panneau fixe à gauche, formulaire centré à droite qui défile si besoin.
 // Sur téléphone : bandeau sombre avec le titre, puis le formulaire.
 function AuthShell({ title, subtitle, showcase, children }: { title: string; subtitle: ReactNode; showcase: string; children: ReactNode }) {
+  const { t } = useI18n()
   return (
     <div className="lg:grid lg:grid-cols-[1.05fr_1fr]">
       {/* 57px : hauteur de l'en-tête public collant, sous lequel le panneau se cale */}
@@ -105,6 +106,10 @@ function AuthShell({ title, subtitle, showcase, children }: { title: string; sub
       </div>
       <div className="flex justify-center px-4 py-8 sm:px-8 lg:min-h-[calc(100dvh-57px)] lg:items-center lg:py-12">
         <div className="w-full max-w-[460px]">
+          <Link to="/" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-green">
+            <Icon name="left" className="size-4" />
+            {t('auth.back_home')}
+          </Link>
           <h1 className="text-[28px]">{title}</h1>
           <p className="mt-1.5 mb-6 text-sm text-muted">{subtitle}</p>
           {children}

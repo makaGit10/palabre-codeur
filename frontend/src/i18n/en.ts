@@ -111,6 +111,7 @@ export const en: Record<keyof typeof fr, string> = {
   'mod.hidden': "Content hidden for everyone.",
   'mod.dismissed': "Report dismissed.",
   'mod.restored': "Content visible again.",
+  'auth.back_home': 'Back to home',
   'auth.forgot': "Forgot password?",
   'verify.title': "Verify your address",
   'verify.showcase': "One last step.",

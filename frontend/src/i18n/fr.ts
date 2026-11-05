@@ -112,6 +112,7 @@ export const fr = {
   'mod.dismissed': "Signalement classé sans suite.",
   'mod.restored': "Contenu de nouveau visible.",
   'auth.forgot': "Mot de passe oublié ?",
+  'auth.back_home': "Retour à l'accueil",
   'verify.title': "Vérifiez votre adresse",
   'verify.showcase': "Une dernière étape.",
   'verify.subtitle': "Nous avons envoyé un code à 6 chiffres à {email}.",

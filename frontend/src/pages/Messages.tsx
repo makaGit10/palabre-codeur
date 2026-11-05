@@ -17,6 +17,8 @@ export default function Messages() {
   const { t, country } = useI18n()
   const { user: me } = useAuth()
   const userId = Number(useParams().userId) || null
+  const [search, setSearch] = useState('')
+  const searching = search.trim().length >= 2
   const toast = useToast()
   const queryClient = useQueryClient()
 
@@ -63,7 +65,7 @@ export default function Messages() {
 
       <div className="grid items-start gap-5 md:grid-cols-[300px_minmax(0,1fr)]">
         <aside className={`rounded-[14px] border border-line bg-surface p-2 md:sticky md:top-7 ${userId ? 'hidden md:block' : ''}`}>
-          <MemberFinder country={me?.country} />
+          <MemberSearch q={search} onChange={setSearch} />
           {listLoading ? (
             <p className="py-6 text-center text-sm text-muted">{t('common.loading')}</p>
           ) : list.length ? (
@@ -98,6 +100,7 @@ export default function Messages() {
           ) : (
             <p className="px-3 py-6 text-center text-sm text-muted">{t('msg.empty_list')}</p>
           )}
+          {!searching && <Suggestions country={me?.country} />}
         </aside>
 
         {userId ? (
@@ -146,30 +149,12 @@ export default function Messages() {
   )
 }
 
-// En tête de la liste : chercher un développeur par son nom pour lui écrire ; sans recherche, les développeurs
-// les plus actifs de son pays (« d'ici ») et ses groupes privés, pour y aller en un clic
-function MemberFinder({ country }: { country?: CountryCode }) {
+// En tête de la liste : chercher un développeur par son nom pour lui écrire (les résultats s'affichent dessous)
+function MemberSearch({ q, onChange }: { q: string; onChange: (q: string) => void }) {
   const { t } = useI18n()
-  const [q, setQ] = useState('')
   const debounced = useDebouncedValue(q.trim(), 250)
   const searching = debounced.length >= 2
   const { data: found = [], isFetching } = useQuery({ queryKey: ['users-search', debounced, ''], queryFn: () => searchUsers(debounced), enabled: searching, staleTime: 30_000 })
-  const { data: nearby = [] } = useQuery({ queryKey: ['users-search', '', country], queryFn: () => searchUsers('', country), enabled: !!country && !searching, staleTime: 60_000 })
-  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: listRooms, staleTime: 60_000 })
-  const groups = rooms.filter((r: Room) => r.isPrivate)
-
-  const person = (u: User) => (
-    <Link key={u.id} to={`/app/messages/${u.id}`} onClick={() => setQ('')} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 hover:bg-sunk">
-      <Avatar user={u} size="sm" />
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 truncate text-sm font-semibold">
-          {u.name} <Flag code={u.country} />
-        </span>
-        {u.city && <span className="block truncate text-xs text-muted">{u.city}</span>}
-      </span>
-    </Link>
-  )
-  const heading = (text: string) => <h2 className="mt-2 mb-1 px-2.5 text-[11px] font-bold tracking-wider text-muted uppercase">{text}</h2>
 
   return (
     <div className="mb-2 border-b border-line pb-2">
@@ -178,40 +163,73 @@ function MemberFinder({ country }: { country?: CountryCode }) {
         <input
           type="search"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={t('msg.find')}
           aria-label={t('msg.find')}
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
         />
       </label>
-      {searching ? (
-        found.length ? (
-          <div className="mt-1 flex flex-col gap-0.5">{found.map(person)}</div>
+      {searching &&
+        (found.length ? (
+          <div className="mt-1 flex flex-col gap-0.5">
+            {found.map((u) => (
+              <PersonLink key={u.id} user={u} onClick={() => onChange('')} />
+            ))}
+          </div>
         ) : (
           <p className="px-2.5 py-2 text-sm text-muted">{isFetching ? t('common.loading') : t('msg.nobody')}</p>
-        )
-      ) : (
+        ))}
+    </div>
+  )
+}
+
+function PersonLink({ user, onClick }: { user: User; onClick?: () => void }) {
+  return (
+    <Link to={`/app/messages/${user.id}`} onClick={onClick} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 hover:bg-sunk">
+      <Avatar user={user} size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 truncate text-sm font-semibold">
+          {user.name} <Flag code={user.country} />
+        </span>
+        {user.city && <span className="block truncate text-xs text-muted">{user.city}</span>}
+      </span>
+    </Link>
+  )
+}
+
+// Sous les conversations : les développeurs les plus actifs de son pays (« d'ici ») et ses groupes privés
+function Suggestions({ country }: { country?: CountryCode }) {
+  const { t } = useI18n()
+  const { data: nearby = [] } = useQuery({ queryKey: ['users-search', '', country], queryFn: () => searchUsers('', country), enabled: !!country, staleTime: 60_000 })
+  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: listRooms, staleTime: 60_000 })
+  const groups = rooms.filter((r: Room) => r.isPrivate)
+  if (!nearby.length && !groups.length) return null
+  const heading = (text: string) => <h2 className="mt-3 mb-1 px-2.5 text-[11px] font-bold tracking-wider text-muted uppercase">{text}</h2>
+
+  return (
+    <div className="mt-2 border-t border-line pt-1">
+      {nearby.length > 0 && (
         <>
-          {nearby.length > 0 && (
-            <>
-              {heading(t('msg.nearby'))}
-              <div className="flex flex-col gap-0.5">{nearby.slice(0, 5).map(person)}</div>
-            </>
-          )}
-          {groups.length > 0 && (
-            <>
-              {heading(t('msg.groups'))}
-              <div className="flex flex-col gap-0.5">
-                {groups.map((g: Room) => (
-                  <Link key={g.id} to={`/app/salons/${g.slug}`} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-sm font-semibold hover:bg-sunk">
-                    <Icon name="lock" className="size-3.5 text-muted" />
-                    <span className="min-w-0 flex-1 truncate">{g.name}</span>
-                    {g.unreadCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-green text-[11px] font-bold text-green-ink">{g.unreadCount}</span>}
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
+          {heading(t('msg.nearby'))}
+          <div className="flex flex-col gap-0.5">
+            {nearby.slice(0, 5).map((u) => (
+              <PersonLink key={u.id} user={u} />
+            ))}
+          </div>
+        </>
+      )}
+      {groups.length > 0 && (
+        <>
+          {heading(t('msg.groups'))}
+          <div className="flex flex-col gap-0.5">
+            {groups.map((g: Room) => (
+              <Link key={g.id} to={`/app/salons/${g.slug}`} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-sm font-semibold hover:bg-sunk">
+                <Icon name="lock" className="size-3.5 text-muted" />
+                <span className="min-w-0 flex-1 truncate">{g.name}</span>
+                {g.unreadCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-green text-[11px] font-bold text-green-ink">{g.unreadCount}</span>}
+              </Link>
+            ))}
+          </div>
         </>
       )}
     </div>
