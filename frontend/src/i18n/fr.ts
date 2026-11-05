@@ -206,7 +206,11 @@ export const fr = {
   'landing.cta_text': 'Rejoignez les développeurs qui construisent le web africain ensemble.',
   'demo.watch': 'Voir la démo',
   'demo.duration': '2 min 50',
-  'demo.title': 'Palabre en 3 minutes',
+  'demo.title': 'Palabre en vidéo',
+  'demo.versions': 'Version de la vidéo',
+  'demo.short': "L'essentiel",
+  'demo.short_duration': '2 min',
+  'demo.full': 'La visite complète',
   'demo.dialog': 'Démonstration de Palabre',
   'demo.unavailable': "La vidéo n'est pas disponible pour le moment.",
 

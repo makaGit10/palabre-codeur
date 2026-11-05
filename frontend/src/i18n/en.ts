@@ -204,7 +204,11 @@ export const en: Record<keyof typeof fr, string> = {
   'landing.cta_text': 'Join the developers building the African web together.',
   'demo.watch': 'Watch the demo',
   'demo.duration': '2 min 50',
-  'demo.title': 'Palabre in 3 minutes',
+  'demo.title': 'Palabre on video',
+  'demo.versions': 'Video version',
+  'demo.short': 'The essentials',
+  'demo.short_duration': '2 min',
+  'demo.full': 'The full tour',
   'demo.dialog': 'Palabre demo',
   'demo.unavailable': 'The video is not available right now.',
 
