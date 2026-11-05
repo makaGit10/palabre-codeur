@@ -86,7 +86,7 @@ function Reactions({ reactions, mine, onReact }: { reactions: Reaction[]; mine?:
 }
 
 // Choix d'un emoji dans une petite fenêtre, fermée au clic ailleurs ou avec Échap
-function EmojiPicker({ items, onPick, onClose, align = 'left' }: { items: string[]; onPick: (e: string) => void; onClose: () => void; align?: 'left' | 'right' }) {
+function EmojiPicker({ items, onPick, onClose, align = 'left', opens = 'up' }: { items: string[]; onPick: (e: string) => void; onClose: () => void; align?: 'left' | 'right'; opens?: 'up' | 'down' }) {
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onDoc = (e: MouseEvent) => !box.current?.contains(e.target as Node) && onClose()
@@ -99,7 +99,7 @@ function EmojiPicker({ items, onPick, onClose, align = 'left' }: { items: string
     }
   }, [onClose])
   return (
-    <div ref={box} role="listbox" className={`absolute bottom-full z-20 mb-1 grid w-max grid-cols-[repeat(8,2rem)] gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-xl ${align === 'right' ? 'right-0' : 'left-0'}`}>
+    <div ref={box} role="listbox" className={`absolute z-20 grid w-max grid-cols-[repeat(8,2rem)] gap-0.5 rounded-xl border border-line bg-surface p-1.5 shadow-xl ${opens === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'} ${align === 'right' ? 'right-0' : 'left-0'}`}>
       {items.map((e) => (
         <button key={e} role="option" aria-selected={false} onClick={() => onPick(e)} className="grid size-8 place-items-center rounded-md text-lg hover:bg-sunk">
           {e}
@@ -128,12 +128,12 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
   const bubble = m.author === undefined
 
   const toolbar = actions && !m.deleted && (
-    <div className={`absolute -top-3 flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 ${bubble && mine ? 'left-2' : 'right-2'}`}>
+    <div className={`absolute top-1 flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 opacity-0 shadow-sm transition group-hover:opacity-100 focus-within:opacity-100 ${bubble && mine ? 'left-2' : 'right-2'}`}>
       <div className="relative">
         <button onClick={() => setMenu(menu === 'react' ? 'none' : 'react')} title={t('chat.react')} aria-label={t('chat.react')} className={iconBtn}>
           <Icon name="smile" className="size-4" />
         </button>
-        {menu === 'react' && <EmojiPicker items={REACTIONS} align={bubble && mine ? 'left' : 'right'} onClose={() => setMenu('none')} onPick={(e) => { actions.onReact(m.id, e); setMenu('none') }} />}
+        {menu === 'react' && <EmojiPicker items={REACTIONS} align={bubble && mine ? 'left' : 'right'} opens="down" onClose={() => setMenu('none')} onPick={(e) => { actions.onReact(m.id, e); setMenu('none') }} />}
       </div>
       {m.canEdit && (
         <button onClick={() => { setDraft(m.body); setMenu('edit') }} title={t('chat.edit_title')} aria-label={t('chat.edit')} className={iconBtn}>
@@ -220,7 +220,7 @@ function MessageRow({ m, actions }: { m: ChatItem; actions?: ChatActions }) {
   }
 
   return (
-    <li className={`group relative flex ${mine ? 'justify-end' : 'justify-start'}`}>
+    <li className={`group relative flex rounded-lg px-1 py-0.5 transition hover:bg-sunk/60 ${mine ? 'justify-end' : 'justify-start'}`}>
       {toolbar}
       <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${mine ? 'bubble-mine rounded-br-md bg-green text-green-ink' : 'rounded-bl-md border border-line bg-surface'}`}>
         {content}
