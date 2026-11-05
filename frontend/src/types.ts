@@ -133,6 +133,7 @@ export interface Room {
   slug: string
   name: string
   kind: 'topic' | 'country' | 'group'
+  country: CountryCode | null
   isPrivate: boolean
   description: string | null
   messagesCount: number

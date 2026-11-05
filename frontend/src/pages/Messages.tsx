@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Avatar, Flag } from '../components/Brand'
 import { ChatComposer, ChatThread, type ChatActions, type ComposerPayload } from '../components/Chat'
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
+import { useAuth } from '../hooks/useAuth'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { timeAgo } from '../lib/format'
-import { deleteMessage, editMessage, listConversations, reactToMessage, sendDirectMessage, thread } from '../services/messaging'
+import { deleteMessage, editMessage, listConversations, listRooms, reactToMessage, searchUsers, sendDirectMessage, thread } from '../services/messaging'
+import type { CountryCode, Room, User } from '../types'
 
 export default function Messages() {
   const { t, country } = useI18n()
+  const { user: me } = useAuth()
   const userId = Number(useParams().userId) || null
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -59,6 +63,7 @@ export default function Messages() {
 
       <div className="grid items-start gap-5 md:grid-cols-[300px_minmax(0,1fr)]">
         <aside className={`rounded-[14px] border border-line bg-surface p-2 md:sticky md:top-7 ${userId ? 'hidden md:block' : ''}`}>
+          <MemberFinder country={me?.country} />
           {listLoading ? (
             <p className="py-6 text-center text-sm text-muted">{t('common.loading')}</p>
           ) : list.length ? (
@@ -137,6 +142,78 @@ export default function Messages() {
           </section>
         )}
       </div>
+    </div>
+  )
+}
+
+// En tête de la liste : chercher un développeur par son nom pour lui écrire ; sans recherche, les développeurs
+// les plus actifs de son pays (« d'ici ») et ses groupes privés, pour y aller en un clic
+function MemberFinder({ country }: { country?: CountryCode }) {
+  const { t } = useI18n()
+  const [q, setQ] = useState('')
+  const debounced = useDebouncedValue(q.trim(), 250)
+  const searching = debounced.length >= 2
+  const { data: found = [], isFetching } = useQuery({ queryKey: ['users-search', debounced, ''], queryFn: () => searchUsers(debounced), enabled: searching, staleTime: 30_000 })
+  const { data: nearby = [] } = useQuery({ queryKey: ['users-search', '', country], queryFn: () => searchUsers('', country), enabled: !!country && !searching, staleTime: 60_000 })
+  const { data: rooms = [] } = useQuery({ queryKey: ['rooms'], queryFn: listRooms, staleTime: 60_000 })
+  const groups = rooms.filter((r: Room) => r.isPrivate)
+
+  const person = (u: User) => (
+    <Link key={u.id} to={`/app/messages/${u.id}`} onClick={() => setQ('')} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 hover:bg-sunk">
+      <Avatar user={u} size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 truncate text-sm font-semibold">
+          {u.name} <Flag code={u.country} />
+        </span>
+        {u.city && <span className="block truncate text-xs text-muted">{u.city}</span>}
+      </span>
+    </Link>
+  )
+  const heading = (text: string) => <h2 className="mt-2 mb-1 px-2.5 text-[11px] font-bold tracking-wider text-muted uppercase">{text}</h2>
+
+  return (
+    <div className="mb-2 border-b border-line pb-2">
+      <label className="flex items-center gap-2 rounded-[10px] border border-line bg-bg px-3 py-1.5">
+        <Icon name="search" className="size-4 text-muted" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t('msg.find')}
+          aria-label={t('msg.find')}
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+        />
+      </label>
+      {searching ? (
+        found.length ? (
+          <div className="mt-1 flex flex-col gap-0.5">{found.map(person)}</div>
+        ) : (
+          <p className="px-2.5 py-2 text-sm text-muted">{isFetching ? t('common.loading') : t('msg.nobody')}</p>
+        )
+      ) : (
+        <>
+          {nearby.length > 0 && (
+            <>
+              {heading(t('msg.nearby'))}
+              <div className="flex flex-col gap-0.5">{nearby.slice(0, 5).map(person)}</div>
+            </>
+          )}
+          {groups.length > 0 && (
+            <>
+              {heading(t('msg.groups'))}
+              <div className="flex flex-col gap-0.5">
+                {groups.map((g: Room) => (
+                  <Link key={g.id} to={`/app/salons/${g.slug}`} className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-sm font-semibold hover:bg-sunk">
+                    <Icon name="lock" className="size-3.5 text-muted" />
+                    <span className="min-w-0 flex-1 truncate">{g.name}</span>
+                    {g.unreadCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-green text-[11px] font-bold text-green-ink">{g.unreadCount}</span>}
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   )
 }

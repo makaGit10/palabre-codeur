@@ -24,6 +24,7 @@ class RoomController extends Controller
             'slug' => $room->slug,
             'name' => $room->name,
             'kind' => $room->kind,
+            'country' => $room->country,
             'isPrivate' => $room->is_private,
             'description' => $room->description,
             'messagesCount' => $room->messages_count,

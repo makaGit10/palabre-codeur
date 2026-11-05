@@ -60,8 +60,9 @@ export async function reactToMessage(kind: MessageKind, id: number, emoji: strin
 }
 
 // ——— Membres et groupes ———
-export async function searchUsers(q: string): Promise<User[]> {
-  const { data } = await api.get<{ data: User[] }>('/users/search', { params: { q } })
+// Par nom, ou par pays (q vide) : les développeurs les plus actifs d'un pays
+export async function searchUsers(q: string, country?: string): Promise<User[]> {
+  const { data } = await api.get<{ data: User[] }>('/users/search', { params: { q, country } })
   return data.data
 }
 

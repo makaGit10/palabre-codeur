@@ -501,6 +501,8 @@ export const fr = {
   'rm.by_country': 'Par pays',
   'rm.loading': 'Chargement des salons…',
   'rm.all': 'Tous les salons',
+  'rm.filter': 'Chercher un salon, un pays…',
+  'rm.no_match': 'Aucun salon ne correspond.',
   'rm.private_members': 'Groupe privé · {n} membres',
   'rm.active': 'actif {ago}',
   'rm.members': 'Membres du groupe',
@@ -523,6 +525,10 @@ export const fr = {
   'msg.choose': 'Choisissez une conversation',
   'msg.choose_text': 'Ou écrivez à un développeur depuis son profil.',
   'msg.nav': 'Conversations',
+  'msg.find': 'Écrire à un développeur…',
+  'msg.nobody': 'Personne à ce nom.',
+  'msg.nearby': "Développeurs d'ici",
+  'msg.groups': 'Mes groupes',
 
   // Discussion (messages de salon et privés)
   'chat.attachment_snippet': 'Extrait de code',

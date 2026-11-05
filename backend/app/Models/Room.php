@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * Salon public (par sujet ou par pays) ou groupe privé (is_private, créé par un membre, avec un administrateur).
  */
-#[Fillable(['slug', 'name', 'kind', 'description'])]
+#[Fillable(['slug', 'name', 'kind', 'country', 'description'])]
 class Room extends Model
 {
     public const TOPIC = 'topic';

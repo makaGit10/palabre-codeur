@@ -15,6 +15,7 @@ use App\Notifications\NewDirectMessage;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 // Données de démonstration (identiques à celles du prototype).
 // Le mot de passe des comptes vient de .env (DEMO_PASSWORD) : jamais écrit dans le code publié.
@@ -340,16 +341,17 @@ class DatabaseSeeder extends Seeder
             ['react', '#react', 'React, React Native et le front-end'],
             ['flutter', '#flutter', 'Flutter et les applications mobiles'],
         ];
-        $countries = [
-            ['senegal', '#sénégal', 'SN'], ['cote-d-ivoire', "#côte-d'ivoire", 'CI'], ['cameroun', '#cameroun', 'CM'],
-            ['maroc', '#maroc', 'MA'], ['burkina-faso', '#burkina-faso', 'BF'], ['mali', '#mali', 'ML'],
-        ];
+        // Un salon par pays couvert (26), dans l'ordre de la configuration : #sénégal, #côte-d'ivoire, #mali…
+        $countries = [];
+        foreach (config('palabre.countries') as $code => $country) {
+            $countries[] = [Str::slug($country['name']), '#'.mb_strtolower(str_replace(' ', '-', $country['name'])), $code];
+        }
         $rooms = [];
         foreach ($topics as [$slug, $name, $description]) {
             $rooms[$slug] = Room::create(['slug' => $slug, 'name' => $name, 'kind' => Room::TOPIC, 'description' => $description]);
         }
         foreach ($countries as [$slug, $name, $code]) {
-            $rooms[$slug] = Room::create(['slug' => $slug, 'name' => $name, 'kind' => Room::COUNTRY, 'description' => 'Les développeurs '.config("palabre.countries.{$code}.name")]);
+            $rooms[$slug] = Room::create(['slug' => $slug, 'name' => $name, 'kind' => Room::COUNTRY, 'country' => $code, 'description' => 'Les développeurs · '.config("palabre.countries.{$code}.name")]);
         }
 
         $chat = [

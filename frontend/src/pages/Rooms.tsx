@@ -7,14 +7,19 @@ import { CreateGroupDialog, GroupMembersDialog } from '../components/GroupDialog
 import { Icon } from '../components/Icon'
 import { useToast } from '../components/toastContext'
 import { useAuth } from '../hooks/useAuth'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/api'
 import { timeAgo } from '../lib/format'
 import { deleteMessage, editMessage, listRooms, postRoomMessage, reactToMessage, roomMessages } from '../services/messaging'
 import type { CountryCode, Room } from '../types'
 
-// Salon par pays → drapeau
+// Salon par pays → drapeau (le pays vient de l'API ; repli sur les premiers salons créés sans pays)
 const ROOM_COUNTRY: Record<string, CountryCode> = { senegal: 'SN', 'cote-d-ivoire': 'CI', cameroun: 'CM', maroc: 'MA', 'burkina-faso': 'BF', mali: 'ML' }
+const flagOf = (r: Room): CountryCode | undefined => r.country ?? ROOM_COUNTRY[r.slug]
+
+// Comparaison sans accents ni majuscules, pour le filtre de la liste
+const plain = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 // Entrée de la liste des salons : drapeau ou cadenas, dernier message, non-lus
 function RoomLink({ r, active }: { r: Room; active: boolean }) {
@@ -23,7 +28,7 @@ function RoomLink({ r, active }: { r: Room; active: boolean }) {
       to={`/app/salons/${r.slug}`}
       className={`flex items-center gap-2.5 rounded-[10px] px-3 py-1.5 transition ${active ? 'bg-green-soft text-green' : 'hover:bg-sunk'}`}
     >
-      {ROOM_COUNTRY[r.slug] && <Flag code={ROOM_COUNTRY[r.slug]} />}
+      {flagOf(r) && <Flag code={flagOf(r)!} />}
       {r.isPrivate && <Icon name="lock" className="size-3.5 text-muted" />}
       <span className="min-w-0 flex-1">
         <span className={`block truncate text-sm ${r.unreadCount ? 'font-bold' : 'font-semibold'}`}>{r.name}</span>
@@ -67,6 +72,8 @@ export default function Rooms() {
   const queryClient = useQueryClient()
   const [creating, setCreating] = useState(false)
   const [members, setMembers] = useState(false)
+  const [filter, setFilter] = useState('')
+  const needle = plain(useDebouncedValue(filter, 150).trim())
 
   const { data: rooms = [], isLoading: roomsLoading } = useQuery({ queryKey: ['rooms'], queryFn: listRooms, refetchInterval: 30_000 })
   const room = rooms.find((r) => r.slug === slug)
@@ -90,13 +97,28 @@ export default function Rooms() {
     ? { onEdit: (id, body) => edit.mutate({ id, body }), onDelete: (id) => remove.mutate(id), onReact: (id, emoji) => react.mutate({ id, emoji }) }
     : undefined
 
-  const topics = rooms.filter((r) => r.kind === 'topic')
-  const countries = rooms.filter((r) => r.kind === 'country')
-  const groups = rooms.filter((r) => r.isPrivate)
+  // Filtre sur le nom du salon (sans accents) : « sene » trouve #sénégal, « equipe » trouve Équipe Dakar
+  const matches = (r: Room) => needle === '' || plain(r.name).includes(needle)
+  const topics = rooms.filter((r) => r.kind === 'topic' && matches(r))
+  const countries = rooms.filter((r) => r.kind === 'country' && matches(r))
+  const groups = rooms.filter((r) => r.isPrivate && matches(r))
+  const nothing = needle !== '' && !topics.length && !countries.length && !groups.length
 
   const list = (
     <nav aria-label={t('nav.rooms')} className="flex flex-col gap-3.5">
-      {user && (
+      <label className="flex items-center gap-2 rounded-[10px] border border-line bg-bg px-3 py-1.5">
+        <Icon name="search" className="size-4 text-muted" />
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={t('rm.filter')}
+          aria-label={t('rm.filter')}
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+        />
+      </label>
+      {nothing && <p className="px-3 text-sm text-muted">{t('rm.no_match')}</p>}
+      {user && (groups.length > 0 || needle === '') && (
         <RoomSection
           title={t('rm.my_groups')}
           items={groups}
@@ -108,9 +130,9 @@ export default function Rooms() {
           }
         />
       )}
-      {user && !groups.length && <p className="-mt-2 px-3 text-xs text-muted">{t('rm.no_groups')}</p>}
-      <RoomSection title={t('rm.by_topic')} items={topics} active={slug} />
-      <RoomSection title={t('rm.by_country')} items={countries} active={slug} />
+      {user && !groups.length && needle === '' && <p className="-mt-2 px-3 text-xs text-muted">{t('rm.no_groups')}</p>}
+      {topics.length > 0 && <RoomSection title={t('rm.by_topic')} items={topics} active={slug} />}
+      {countries.length > 0 && <RoomSection title={t('rm.by_country')} items={countries} active={slug} />}
     </nav>
   )
 
@@ -134,7 +156,7 @@ export default function Rooms() {
               <Link to="/app/salons" className="text-muted hover:text-ink md:hidden" aria-label={t('rm.all')}>
                 <Icon name="left" />
               </Link>
-              {room && ROOM_COUNTRY[room.slug] && <Flag code={ROOM_COUNTRY[room.slug]} />}
+              {room && flagOf(room) && <Flag code={flagOf(room)!} />}
               {room?.isPrivate && <Icon name="lock" className="size-4 text-muted" />}
               <div className="min-w-0">
                 <h2 className="truncate text-base">{room?.name ?? `#${slug}`}</h2>
