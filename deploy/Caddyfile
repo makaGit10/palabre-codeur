@@ -4,6 +4,12 @@
 	frankenphp
 }
 
+# Autres noms du site (ex. www.) : redirigés vers l'adresse principale, chacun avec son certificat.
+# Sans SERVER_ALIASES, ce bloc ne correspond à aucune adresse réelle.
+{$SERVER_ALIASES:http://alias.invalid} {
+	redir https://{$SERVER_NAME}{uri} permanent
+}
+
 # http://localhost : adresse interne du test de santé du conteneur (pas de redirection HTTPS)
 {$SERVER_NAME}, http://localhost {
 	encode zstd br gzip

@@ -13,7 +13,7 @@ Projet présenté au **Systalink Challenge (concours CADEV 2026)** par l'équipe
 
 | | |
 |---|---|
-| **Démo en ligne** | https://palabre.5-22-218-229.sslip.io |
+| **Démo en ligne** | https://palabre.site |
 | **Vidéo de présentation** | deux boutons sur la page d'accueil : « L'essentiel » (2 min) et « La visite complète » (2 min 50) |
 | **Code source** | https://github.com/makaGit10/palabre-codeur |
 | **Comptes de test** | proposés sur la page de connexion : un clic suffit, le mot de passe y est affiché |

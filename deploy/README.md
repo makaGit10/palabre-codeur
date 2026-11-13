@@ -14,7 +14,7 @@ ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw allow 443/udp && ufw -
 fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
-Si vous avez un nom de domaine, faites pointer son enregistrement `A` vers l'adresse IP du serveur avant de continuer : le certificat HTTPS sera obtenu automatiquement.
+Si vous avez un nom de domaine, faites pointer son enregistrement `A` vers l'adresse IP du serveur avant de continuer : le certificat HTTPS sera obtenu automatiquement. Pour que `www.` (ou tout autre nom) mène au même site, ajoutez aussi son enregistrement `A` et listez-le dans `SERVER_ALIASES` : il redirige vers l'adresse principale.
 
 ## 2. Récupérer le projet et le configurer
 
