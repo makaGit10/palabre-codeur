@@ -4,7 +4,8 @@
 	frankenphp
 }
 
-{$SERVER_NAME} {
+# http://localhost : adresse interne du test de santé du conteneur (pas de redirection HTTPS)
+{$SERVER_NAME}, http://localhost {
 	encode zstd br gzip
 
 	header {
