@@ -1,6 +1,6 @@
 # Déployer Palabre sur un serveur
 
-Un seul serveur Ubuntu (2 Go de RAM suffisent) avec Docker. Tout tourne dans trois conteneurs : l'application (front-end + API, servie par FrankenPHP avec HTTPS automatique), PostgreSQL et Valkey. La base de données et Valkey ne sont jamais joignables depuis l'extérieur.
+Un seul serveur Ubuntu (2 Go de RAM suffisent) avec Docker. Tout tourne dans six conteneurs : l'application (front-end + API, servie par FrankenPHP avec HTTPS automatique), les tâches planifiées, le temps réel (Reverb), PostgreSQL, sa sauvegarde nocturne et Valkey. Avec 2 Go de mémoire, ajoutez 2 Go de swap avant la première construction des images. La base de données et Valkey ne sont jamais joignables depuis l'extérieur.
 
 ## 1. Préparer le serveur
 
@@ -10,6 +10,8 @@ apt update && apt upgrade -y
 curl -fsSL https://get.docker.com | sh
 # Pare-feu : seuls SSH et le web restent ouverts
 ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw allow 443/udp && ufw --force enable
+# Mémoire d'appoint (serveur de 2 Go)
+fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
 ```
 
 Si vous avez un nom de domaine, faites pointer son enregistrement `A` vers l'adresse IP du serveur avant de continuer : le certificat HTTPS sera obtenu automatiquement.
