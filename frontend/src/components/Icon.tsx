@@ -26,6 +26,7 @@ const PATHS = {
   up: <path d="M6 15l6-6 6 6" />,
   down: <path d="M6 9l6 6 6-6" />,
   left: <path d="M15 6l-6 6 6 6" />,
+  right: <path d="M9 6l6 6-6 6" />,
   copy: (
     <>
       <rect x="9" y="9" width="11" height="11" rx="2" />

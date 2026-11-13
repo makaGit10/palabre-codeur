@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Avatar, Logo } from '../components/Brand'
+import { GuideDialog, GuideLink } from '../components/Guide'
 import { Icon, type IconName } from '../components/Icon'
 import { LiveSync } from '../components/LiveSync'
 import { SearchProvider } from '../components/SearchPalette'
@@ -156,7 +157,15 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         {!collapsed && (
           <div className="mt-4 rounded-xl border border-line bg-bg p-3.5 text-[13px] text-muted">
             <b className="mb-1 block font-display text-ink">{t('nav.principle_title')}</b>
-            {t('nav.principle')}
+            <ol className="flex flex-col gap-1.5">
+              {(['nav.step1', 'nav.step2', 'nav.step3'] as const).map((key, i) => (
+                <li key={key} className="flex gap-2">
+                  <span className="grid size-[18px] shrink-0 place-items-center rounded-full bg-green-soft text-[11px] font-bold text-green">{i + 1}</span>
+                  <span>{t(key)}</span>
+                </li>
+              ))}
+            </ol>
+            <GuideLink />
           </div>
         )}
       </nav>
@@ -244,6 +253,7 @@ function MobileTabbar() {
   const logoutMutation = useLogout()
   const openSearch = useSearchPalette()
   const [open, setOpen] = useState(false)
+  const [guide, setGuide] = useState(false)
   const tab = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10.5px] ${isActive ? 'font-bold text-green' : 'text-muted'}`
   const row = 'flex items-center gap-3 rounded-[10px] px-3 py-3 text-[15px] font-medium hover:bg-sunk'
@@ -251,6 +261,7 @@ function MobileTabbar() {
 
   return (
     <>
+      {guide && <GuideDialog onClose={() => setGuide(false)} />}
       {open && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={close}>
           <div className="absolute inset-0 bg-ink/40" />
@@ -278,6 +289,15 @@ function MobileTabbar() {
               <Link to="/app/classement" onClick={close} className={row}>
                 <Icon name="trophy" /> {t('nav.leaderboard')}
               </Link>
+              <button
+                onClick={() => {
+                  close()
+                  setGuide(true)
+                }}
+                className={row}
+              >
+                <Icon name="spark" /> {t('guide.title')}
+              </button>
               {user ? (
                 <>
                   <Link to="/app/portefeuille" onClick={close} className={row}>

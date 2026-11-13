@@ -68,8 +68,8 @@ export default function WalletPage() {
         <h1 className="text-[26px]">{t('w.title')}</h1>
         <p className="mt-1 text-sm text-muted">{t('w.subtitle')}</p>
         {/* Honnêteté : pendant le concours, aucun paiement n'est réel */}
-        <p className="mt-3 mb-5 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold-soft px-3 py-1 text-[12.5px] font-semibold text-gold">
-          <Icon name="coin" className="size-3.5" />
+        <p className="mt-3 mb-5 inline-flex items-start gap-2 rounded-xl border border-gold/40 bg-gold-soft px-3 py-1.5 text-[12.5px] font-semibold text-gold">
+          <Icon name="coin" className="mt-0.5 size-3.5 shrink-0" />
           {t('w.simulation')}
         </p>
 
