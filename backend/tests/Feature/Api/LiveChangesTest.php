@@ -91,4 +91,11 @@ class LiveChangesTest extends TestCase
             ->assertJsonStructure(['enabled', 'key', 'host', 'port', 'scheme', 'path', 'channel'])
             ->assertJsonMissingPath('secret');
     }
+
+    public function test_live_config_uses_the_visited_host_when_none_is_configured(): void
+    {
+        config(['palabre.live.public.host' => '']);
+
+        $this->getJson('http://palabre.site/api/live')->assertOk()->assertJsonPath('host', 'palabre.site');
+    }
 }

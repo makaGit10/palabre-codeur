@@ -138,7 +138,7 @@ Comptes de démonstration : ceux de l'équipe (`marememakalou10@gmail.com`, `mll
 ## Tests et qualité
 
 ```bash
-docker compose exec api php artisan test     # 91 tests sur une base PostgreSQL dédiée
+docker compose exec api php artisan test     # 92 tests sur une base PostgreSQL dédiée
 docker compose exec api ./vendor/bin/pint    # style du code PHP (Laravel Pint)
 cd frontend && npx tsc -b && npx oxlint src  # types TypeScript et analyse du code
 ```
