@@ -76,10 +76,10 @@ services:
       PGUSER: ${DB_USERNAME:-palabre}
       PGPASSWORD: ${DB_PASSWORD:?Définir DB_PASSWORD dans deploy/.env}
       PGDATABASE: ${DB_DATABASE:-palabre}
-    command: >
+    command: >-
       sh -c 'while true; do
-        pg_dump --no-owner | gzip > /backups/palabre-$$(date +%F-%H%M).sql.gz
-        && find /backups -name "palabre-*.sql.gz" -mtime +7 -delete;
+        pg_dump --no-owner | gzip > /backups/palabre-$$(date +%F-%H%M).sql.gz &&
+        find /backups -name "palabre-*.sql.gz" -mtime +7 -delete;
         sleep 86400; done'
     volumes:
       - backups:/backups

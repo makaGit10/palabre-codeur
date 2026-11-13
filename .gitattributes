@@ -1,0 +1,6 @@
+# Fichiers exécutés ou lus dans les conteneurs Linux : fins de ligne LF, même depuis Windows
+*.sh text eol=lf
+deploy/Caddyfile text eol=lf
+deploy/*.yml text eol=lf
+deploy/php.ini text eol=lf
+backend/docker/** text eol=lf
